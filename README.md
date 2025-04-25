@@ -20,7 +20,7 @@
 
 4. Install dependencies
 
-        pip install flask flask_sqlalchemy flask_migrate python-dotenv psycopg2-binary typing_extensions setuptools flask-jwt-extended flask_cors
+        1234
 
 
 5. ensure your python and postgress versions are:
