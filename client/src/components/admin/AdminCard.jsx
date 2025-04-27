@@ -1,4 +1,4 @@
-export default function AdminCard({ user, onDeactivate, onEdit }) {
+export default function AdminCard({ user, onDeactivate, onEdit, onViewActivity }) {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Card Header */}
