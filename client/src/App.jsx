@@ -4,11 +4,11 @@ import Home from './pages/Home';
 import About from './pages/About'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import LoginSignup from './components/Login|SignUp'
-import { HealthProfessional } from './pages/HealthProfessional';
-import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
-import { Privacy } from './pages/Privacy';
-import { Terms } from './pages/Terms';
+// import LoginSignup from './components/Login|SignUp'
+// import { HealthProfessional } from './pages/HealthProfessional';
+// import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
+// import { Privacy } from './pages/Privacy';
+// import { Terms } from './pages/Terms';
 
 function NotFound() {
   return (
@@ -29,7 +29,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/health-professional" element={<HealthProfessional />} />
               <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
-               <Route path="/loginsignup" element={<LoginSignup />} />
+              <Route path="/loginsignup" element={<LoginSignup />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
