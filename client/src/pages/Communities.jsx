@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
 import Welcome from '../components/WelcomeCard';
 import PopularGroups from '../components/PopularGroups';
 import ParentingDevelopment from '../components/ParentingDevelopment';
@@ -13,39 +13,46 @@ const Communities = () => {
   useEffect(() => {
     const fetchCommunityData = async () => {
       try {
-
-        const groupsResponse = await fetch('/api/groups/popular');
-        const groupsData = await groupsResponse.json();
-        setGroups(groupsData);
-
-
-        const postsResponse = await fetch('/api/posts/recent');
-        const postsData = await postsResponse.json();
-        setPosts(postsData);
-
+        // Fetch groups
+        const groupsResponse = await axios.get('http://localhost:5000/communities', { withCredentials: true });
+        setGroups(groupsResponse.data);
+    
+        // Fetch posts
+        const postsResponse = await axios.get('/posts', { withCredentials: true });
+        setPosts(postsResponse.data);
+    
         setLoading(false);
       } catch (error) {
         console.error('Error fetching community data:', error);
         setLoading(false);
       }
     };
-
     fetchCommunityData();
   }, []);
 
-  if (loading) return <div className="loading">Loading community...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-xl font-semibold">
+        Loading community...
+      </div>
+    );
+  }
 
   return (
-    <div className="community-container">
-      <div className="community-main">
+    <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+      
+      {/* Main Section */}
+      <div className="flex-1 flex flex-col gap-6">
         <Welcome />
         <MothersPost posts={posts} />
       </div>
-      
-      <div className="community-sidebar">
+
+      {/* Sidebar */}
+      <div className="w-full lg:w-1/3 flex flex-col gap-6">
         <PopularGroups groups={groups} />
         <ParentingDevelopment />
       </div>
+
     </div>
   );
 };

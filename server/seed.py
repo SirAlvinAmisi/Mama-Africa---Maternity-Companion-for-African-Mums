@@ -13,31 +13,127 @@ with app.app_context():
     db.session.commit()
 
     # 2. HEALTH SPECIALISTS
-    specialists = [
-        ("dr.ouma@mama.africa", "Dr. Ouma Odhiambo", "Kisumu", "Maternal-Fetal Medicine Specialist"),
-        ("dr.njeri@mama.africa", "Dr. Wanjiru Njeri", "Nyeri", "Obstetrician-Gynecologist"),
-        ("dr.sarah@mama.africa", "Dr. Sarah Were", "Nairobi", "Prenatal Nutritionist"),
-        ("dr.kimani@mama.africa", "Dr. Peter Kimani", "Nakuru", "Fertility Specialist"),
-        ("dr.atieno@mama.africa", "Dr. Mary Atieno", "Mombasa", "Certified Lactation Consultant"),
-        ("dr.kariuki@mama.africa", "Dr. James Kariuki", "Eldoret", "Pelvic Health Physiotherapist"),
-        ("dr.mwende@mama.africa", "Dr. Grace Mwende", "Machakos", "High-Risk Pregnancy Specialist"),
-        ("dr.otieno@mama.africa", "Dr. John Otieno", "Kisii", "Neonatologist (Newborn Care)"),
-        ("dr.nancy@mama.africa", "Dr. Nancy Gikonyo", "Meru", "Midwife and Maternal Educator"),
-        ("dr.chebet@mama.africa", "Dr. Alice Chebet", "Kericho", "Traditional and Modern Maternal Care Expert"),
+    specialists_data = [
+        {
+            "email": "dr.ouma@mama.africa",
+            "full_name": "Dr. Auma Odhiambo",
+            "region": "Kisumu",
+            "speciality": "Maternal-Fetal Medicine Specialist",
+            "profile_picture": "https://i.pinimg.com/736x/97/96/0f/97960f9d817738d322a6b1b02f05c6b7.jpg"
+        },
+        {
+            "email": "dr.njeri@mama.africa",
+            "full_name": "Dr. Wanjiru Njeri",
+            "region": "Nyeri",
+            "speciality": "Obstetrician-Gynecologist",
+            "profile_picture": "hhttps://i.pinimg.com/736x/a5/c8/93/a5c893f7179d55435b0e920620c010d3.jpg"
+        },
+        {
+            "email": "dr.sarah@mama.africa",
+            "full_name": "Dr. Sarah Were",
+            "region": "Nairobi",
+            "speciality": "Prenatal Nutritionist",
+            "profile_picture": "https://i.pinimg.com/736x/a9/da/1d/a9da1dea6368ebb099100f489cc37cfe.jpg"
+        },
+        {
+            "email": "dr.kimani@mama.africa",
+            "full_name": "Dr. Peter Kimani",
+            "region": "Nakuru",
+            "speciality": "Fertility Specialist",
+            "profile_picture": "https://i.pinimg.com/736x/80/6a/3d/806a3d3e057a3f061cabd1d06dfa9d89.jpg"
+        },
+        {
+            "email": "dr.atieno@mama.africa",
+            "full_name": "Dr. Mary Atieno",
+            "region": "Mombasa",
+            "speciality": "Certified Lactation Consultant",
+            "profile_picture": "https://i.pinimg.com/736x/56/26/a5/5626a56c7d6fb6880779879c72f52dc9.jpg"
+        },
+        {
+            "email": "dr.kariuki@mama.africa",
+            "full_name": "Dr. James Kariuki",
+            "region": "Eldoret",
+            "speciality": "Pelvic Health Physiotherapist",
+            "profile_picture": "hhttps://i.pinimg.com/736x/c2/70/9f/c2709f51a673bd2df3f654d524e2f675.jpg"
+        },
+        {
+            "email": "dr.mwende@mama.africa",
+            "full_name": "Dr. Grace Mwende",
+            "region": "Machakos",
+            "speciality": "High-Risk Pregnancy Specialist",
+            "profile_picture": "https://i.pinimg.com/736x/d1/c6/eb/d1c6ebab5103bbdad512f87b937572c6.jpg"
+        },
+        {
+            "email": "dr.otieno@mama.africa",
+            "full_name": "Dr. John Otieno",
+            "region": "Kisii",
+            "speciality": "Neonatologist (Newborn Care)",
+            "profile_picture": "https://i.pinimg.com/736x/f0/2c/98/f02c9840ecc8a14e3ec6c7bf2d165977.jpg"
+        },
+        {
+            "email": "dr.nancy@mama.africa",
+            "full_name": "Dr. Nancy Gikonyo",
+            "region": "Meru",
+            "speciality": "Midwife and Maternal Educator",
+            "profile_picture": "https://i.pinimg.com/736x/66/a4/46/66a44626a635eb117f81d95b6ebc9309.jpg"
+        },
+        {
+            "email": "dr.chebet@mama.africa",
+            "full_name": "Dr. Alice Chebet",
+            "region": "Kericho",
+            "speciality": "Traditional and Modern Maternal Care Expert",
+            "profile_picture": "https://i.pinimg.com/736x/a1/c7/68/a1c768cffec08a7fabe74c55297f22bc.jpg"
+        }
     ]
 
     specialist_users = []
-    specialist_profiles = []
 
-    for email, name, region, bio in specialists:
-        user = User(email=email, password_hash="hashed_specialist", role="health_pro")
+    for spec in specialists_data:
+        # Create User
+        user = User(email=spec["email"], password_hash="hashed_specialist", role="health_pro")
         db.session.add(user)
-        db.session.flush()
-        specialist_users.append(user)
-        profile = Profile(user_id=user.id, full_name=name, region=region, bio=bio)
-        specialist_profiles.append(profile)
+        db.session.flush()  # To get user.id immediately
 
-    db.session.add_all(specialist_profiles)
+        # Create Profile
+        profile = Profile(
+            user_id=user.id,
+            full_name=spec["full_name"],
+            region=spec["region"],
+            bio=spec["speciality"],
+            profile_picture=spec["profile_picture"]
+        )
+        db.session.add(profile)
+
+        specialist_users.append(user)
+
+    db.session.commit()
+
+    # 3. ARTICLES for each specialist
+    sample_articles = [
+        ("Nutrition Tips During Pregnancy", "Pregnancy"),
+        ("Managing High Blood Pressure", "Health"),
+        ("Postpartum Recovery Basics", "Postpartum"),
+        ("Preparing for Childbirth", "Pregnancy"),
+        ("Mental Health During Pregnancy", "Mental Health"),
+        ("Choosing the Right Hospital", "Healthcare"),
+        ("Early Baby Development Milestones", "Newborn Care"),
+        ("How to Boost Fertility Naturally", "Fertility"),
+    ]
+
+    articles = []
+    for specialist in specialist_users:
+        selected_articles = random.sample(sample_articles, 2)  # Pick 2 random articles
+        for title, category in selected_articles:
+            article = Article(
+                author_id=specialist.id,
+                title=title,
+                content=f"This is a helpful article about {category.lower()} authored by {specialist.profile.full_name}.",
+                category=category,
+                is_approved=True
+            )
+            articles.append(article)
+
+    db.session.add_all(articles)
     db.session.commit()
 
     # 3. MUMS
@@ -96,7 +192,7 @@ with app.app_context():
     db.session.add_all(uploads)
     db.session.commit()
 
-    # 6. POSTS
+    # 6. POSTS (Community Posts)
     post_titles = [
         ("Foods to Avoid During Pregnancy", "Avoid raw fish, unpasteurized milk, excess caffeine."),
         ("Common Signs You Need Immediate Medical Attention", "Bleeding, severe headaches, loss of fetal movement."),
@@ -120,19 +216,19 @@ with app.app_context():
     posts = []
     for idx, (title, content) in enumerate(post_titles):
         post = Post(
-            author_id=random.choice(specialist_users).id,
+            author_id=random.choice(mum_users).id,  # Posts now from Mums, because Articles will be from Doctors
             title=title,
             content=content,
-            is_medical=True,
-            is_approved=True,
-            category="health" if idx % 2 == 0 else "nutrition"
+            media_url=None
         )
         posts.append(post)
 
     db.session.add_all(posts)
     db.session.commit()
 
-    # 7. COMMENTS
+   
+
+    # 8. COMMENTS (on Posts)
     comments = []
     for post in posts:
         selected_mums = random.sample(mum_users, 3)
@@ -150,7 +246,7 @@ with app.app_context():
     db.session.add_all(comments)
     db.session.commit()
 
-    # 8. QUESTIONS
+    # 9. QUESTIONS
     questions = []
     sample_questions = [
         ("Can I fast during pregnancy?", "It depends, but consult your doctor before fasting."),
@@ -175,7 +271,7 @@ with app.app_context():
     db.session.add_all(questions)
     db.session.commit()
 
-    # 9. CLINICS
+    # 10. CLINICS
     clinics = [
         Clinic(name="MumsCare Clinic", location="Machakos", contact_info="0722123456", recommended_by=specialist_users[0].id),
         Clinic(name="Nakuru Women's Center", location="Nakuru", contact_info="0733556677", recommended_by=specialist_users[1].id),
@@ -184,8 +280,8 @@ with app.app_context():
 
     db.session.add_all(clinics)
     db.session.commit()
-    
-    # 10. Communities 
+
+    # 11. COMMUNITIES
     communities = [
         Community(name="First-time Mums Support", description="A community for first pregnancies."),
         Community(name="High-risk Pregnancy Warriors", description="Sharing journeys and support."),
@@ -196,6 +292,5 @@ with app.app_context():
 
     db.session.add_all(communities)
     db.session.commit()
-
 
     print("✅ Database seeded successfully.")

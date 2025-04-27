@@ -1,14 +1,36 @@
-import React from 'react';
-// Removed unused imports for navigation icons
-// import { ChevronRightIcon, SkipBackIcon, SkipForwardIcon } from 'lucide-react';
-// import { Footer } from '../components/Footer';
-// import { Header } from '../components/Header';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export const HealthProfessional = () => {
+  const [profile, setProfile] = useState(null);
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    // Fetch health professional profile
+    axios.get('http://localhost:5000/healthpros') // Adjust backend URL if needed
+      .then(response => {
+        if (response.data.health_professionals.length > 0) {
+          // Just pick the first health pro for now (or you can randomize)
+          setProfile(response.data.health_professionals[0]);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching health professional:", error);
+      });
+
+    // Fetch articles
+    axios.get('http://localhost:5000/articles')
+      .then(response => {
+        setArticles(response.data.articles || []);
+      })
+      .catch(error => {
+        console.error("Error fetching articles:", error);
+      });
+  }, []);
+
   return (
     <div className="bg-white flex flex-col min-h-screen w-full">
-      {/* <Header /> {/* Commented out as per your request */} 
-
+      {/* Main Section */}
       <main className="flex-1">
         {/* Profile Section */}
         <section className="container mx-auto px-6 pt-16 pb-8">
@@ -16,30 +38,36 @@ export const HealthProfessional = () => {
             {/* Profile Image */}
             <div className="w-[334px] h-[249px] rounded-[80px] overflow-hidden">
               <img
-                src="https://images.pexels.com/photos/5407206/pexels-photo-5407206.jpeg?auto=compress&cs=tinysrgb&w=350"
+                src="https://i.pinimg.com/736x/97/96/0f/97960f9d817738d322a6b1b02f05c6b7.jpg"
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
             </div>
 
             {/* Profile Details */}
-            <div className="flex flex-col gap-6">
-              <div className="font-montserrat font-normal text-black text-[40px]">
-                Speciality: Midwife
+            {profile ? (
+              <div className="flex flex-col gap-6">
+                <div className="font-montserrat font-normal text-black text-[40px]">
+                  Speciality: {profile.bio || "Health Specialist"}
+                </div>
+                <div className="font-montserrat font-normal text-black text-[40px]">
+                  Region: {profile.region}
+                </div>
+                <div className="font-montserrat font-medium text-green text-[40px]">
+                  Verified
+                </div>
               </div>
-              <div className="font-montserrat font-normal text-black text-[40px]">
-                License No: MOH123456
-              </div>
-              <div className="font-montserrat font-medium text-green text-[40px]">
-                Verified
-              </div>
-            </div>
+            ) : (
+              <div>Loading profile...</div>
+            )}
           </div>
 
           {/* Name */}
-          <h1 className="font-montserrat font-medium text-black text-[40px] mt-6">
-            Nasaba Bora
-          </h1>
+          {profile && (
+            <h1 className="font-montserrat font-medium text-black text-[40px] mt-6">
+              {profile.full_name}
+            </h1>
+          )}
         </section>
 
         {/* Published Articles Section */}
@@ -49,20 +77,24 @@ export const HealthProfessional = () => {
               Published Articles
             </h2>
 
-            <div className="flex flex-row gap-12 justify-center">
-              {[1, 2].map((id) => (
-                <div
-                  key={id}
-                  className="w-[298px] h-[270px] bg-white rounded-[60px] flex items-center justify-center"
-                >
-                  <span className="font-montserrat font-normal text-black text-5xl">
-                    Article {id}
-                  </span>
-                </div>
-              ))}
+            <div className="flex flex-row gap-12 justify-center flex-wrap">
+              {articles.length > 0 ? (
+                articles.map((article, index) => (
+                  <div
+                    key={index}
+                    className="w-[298px] h-[270px] bg-white rounded-[60px] flex flex-col items-center justify-center p-4 text-center shadow-md"
+                  >
+                    <span className="font-montserrat font-normal text-black text-2xl">
+                      {article.title}
+                    </span>
+                    <p className="text-gray-500 text-sm mt-2">{article.category}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No articles published yet.</p>
+              )}
             </div>
           </div>
-          {/* Removed navigation arrows */}
         </section>
 
         {/* New Articles Section */}
@@ -87,11 +119,8 @@ export const HealthProfessional = () => {
               </div>
             </div>
           </div>
-          {/* Removed right arrow */}
         </section>
       </main>
-
-      {/* <Footer /> {/* Commented out as per your request */}
     </div>
   );
 };

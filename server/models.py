@@ -1,38 +1,42 @@
-# from app import db
+# models.py
+
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 db = SQLAlchemy()
- 
+
+
+# User Management
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    
-    #hashing the password
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
     role = db.Column(db.String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Password handling
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     # Relationships
     profile = db.relationship("Profile", backref="user", uselist=False)
     pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False)
     uploads = db.relationship("MedicalUpload", backref="user", lazy=True)
     posts = db.relationship("Post", backref="author", lazy=True)
+    articles = db.relationship("Article", backref="author", lazy=True)
     comments = db.relationship("Comment", backref="user", lazy=True)
     reminders = db.relationship("Reminder", backref="user", lazy=True)
     questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', lazy=True)
     answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', lazy=True)
     clinics = db.relationship("Clinic", backref="recommender", lazy=True)
 
+
+# Profile & Pregnancy
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -50,6 +54,8 @@ class PregnancyDetail(db.Model):
     current_week = db.Column(db.Integer)
     pregnancy_status = db.Column(db.String(50))  # 'active', 'completed'
 
+
+# Uploads
 class MedicalUpload(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -58,26 +64,43 @@ class MedicalUpload(db.Model):
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
 
+
+# Content Models
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'), nullable=True)  # optional
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
     media_url = db.Column(db.String(200))
-    is_medical = db.Column(db.Boolean, default=False)
-    is_approved = db.Column(db.Boolean, default=False)
-    category = db.Column(db.String(100))  # e.g., nutrition, mental_health
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     comments = db.relationship("Comment", backref="post", lazy=True)
 
+class Article(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Health professional
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    media_url = db.Column(db.String(200))  # Optional: video, images
+    category = db.Column(db.String(100))   # e.g., Nutrition, Mental Health, Exercise
+    is_approved = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    comments = db.relationship("Comment", backref="article", lazy=True)
+
+
+# Comment Model (supports both Posts and Articles)
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=True)
     content = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+# Reminders
 class Reminder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -85,6 +108,7 @@ class Reminder(db.Model):
     reminder_date = db.Column(db.DateTime)
     type = db.Column(db.String(50))  # 'checkup', 'scan', etc.
 
+# Questions
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -92,15 +116,22 @@ class Question(db.Model):
     is_anonymous = db.Column(db.Boolean, default=False)
     answered_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     answer_text = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+# Clinics
 class Clinic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150))
     location = db.Column(db.String(150))
     contact_info = db.Column(db.String(150))
     recommended_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
+
+# Communities
 class Community(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
+
+    posts = db.relationship('Post', backref='community', lazy=True)

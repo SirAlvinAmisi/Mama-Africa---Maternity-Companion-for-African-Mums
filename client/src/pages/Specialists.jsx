@@ -1,135 +1,120 @@
-// CombinedCommunityPage.js
+// src/pages/Specialists.jsx
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Specialists = () => {
-
   const [specialists, setSpecialists] = useState([]);
   const [currentSpecialistIndex, setCurrentSpecialistIndex] = useState(0);
-  
-
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [articles, setArticles] = useState([]);
-  
-
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSpecialists = async () => {
       try {
-
-        const specialistsRes = await fetch('/api/specialists');
-        const specialistsData = await specialistsRes.json();
-        setSpecialists(specialistsData);
-
-
-        const categoriesRes = await fetch('/api/categories');
-        const categoriesData = await categoriesRes.json();
-        setCategories(categoriesData);
-
+        const response = await axios.get('http://localhost:5000/healthpros'); 
+        setSpecialists(response.data.specialists || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching specialists:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchSpecialists();
   }, []);
 
-
-  useEffect(() => {
-    if (!selectedCategory) return;
-    
-    const fetchArticles = async () => {
-      try {
-        const res = await fetch(`/api/articles?category=${selectedCategory}`);
-        const data = await res.json();
-        setArticles(data);
-      } catch (error) {
-        console.error('Error fetching articles:', error);
-      }
-    };
-
-    fetchArticles();
-  }, [selectedCategory]);
-
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600 text-2xl">Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="specialists-page">
-      <div className="specialist-profile">
-        <h2 className="profile-heading">Profile</h2>
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Top Profile Carousel */}
+      <section className="flex flex-col items-center justify-center bg-cyan-100 py-12 px-4">
+        <h2 className="text-4xl font-bold text-cyan-700 mb-6">Featured Specialist</h2>
+
         {specialists.length > 0 && (
-          <div className="profile-card">
-            <button className="left-button" onClick={() => 
-              setCurrentSpecialistIndex(prev => (prev - 1 + specialists.length) % specialists.length)
-            }>
+          <div className="flex items-center gap-8">
+            <button
+              onClick={() =>
+                setCurrentSpecialistIndex(
+                  (prev) => (prev - 1 + specialists.length) % specialists.length
+                )
+              }
+              className="text-3xl text-cyan-700"
+            >
               ⬅️
             </button>
-            <img
-              className="profile-image"
-              src={specialists[currentSpecialistIndex]?.profile_picture}
-              alt="Profile"
-            />
-            <div>
-              <h3 className="profile-name">{specialists[currentSpecialistIndex]?.name}</h3>
-              <p className="specialist-speciality">{specialists[currentSpecialistIndex]?.speciality}</p>
-              <button className="specialist-card-btn">Consult</button>
+
+            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-md max-w-md">
+              <img
+                src={specialists[currentSpecialistIndex].profile_picture || 'https://via.placeholder.com/150'}
+                alt="Profile"
+                className="w-40 h-40 rounded-full object-cover mb-4"
+              />
+              <h3 className="text-2xl font-semibold text-gray-800">{specialists[currentSpecialistIndex].full_name}</h3>
+              <p className="text-gray-500 mb-2">{specialists[currentSpecialistIndex].speciality}</p>
+              <button className="bg-cyan-600 text-white rounded-full px-6 py-2 mt-4 hover:bg-cyan-700">
+                Consult
+              </button>
             </div>
-            <button className="right-button" onClick={() => 
-              setCurrentSpecialistIndex(prev => (prev + 1) % specialists.length)
-            }>
+
+            <button
+              onClick={() =>
+                setCurrentSpecialistIndex(
+                  (prev) => (prev + 1) % specialists.length
+                )
+              }
+              className="text-3xl text-cyan-700"
+            >
               ➡️
             </button>
           </div>
         )}
-      </div>
-      <div className="specialists-list">
-        <h1>Meet Mama Africa Specialists</h1>
-        <div className="all-specialists-card">
+      </section>
+
+      {/* All Specialists Grid */}
+      <section className="py-16 px-8 bg-gray-50">
+        <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Meet Our Specialists</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {specialists.map((specialist, index) => (
-            <div className='specialist-card' key={index}>
-              <img 
-                className='specialist-card-image' 
-                src={specialist.profile_picture} 
-                alt='Profile'
+            <div key={index} className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
+              <img
+                src={specialist.profile_picture || 'https://via.placeholder.com/150'}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover mb-4"
               />
-              <h2 className='specialist-card-title'>{specialist.name}</h2>
-              <p className='specialist-card-speciality'>{specialist.speciality}</p>
-              <button className='specialist-card-btn'>Consult</button>
+              <h3 className="text-xl font-semibold text-gray-800">{specialist.full_name}</h3>
+              <p className="text-gray-500 text-center">{specialist.speciality}</p>
+              <button className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700">
+                Consult
+              </button>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="articles-section">
-        <h2 className="category-heading">Articles</h2>
-        <div className="category-list">
-          {categories.map((category, index) => (
-            <button 
-              key={index} 
-              className={`category-button ${selectedCategory === category ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-        <div className="articles-list">
-          {articles.length > 0 ? (
-            articles.map((article, index) => (
-              <div key={index} className="article-card">
-                <h3>{article.title}</h3>
-                <p>{article.description}</p>
+      {/* Specialist Articles */}
+      <section className="py-16 px-8">
+        <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Articles by {specialists[currentSpecialistIndex]?.full_name}</h2>
+
+        {specialists[currentSpecialistIndex]?.articles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {specialists[currentSpecialistIndex].articles.map((article, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-2xl font-semibold text-gray-800 mb-2">{article.title}</h3>
+                <p className="text-gray-600">{article.category}</p>
               </div>
-            ))
-          ) : (
-            <p>Select a category to view articles</p>
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 text-xl">No articles published yet.</p>
+        )}
+      </section>
     </div>
   );
 };

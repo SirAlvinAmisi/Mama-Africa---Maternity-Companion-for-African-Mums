@@ -1,17 +1,33 @@
 // src/pages/Home.jsx
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 export default function Home() {
-  const [featuredMum, setFeaturedMum] = useState(null);
+  const [featuredMums, setFeaturedMums] = useState([]);
 
   useEffect(() => {
-    // Fetch profiles (only mums) from backend
-    axios.get('/profile')
+    axios.get('http://localhost:5000/profile')  // Adjust your backend URL if needed
       .then(response => {
-        const mums = response.data.users.filter(user => user.bio && user.bio.toLowerCase().includes("mum"));
-        const randomMum = mums[Math.floor(Math.random() * mums.length)];
-        setFeaturedMum(randomMum);
+        const mums = response.data.users.filter(user => 
+          user.bio && (
+            user.bio.toLowerCase().includes("mum") ||
+            user.bio.toLowerCase().includes("pregnancy") ||
+            user.bio.toLowerCase().includes("expecting") ||
+            user.bio.toLowerCase().includes("mother")
+          )
+        );
+        if (mums.length > 0) {
+          const randomMums = [];
+          while (randomMums.length < 3 && mums.length > 0) {
+            const randomIndex = Math.floor(Math.random() * mums.length);
+            randomMums.push(mums.splice(randomIndex, 1)[0]);
+          }
+          setFeaturedMums(randomMums);
+        }
       })
       .catch(error => {
         console.error("Error fetching profiles:", error);
@@ -28,24 +44,42 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Meet Mama Africa Section */}
-      {featuredMum && (
-        <section className="flex flex-col md:flex-row items-center justify-center py-16 px-6 gap-12">
-          {/* Mum's Photo */}
-          <div className="w-64 h-64 bg-cyan-200 rounded-full overflow-hidden shadow-md">
-            <img
-              src="https://source.unsplash.com/featured/?african,woman,motherhood"
-              alt="Mum"
-              className="object-cover w-full h-full"
-            />
-          </div>
+      {/* Meet Mama Afrika Section */}
+      {featuredMums.length > 0 && (
+        <section className="py-16 px-6 bg-cyan-50">
+          <h2 className="text-3xl font-bold text-cyan-700 text-center mb-8">Meet Our Mamas</h2>
 
-          {/* Mum's Details */}
-          <div className="flex flex-col items-start text-left max-w-md">
-            <h2 className="text-3xl font-bold text-cyan-700 mb-2">Meet {featuredMum.full_name}</h2>
-            <p className="text-gray-600 mb-2"><strong>Region:</strong> {featuredMum.region}</p>
-            <p className="text-gray-600"><strong>About:</strong> {featuredMum.bio}</p>
-          </div>
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            spaceBetween={30}
+            slidesPerView={1}
+            autoplay={{
+              delay: 3000,
+              disableOnInteraction: false,
+            }}
+            loop={true}
+            pagination={{ clickable: true }}
+          >
+            {featuredMums.map((mum, index) => (
+              <SwiperSlide key={index}>
+                <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+                  {/* Mum's Photo */}
+                  <div className="w-48 h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
+                    <img
+                      src="https://source.unsplash.com/featured/?african,motherhood"
+                      alt={`Featured Mum ${index}`}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+
+                  {/* Mum's Details */}
+                  <h3 className="text-2xl font-semibold text-cyan-700 mb-2">{mum.full_name}</h3>
+                  <p className="text-gray-600 mb-1"><strong>Region:</strong> {mum.region}</p>
+                  <p className="text-gray-600 text-center"><strong>Story:</strong> {mum.bio}</p>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </section>
       )}
     </div>

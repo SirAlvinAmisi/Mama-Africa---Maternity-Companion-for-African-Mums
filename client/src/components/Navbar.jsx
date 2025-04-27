@@ -7,15 +7,16 @@ const Navbar = () => {
       <div className="container mx-auto flex justify-between items-center p-4">
         {/* Logo */}
         <div className="text-2xl font-bold text-black">
-          Mama Afrika
+          Mama 🌍frika
         </div>
 
         {/* Navigation Links */}
         <div className="flex gap-6 text-black font-medium">
           <Link to="/" className="hover:text-cyan-600 transition-colors duration-300">Home</Link>
-          <Link to="/health-professional" className="hover:text-cyan-600 transition-colors duration-300">Specialists</Link>
+          <Link to="/specialists" className="hover:text-cyan-600 transition-colors duration-300">Specialists</Link>
           <Link to="/communities" className="hover:text-cyan-600 transition-colors duration-300">Communities</Link>
-          <Link to="/login" className="hover:text-cyan-600 transition-colors duration-300">Login | Signup</Link>
+          <Link to="/signup" className="hover:text-cyan-600 transition-colors duration-300">Signup</Link>
+          <Link to="/login" className="hover:text-cyan-600 transition-colors duration-300">Login</Link>
         </div>
       </div>
     </nav>

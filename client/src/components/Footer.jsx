@@ -1,80 +1,42 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
-  const footerStyle = {
-    backgroundColor: '#e6f7ff',
-    padding: '2rem',
-    width: '100%',
-    bottom: 0,
-    position: 'relative'
-    
-  };
-
-  const footerContentStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    flexWrap: 'wrap'
-  };
-
-  const columnStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.8rem',
-    minWidth: '200px',
-    margin: '0 1rem 1rem 0'
-  };
-
-  const linkStyle = {
-    textDecoration: 'none',
-    color: '#333',
-    fontSize: '0.9rem'
-  };
-
-  const copyrightStyle = {
-    textAlign: 'center',
-    marginTop: '2rem',
-    fontSize: '0.8rem',
-    color: '#666'
-  };
-
-  const socialIconsStyle = {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '1rem',
-    marginTop: '1rem'
-  };
-
   return (
-    <footer style={footerStyle}>
-      <div style={footerContentStyle}>
-        <div style={columnStyle}>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Home</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Specialist</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Communities</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>About Us</a>
+    <footer className="bg-cyan-100 p-8 w-full relative">
+      <div className="flex justify-between max-w-screen-xl mx-auto flex-wrap">
+        
+        <div className="flex flex-col gap-2 min-w-[200px] mr-4 mb-4">
+          <Link to="/" className="text-gray-800 text-sm hover:underline">Home</Link>
+          <Link to="/specialists" className="text-gray-800 text-sm hover:underline">Specialist</Link>
+          <Link to="/communities" className="text-gray-800 text-sm hover:underline">Communities</Link>
+          <Link to="/about" className="text-gray-800 text-sm hover:underline">About Us</Link>
         </div>
-        <div style={columnStyle}>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Community Guidelines</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Data Privacy Policy</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Help Center</a>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Popular Topics</a>
+
+        <div className="flex flex-col gap-2 min-w-[200px] mr-4 mb-4">
+          <Link to="/community-guidelines" className="text-gray-800 text-sm hover:underline">Community Guidelines</Link>
+          <Link to="/privacy" className="text-gray-800 text-sm hover:underline">Data Privacy Policy</Link>
+          <Link to="/help-center" className="text-gray-800 text-sm hover:underline">Help Center</Link>
+          <Link to="/popular-topics" className="text-gray-800 text-sm hover:underline">Popular Topics</Link>
         </div>
-        <div style={columnStyle}>
-          <a href="#" style={linkStyle} onClick={(e) => e.preventDefault()}>Terms & Conditions</a>
-          <div style={linkStyle}>info@mamaafrika.com</div>
+
+        <div className="flex flex-col gap-2 min-w-[200px] mb-4">
+          <Link to="/terms" className="text-gray-800 text-sm hover:underline">Terms & Conditions</Link>
+          <div className="text-gray-800 text-sm">info@mamaafrika.com</div>
         </div>
+
       </div>
-      <div style={socialIconsStyle}>
-        {/* Placeholder for social media icons */}
-        <div style={{width: '30px', height: '30px', backgroundColor: '#ddd', borderRadius: '50%'}}></div>
-        <div style={{width: '30px', height: '30px', backgroundColor: '#ddd', borderRadius: '50%'}}></div>
-        <div style={{width: '30px', height: '30px', backgroundColor: '#ddd', borderRadius: '50%'}}></div>
+
+      <div className="flex justify-center gap-4 mt-4">
+        {/* Placeholder social icons */}
+        <div className="w-[30px] h-[30px] bg-gray-300 rounded-full"></div>
+        <div className="w-[30px] h-[30px] bg-gray-300 rounded-full"></div>
+        <div className="w-[30px] h-[30px] bg-gray-300 rounded-full"></div>
       </div>
-      <div style={copyrightStyle}>
-        <p>Mama Afrika. All rights reserved.</p>
-        <p>Mama Afrika is designed for educational purposes only. Consult with a medical professional if you have health concerns.</p>
+
+      <div className="text-center mt-8 text-xs text-gray-500">
+        <p>Mama 🌍frika. All rights reserved.</p>
+        <p>Mama 🌍frika is designed for educational purposes only. Consult with a medical professional if you have health concerns.</p>
       </div>
     </footer>
   );

@@ -63,18 +63,26 @@ def create_app():
 
     # Health Professionals 
     @app.route('/healthpros', methods=['GET'])
-    def list_health_pros():
-        health_pros = Profile.query.join(User).filter(User.role == 'health_pro').all()
-        return {
-            "health_professionals": [
-                {
-                    "id": prof.id,
-                    "full_name": prof.full_name,
-                    "region": prof.region,
-                    "bio": prof.bio
-                } for prof in health_pros
-            ]
-        }
+    def get_healthpros():
+        specialists = User.query.filter_by(role='health_pro').all()
+        results = []
+        for specialist in specialists:
+            profile = specialist.profile
+            results.append({
+                "id": specialist.id,
+                "full_name": profile.full_name,
+                "speciality": profile.bio,
+                "region": profile.region,
+                "profile_picture": profile.profile_picture,
+                "articles": [
+                    {
+                        "title": article.title,
+                        "category": article.category
+                    } for article in specialist.posts if article.is_medical and article.is_approved
+                ]
+            })
+        return jsonify({"specialists": results})
+
     
     # Communities
     @app.route('/communities', methods=['GET'])
@@ -149,6 +157,22 @@ def create_app():
                     "user_id": comment.user_id,
                     "content": comment.content
                 } for comment in comments
+            ]
+        }
+    
+    @app.route('/articles', methods=['GET'])
+    def get_articles():
+        articles = Article.query.filter_by(is_approved=True).all()
+        return {
+            "articles": [
+                {
+                    "id": article.id,
+                    "title": article.title,
+                    "content": article.content,
+                    "category": article.category,
+                    "created_at": article.created_at,
+                    "author_id": article.author_id
+                } for article in articles
             ]
         }
     
@@ -233,7 +257,16 @@ def create_app():
     def add_category():
         data = request.get_json()
         return jsonify({"message": f"Category '{data['category']}' recorded (stub)"}), 200
-
+    
+    #Admin to approve Articles
+    @app.route('/admin/approve_article/<int:article_id>', methods=['POST'])
+    @role_required("admin")
+    def approve_article(article_id):
+        article = Article.query.get_or_404(article_id)
+        article.is_approved = True
+        db.session.commit()
+        return jsonify({"message": "Article approved"}), 200
+    
     # Health Professionals Registration 
     @app.route('/healthpros/register', methods=['POST'])
     def register_health_pro():
@@ -260,11 +293,16 @@ def create_app():
     def health_pro_article():
         data = request.get_json()
         identity = get_jwt_identity()
-        post = Post(author_id=identity['id'], title=data['title'], content=data['content'],
-                    category=data['category'], is_medical=True)
-        db.session.add(post)
+        article = Article(
+            author_id=identity['id'],
+            title=data['title'],
+            content=data['content'],
+            category=data['category'],
+            is_approved=False  # Articles must be approved first
+        )
+        db.session.add(article)
         db.session.commit()
-        return jsonify({"message": "Article submitted"}), 201
+        return jsonify({"message": "Article submitted for approval"}), 201
     
     # Health Professionals Answer questions
     @app.route('/healthpros/answers', methods=['POST'])
@@ -372,8 +410,12 @@ def create_app():
     @app.route('/mums/content', methods=['GET'])
     @role_required("mum")
     def view_content():
-        posts = Post.query.filter_by(is_approved=True).all()
-        return {"posts": [{"title": p.title, "content": p.content, "category": p.category} for p in posts]}
+        posts = Post.query.all()
+        articles = Article.query.filter_by(is_approved=True).all()
+        return {
+            "posts": [{"title": p.title, "content": p.content} for p in posts],
+            "articles": [{"title": a.title, "content": a.content, "category": a.category} for a in articles]
+    }
 
     return app
 
