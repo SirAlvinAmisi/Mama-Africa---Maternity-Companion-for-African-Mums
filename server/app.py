@@ -61,6 +61,36 @@ def create_app():
             ]
         }
 
+    # Health Professionals 
+    @app.route('/healthpros', methods=['GET'])
+    def list_health_pros():
+        health_pros = Profile.query.join(User).filter(User.role == 'health_pro').all()
+        return {
+            "health_professionals": [
+                {
+                    "id": prof.id,
+                    "full_name": prof.full_name,
+                    "region": prof.region,
+                    "bio": prof.bio
+                } for prof in health_pros
+            ]
+        }
+    
+    # Communities
+    @app.route('/communities', methods=['GET'])
+    def get_communities():
+        communities = Community.query.all()
+        return {
+            "communities": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "description": c.description
+                } for c in communities
+            ]
+        }
+    
+
     # all clinics
     @app.route('/clinics')
     def get_clinics():

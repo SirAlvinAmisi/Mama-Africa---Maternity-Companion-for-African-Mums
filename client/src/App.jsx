@@ -4,11 +4,11 @@ import Home from './pages/Home';
 import About from './pages/About'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-// import LoginSignup from './components/Login|SignUp'
-// import { HealthProfessional } from './pages/HealthProfessional';
-// import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
-// import { Privacy } from './pages/Privacy';
-// import { Terms } from './pages/Terms';
+import LoginSignup from './components/Login|SignUp'
+import { HealthProfessional } from './pages/HealthProfessional';
+import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
+import { Privacy } from './pages/Privacy';
+import { Terms } from './pages/Terms';
 
 function NotFound() {
   return (
