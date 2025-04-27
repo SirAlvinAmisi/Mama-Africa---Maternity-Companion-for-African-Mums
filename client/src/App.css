@@ -1,3 +1,8 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* .all-specialists-card {
     background-color: #b2ebf2; 
     border-radius: 20px; 
