@@ -99,3 +99,8 @@ class Clinic(db.Model):
     location = db.Column(db.String(150))
     contact_info = db.Column(db.String(150))
     recommended_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+class Community(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
