@@ -39,34 +39,57 @@ const About = () => {
       </section>
 
       {/* Our Team */}
-      <section className="mb-12">
-        <h2 className="text-cyan-700 text-2xl font-semibold mb-4">Our Team</h2>
-        <p>
-          Mama Afrika is brought to you by a dedicated team of healthcare professionals, 
-          community advocates, and technology experts passionate about maternal health.
-        </p>
+{/* Our Team */}
+<section className="mb-12">
+  <h2 className="text-cyan-700 text-2xl font-semibold mb-4">Our Team</h2>
+  <p>
+    Mama Afrika is built by a visionary team of founders and developers, each bringing unique leadership, creativity, and passion to empower mothers through technology and community.
+  </p>
 
-        <div className="flex flex-wrap justify-center gap-8 mt-8">
-          {/* Team member placeholders */}
-          <div className="w-48 text-center">
-            <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Fadilatu Amana</h3>
-            <p className="text-sm text-gray-600">Founder & CEO</p>
-          </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
+    {/* Alvin Amisi */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Alvin Amisi</h3>
+      <p className="text-sm text-gray-600">Chief Executive Officer (CEO)</p>
+    </div>
 
-          <div className="w-48 text-center">
-            <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Dr. Sarah Mensah</h3>
-            <p className="text-sm text-gray-600">Medical Director</p>
-          </div>
+    {/* Sayfudin Sheikh */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Sayfudin Sheikh</h3>
+      <p className="text-sm text-gray-600">Chief Financial Officer (CFO)</p>
+    </div>
 
-          <div className="w-48 text-center">
-            <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Kofi Adetokunbo</h3>
-            <p className="text-sm text-gray-600">Community Lead</p>
-          </div>
-        </div>
-      </section>
+    {/* Mwangi Martha */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Mwangi Martha</h3>
+      <p className="text-sm text-gray-600">Chief Operations Officer (COO)</p>
+    </div>
+
+    {/* Margaret Gathoni */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Margaret Gathoni</h3>
+      <p className="text-sm text-gray-600">Head of Innovation & Creativity</p>
+    </div>
+
+    {/* Damaris Ngari */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Damaris Ngari</h3>
+      <p className="text-sm text-gray-600">Director of Community Engagement (DCE)</p>
+    </div>
+
+    {/* Dennis Kipsang */}
+    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
+      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <h3 className="font-semibold text-lg">Dennis Kipsang</h3>
+      <p className="text-sm text-gray-600">Chief Technology Officer (CTO)</p>
+    </div>
+  </div>
+</section>
 
       {/* Join Community */}
       <section className="mb-12">
