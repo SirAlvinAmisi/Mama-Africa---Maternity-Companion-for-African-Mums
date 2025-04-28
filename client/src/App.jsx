@@ -14,6 +14,15 @@ import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
+import MomLayout         from './components/MomLayout';
+import MomRegister       from './pages/MomRegister';
+import MomProfile        from './pages/MomProfile';
+import MomPregnancy      from './pages/MomPregnancy';
+import MomDevelopment    from './pages/MomDevelopment';
+import MomReminders      from './pages/MomReminders';
+import MomUploadScan     from './pages/MomUploadScan';
+import MomAskQuestion    from './pages/MomAskQuestion';
+import MomContent        from './pages/MomContent';
 
 function NotFound() {
   return (
