@@ -29,6 +29,9 @@ import MomContent     from './pages/MomContent';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
 
+
+
+
 function NotFound() {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-white">
