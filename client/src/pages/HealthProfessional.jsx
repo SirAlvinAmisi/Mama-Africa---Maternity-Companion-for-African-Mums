@@ -1,32 +1,40 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom'; // Needed to get the :id from URL
 import axios from 'axios';
 
 export const HealthProfessional = () => {
+  const { id } = useParams(); // Get id from URL
   const [profile, setProfile] = useState(null);
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch health professional profile
-    axios.get('http://localhost:5000/healthpros') // Adjust backend URL if needed
-      .then(response => {
-        if (response.data.health_professionals.length > 0) {
-          // Just pick the first health pro for now (or you can randomize)
-          setProfile(response.data.health_professionals[0]);
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching health professional:", error);
-      });
+    const fetchProfileAndArticles = async () => {
+      try {
+        // Fetch specific health professional profile by ID
+        const profileResponse = await axios.get(`http://localhost:5000/healthpros/${id}`);
+        setProfile(profileResponse.data.health_professional);
 
-    // Fetch articles
-    axios.get('http://localhost:5000/articles')
-      .then(response => {
-        setArticles(response.data.articles || []);
-      })
-      .catch(error => {
-        console.error("Error fetching articles:", error);
-      });
-  }, []);
+        // Fetch only articles authored by this professional
+        const articlesResponse = await axios.get(`http://localhost:5000/articles/author/${id}`);
+        setArticles(articlesResponse.data.articles || []);
+      } catch (error) {
+        console.error('Error fetching profile or articles:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileAndArticles();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600 text-2xl">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white flex flex-col min-h-screen w-full">
@@ -38,8 +46,8 @@ export const HealthProfessional = () => {
             {/* Profile Image */}
             <div className="w-[334px] h-[249px] rounded-[80px] overflow-hidden">
               <img
-                src="https://i.pinimg.com/736x/97/96/0f/97960f9d817738d322a6b1b02f05c6b7.jpg"
-                alt="Profile"
+                src={profile?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Profile')}`}
+                alt={profile?.full_name || 'Profile'}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -48,7 +56,7 @@ export const HealthProfessional = () => {
             {profile ? (
               <div className="flex flex-col gap-6">
                 <div className="font-montserrat font-normal text-black text-[40px]">
-                  Speciality: {profile.bio || "Health Specialist"}
+                  Speciality: {profile.speciality || "Health Specialist"}
                 </div>
                 <div className="font-montserrat font-normal text-black text-[40px]">
                   Region: {profile.region}
@@ -91,35 +99,12 @@ export const HealthProfessional = () => {
                   </div>
                 ))
               ) : (
-                <p>No articles published yet.</p>
+                <p className="text-gray-500 text-xl">No articles published yet.</p>
               )}
             </div>
           </div>
         </section>
 
-        {/* New Articles Section */}
-        <section className="w-full max-w-[930px] mx-auto my-8 bg-cards-color rounded-[20px] p-8">
-          <div className="flex flex-col items-center">
-            <h2 className="font-inria font-bold text-[#665e5e] text-5xl mb-6">
-              New Articles
-            </h2>
-
-            <div className="w-full max-w-[681px] bg-white rounded-[60px] p-8">
-              <div className="flex flex-col items-center pt-6">
-                <p className="font-montserrat font-light text-black text-5xl mb-8">
-                  Write new article
-                </p>
-                <div className="flex justify-end w-full">
-                  <button className="bg-blue-button hover:bg-blue-button/90 rounded-[30px] h-[59px] px-10">
-                    <span className="font-inria font-bold text-white text-4xl">
-                      Post
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );

@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
@@ -84,6 +85,30 @@ def create_app():
         return jsonify({"specialists": results})
 
     
+    # Get a single health professional by ID
+    @app.route('/healthpros/<int:id>', methods=['GET'])
+    def get_healthpro_by_id(id):
+        specialist = User.query.filter_by(id=id, role='health_pro').first()
+        if not specialist:
+            return jsonify({"error": "Health professional not found"}), 404
+
+        profile = specialist.profile
+        result = {
+            "id": specialist.id,
+            "full_name": profile.full_name,
+            "speciality": profile.bio,
+            "region": profile.region,
+            "profile_picture": profile.profile_picture,
+            "articles": [
+                {
+                    "title": article.title,
+                    "category": article.category
+                } for article in specialist.posts if article.is_medical and article.is_approved
+            ]
+        }
+        return jsonify({"health_professional": result})
+
+    
     # Communities
     @app.route('/communities', methods=['GET'])
     def get_communities():
@@ -160,9 +185,18 @@ def create_app():
             ]
         }
     
+    # all articles
     @app.route('/articles', methods=['GET'])
     def get_articles():
-        articles = Article.query.filter_by(is_approved=True).all()
+        limit = request.args.get('limit', default=None, type=int)
+
+        query = Article.query.filter_by(is_approved=True).order_by(desc(Article.created_at))
+        
+        if limit:
+            articles = query.limit(limit).all()
+        else:
+            articles = query.all()
+
         return {
             "articles": [
                 {
@@ -175,7 +209,25 @@ def create_app():
                 } for article in articles
             ]
         }
-    
+
+    # Articles by specific author
+    @app.route('/articles/author/<int:author_id>', methods=['GET'])
+    def get_articles_by_author(author_id):
+        articles = Article.query.filter_by(author_id=author_id, is_approved=True).all()
+        return {
+            "articles": [
+                {
+                    "id": article.id,
+                    "title": article.title,
+                    "content": article.content,
+                    "category": article.category,
+                    "created_at": article.created_at,
+                    "author_id": article.author_id
+                } for article in articles
+            ]
+        }
+
+
     # ========= Authentication and User Management ================
     # Signup
     @app.route('/signup', methods=['POST'])

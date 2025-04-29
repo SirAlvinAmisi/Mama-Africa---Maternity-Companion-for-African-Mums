@@ -26,7 +26,7 @@ with app.app_context():
             "full_name": "Dr. Wanjiru Njeri",
             "region": "Nyeri",
             "speciality": "Obstetrician-Gynecologist",
-            "profile_picture": "hhttps://i.pinimg.com/736x/a5/c8/93/a5c893f7179d55435b0e920620c010d3.jpg"
+            "profile_picture": "https://i.pinimg.com/736x/a5/c8/93/a5c893f7179d55435b0e920620c010d3.jpg"
         },
         {
             "email": "dr.sarah@mama.africa",
@@ -54,7 +54,7 @@ with app.app_context():
             "full_name": "Dr. James Kariuki",
             "region": "Eldoret",
             "speciality": "Pelvic Health Physiotherapist",
-            "profile_picture": "hhttps://i.pinimg.com/736x/c2/70/9f/c2709f51a673bd2df3f654d524e2f675.jpg"
+            "profile_picture": "https://i.pinimg.com/736x/c2/70/9f/c2709f51a673bd2df3f654d524e2f675.jpg"
         },
         {
             "email": "dr.mwende@mama.africa",
