@@ -15,7 +15,7 @@ import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
-
+import { ArticleDetail } from './components/articles/ArticleDetail';
 import MomLayout      from './components/Momlayout';
 import MomRegister    from './pages/MomRegister';
 import MomProfile     from './pages/MomProfile';
@@ -47,6 +47,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/specialists" element={<Specialists />} />
             <Route path="/specialist/:id" element={<HealthProfessional />} />
+            <Route path="/article/:id" element={<ArticleDetail />} />
             {/* <Route path="/health-professional" element={<HealthProfessional />} /> */}
             <Route path="/communities" element={<Communities />} />
             <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />

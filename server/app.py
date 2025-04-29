@@ -210,7 +210,7 @@ def create_app():
             ]
         }
 
-    # Articles by specific author
+    # articles by specific author
     @app.route('/articles/author/<int:author_id>', methods=['GET'])
     def get_articles_by_author(author_id):
         articles = Article.query.filter_by(author_id=author_id, is_approved=True).all()
@@ -225,6 +225,25 @@ def create_app():
                     "author_id": article.author_id
                 } for article in articles
             ]
+        }
+
+    # specific article by ID (NEW)
+    @app.route('/articles/<int:id>', methods=['GET'])
+    def get_article_by_id(id):
+        article = Article.query.get(id)
+
+        if not article or not article.is_approved:
+            return {"error": "Article not found"}, 404
+
+        return {
+            "article": {
+                "id": article.id,
+                "title": article.title,
+                "content": article.content,
+                "category": article.category,
+                "created_at": article.created_at,
+                "author_id": article.author_id
+            }
         }
 
 
