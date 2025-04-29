@@ -15,6 +15,7 @@ import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
 
+
 function NotFound() {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-white">
