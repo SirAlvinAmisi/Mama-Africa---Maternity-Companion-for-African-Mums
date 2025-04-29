@@ -1,23 +1,35 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  return (
-    <nav className="bg-cyan-100 shadow-md sticky top-0 z-50">
-      <div className="container mx-auto flex justify-between items-center p-4">
-        {/* Logo */}
-        <div className="text-2xl font-bold text-black">
-          Mama 🌍frika
-        </div>
+  const isLoggedIn = !!localStorage.getItem('access_token'); // Check if token exists
 
-        {/* Navigation Links */}
-        <div className="flex gap-6 text-black font-medium">
-          <Link to="/" className="hover:text-cyan-600 transition-colors duration-300">Home</Link>
-          <Link to="/specialists" className="hover:text-cyan-600 transition-colors duration-300">Specialists</Link>
-          <Link to="/communities" className="hover:text-cyan-600 transition-colors duration-300">Communities</Link>
-          <Link to="/signup" className="hover:text-cyan-600 transition-colors duration-300">Signup</Link>
-          <Link to="/login" className="hover:text-cyan-600 transition-colors duration-300">Login</Link>
-        </div>
+  return (
+    <nav className="flex justify-between items-center p-4 bg-cyan-600 text-white">
+      <div className="text-2xl font-bold">
+        Mama Afrika
+      </div>
+      <div className="flex gap-4">
+        {!isLoggedIn && (
+          <>
+            <Link to="/login" className="hover:underline">Login</Link>
+            <Link to="/signup" className="hover:underline">Sign Up</Link>
+          </>
+        )}
+        {isLoggedIn && (
+          <>
+            <Link to="/profile" className="hover:underline">Profile</Link>
+            <button
+              onClick={() => {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('role');
+                window.location.href = '/login'; // Force logout and go to login
+              }}
+              className="hover:underline"
+            >
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </nav>
   );

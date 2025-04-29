@@ -9,7 +9,7 @@ function BabyCorner() {
       </h2>
 
       <img 
-        src="https://www.pinterest.com/pin/35395547063523232/" 
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZmYsjo8t1K8r6L7KO5Uqs5kLIrZ18bSwM5Qac5ROnKVOAgzL5L9s-JnvmCFMBOOkARow&usqp=CAU" 
         alt="Baby Corner" 
         className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
       />

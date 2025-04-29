@@ -1,36 +1,76 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/login', {
+        email,
+        password
+      });
+
+      const { access_token } = response.data;
+      localStorage.setItem('access_token', access_token);
+
+      // Fetch user profile
+      const userResponse = await axios.get('http://localhost:5000/me', {
+        headers: {
+          Authorization: `Bearer ${access_token}`
+        }
+      });
+
+      const user = userResponse.data;
+      console.log("Fetched user from /me:", user);
+
+      const role = user.role.toLowerCase(); // Normalize role to lowercase
+
+      // Save role in localStorage if needed later
+      localStorage.setItem('role', role);
+
+      // Navigate based on role
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'mum') {
+        navigate('/mom');
+      } else if (role === 'health_pro') {
+        navigate('/healthpro');
+      } else {
+        navigate('/'); // fallback
+      }
+
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      alert(error.response?.data?.error || "Login failed. Try again.");
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-center mb-2">Login</h2>
-      <p className="text-center text-gray-500 mb-6">Welcome back to Mama Afrika</p>
-      
-      <form className="flex flex-col gap-4">
+      <h2 className="text-3xl font-bold text-center mb-2">Login</h2>
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <input 
           type="email" 
           placeholder="Email Address" 
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="p-3 border rounded-md text-base"
         />
         <input 
           type="password" 
           placeholder="Password" 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="p-3 border rounded-md text-base"
         />
-        <button 
-          type="submit" 
-          className="p-3 bg-cyan-600 text-white rounded-md text-base hover:bg-cyan-700"
-        >
+        <button type="submit" className="p-3 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition">
           Login
         </button>
-        {/* Already have account */}
-        <p className="text-center text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-cyan-600 hover:underline font-semibold">
-            Signup
-          </Link>
-        </p>
       </form>
     </div>
   );

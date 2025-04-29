@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import Admin from './pages/Admin';
 import Home from './pages/Home';
 import About from './pages/About';
 import Navbar from './components/Navbar';
@@ -59,6 +59,7 @@ function App() {
             <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
