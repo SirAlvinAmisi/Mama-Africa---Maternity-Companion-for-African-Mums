@@ -118,11 +118,48 @@ def create_app():
                 {
                     "id": c.id,
                     "name": c.name,
-                    "description": c.description
+                    "description": c.description,
+                    "image": c.image,           
+                    "members": c.member_count,
                 } for c in communities
             ]
         }
     
+    # Get specific community details
+    @app.route('/communities/<int:id>', methods=['GET'])
+    def get_community(id):
+        community = Community.query.get(id)
+        if not community:
+            return {"error": "Community not found"}, 404
+        
+        print(f"Found community: {community.name}")  # <-- Add this for debugging!
+
+        return {
+            "community": {
+                "id": community.id,
+                "name": community.name,
+                "description": community.description,
+                "image": community.image,
+                "member_count": community.member_count
+            }
+        }
+
+
+    # Get posts for specific community
+    @app.route('/communities/<int:id>/posts', methods=['GET'])
+    def get_community_posts(id):
+        posts = Post.query.filter_by(community_id=id).all()
+        return {
+            "posts": [
+                {
+                    "id": post.id,
+                    "title": post.title,
+                    "content": post.content,
+                    "author_id": post.author_id
+                } for post in posts
+            ]
+        }
+
 
     # all clinics
     @app.route('/clinics')
@@ -180,7 +217,7 @@ def create_app():
                     "id": comment.id,
                     "post_id": comment.post_id,
                     "user_id": comment.user_id,
-                    "content": comment.content
+                    "content": comment.content,
                 } for comment in comments
             ]
         }
@@ -246,6 +283,16 @@ def create_app():
             }
         }
 
+
+    @app.route('/parenting-articles')
+    def get_parenting_articles():
+        articles = Article.query.filter_by(category='Parenting Development', is_approved=True).all()
+        return {"articles": [a.serialize() for a in articles]}
+
+    @app.route('/baby-articles')
+    def get_baby_articles():
+        articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
+        return {"articles": [a.serialize() for a in articles]}
 
     # ========= Authentication and User Management ================
     # Signup

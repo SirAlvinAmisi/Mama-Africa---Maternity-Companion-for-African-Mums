@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import Login from './components/Login';
 import Signup from './components/SignUp';
 import Communities from './pages/Communities';
+import CommunityDetail from './pages/CommunityDetail';
 import Specialists from './pages/Specialists';
 import { HealthProfessional } from './pages/HealthProfessional';
 import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
@@ -25,6 +26,8 @@ import MomReminders   from './pages/MomReminders';
 import MomUploadScan  from './pages/MomUploadScan';
 import MomAskQuestion from './pages/MomAskQuestion';
 import MomContent     from './pages/MomContent';
+import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
+import BabyCornerPage from './components/BabyCornerPage';
 
 function NotFound() {
   return (
@@ -48,8 +51,11 @@ function App() {
             <Route path="/specialists" element={<Specialists />} />
             <Route path="/specialist/:id" element={<HealthProfessional />} />
             <Route path="/article/:id" element={<ArticleDetail />} />
+            <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
+            <Route path="/baby-corner" element={<BabyCornerPage />} />
             {/* <Route path="/health-professional" element={<HealthProfessional />} /> */}
             <Route path="/communities" element={<Communities />} />
+            <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
