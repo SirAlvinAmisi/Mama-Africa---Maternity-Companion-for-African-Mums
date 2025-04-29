@@ -11,7 +11,9 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    # password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
+
     role = db.Column(db.String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -37,14 +39,21 @@ class User(db.Model):
 
 
 # Profile & Pregnancy
+# class Profile(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     full_name = db.Column(db.String(120))
+#     dob = db.Column(db.Date)
+#     region = db.Column(db.String(100))
+#     profile_picture = db.Column(db.String(200))
+#     bio = db.Column(db.Text)
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    full_name = db.Column(db.String(120))
-    dob = db.Column(db.Date)
+    full_name = db.Column(db.String(150))
+    bio = db.Column(db.Text)
     region = db.Column(db.String(100))
     profile_picture = db.Column(db.String(200))
-    bio = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class PregnancyDetail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -133,5 +142,6 @@ class Community(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
-
+    image = db.Column(db.String(255))
+    member_count = db.Column(db.Integer, default=0) 
     posts = db.relationship('Post', backref='community', lazy=True)

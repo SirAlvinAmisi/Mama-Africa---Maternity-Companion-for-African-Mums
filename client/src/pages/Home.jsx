@@ -35,11 +35,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+   
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden bg-white">
       {/* Intro Section */}
-      <section className="flex flex-col items-center justify-center py-16 bg-cyan-100">
-        <h1 className="text-5xl font-bold text-gray-800 mb-4">Welcome to Mama Afrika</h1>
-        <p className="text-gray-600 max-w-2xl text-center text-lg">
+      <section className="flex flex-col items-center justify-center py-16 px-4 sm:px-8 bg-cyan-100">
+        <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-4 text-center">Welcome to Mama Afrika</h1>
+        <p className="text-gray-600 max-w-2xl text-center text-base sm:text-lg">
           Empowering African mothers and healthcare workers with trusted support, knowledge, and community.
         </p>
       </section>
@@ -62,9 +63,9 @@ export default function Home() {
           >
             {featuredMums.map((mum, index) => (
               <SwiperSlide key={index}>
-                <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+                <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md max-w-md mx-auto w-full">
                   {/* Mum's Photo */}
-                  <div className="w-48 h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
+                  <div className="w-40 h-40 sm:w-48 sm:h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
                     <img
                       src="https://source.unsplash.com/featured/?african,motherhood"
                       alt={`Featured Mum ${index}`}
@@ -73,7 +74,7 @@ export default function Home() {
                   </div>
 
                   {/* Mum's Details */}
-                  <h3 className="text-2xl font-semibold text-cyan-700 mb-2">{mum.full_name}</h3>
+                  <h3 className="text-xl sm:text-2xl font-semibold text-cyan-700 mb-2">{mum.full_name}</h3>
                   <p className="text-gray-600 mb-1"><strong>Region:</strong> {mum.region}</p>
                   <p className="text-gray-600 text-center"><strong>Story:</strong> {mum.bio}</p>
                 </div>
@@ -83,5 +84,6 @@ export default function Home() {
         </section>
       )}
     </div>
+   
   );
 }

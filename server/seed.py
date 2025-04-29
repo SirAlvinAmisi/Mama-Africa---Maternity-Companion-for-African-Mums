@@ -26,7 +26,7 @@ with app.app_context():
             "full_name": "Dr. Wanjiru Njeri",
             "region": "Nyeri",
             "speciality": "Obstetrician-Gynecologist",
-            "profile_picture": "hhttps://i.pinimg.com/736x/a5/c8/93/a5c893f7179d55435b0e920620c010d3.jpg"
+            "profile_picture": "https://i.pinimg.com/736x/a5/c8/93/a5c893f7179d55435b0e920620c010d3.jpg"
         },
         {
             "email": "dr.sarah@mama.africa",
@@ -54,7 +54,7 @@ with app.app_context():
             "full_name": "Dr. James Kariuki",
             "region": "Eldoret",
             "speciality": "Pelvic Health Physiotherapist",
-            "profile_picture": "hhttps://i.pinimg.com/736x/c2/70/9f/c2709f51a673bd2df3f654d524e2f675.jpg"
+            "profile_picture": "https://i.pinimg.com/736x/c2/70/9f/c2709f51a673bd2df3f654d524e2f675.jpg"
         },
         {
             "email": "dr.mwende@mama.africa",
@@ -283,11 +283,56 @@ with app.app_context():
 
     # 11. COMMUNITIES
     communities = [
-        Community(name="First-time Mums Support", description="A community for first pregnancies."),
-        Community(name="High-risk Pregnancy Warriors", description="Sharing journeys and support."),
-        Community(name="Postpartum Care Group", description="Tips for recovery after delivery."),
-        Community(name="Traditional and Modern Mums", description="Balancing cultural practices with modern medicine."),
-        Community(name="Young Mums Circle", description="For mothers under 25."),
+        Community(
+            name="First-time Mums Support",
+            description="A welcoming space for women experiencing pregnancy for the first time.",
+            image="https://www.pinterest.com/pin/352125264634581686/"  
+        ),
+        Community(
+            name="High-risk Pregnancy Warriors",
+            description="Support network for mothers going through complex or high-risk pregnancies.",
+            image="https://www.pinterest.com/pin/114419646777834927/"  # Hospital care
+        ),
+        Community(
+            name="Postpartum Care Group",
+            description="Helping mothers heal, recover, and rebuild strength after childbirth.",
+            image="https://www.pinterest.com/pin/23432860615799448/"  # Post-birth bonding
+        ),
+        Community(
+            name="Traditional and Modern Mums",
+            description="Combining cultural practices with modern healthcare in pregnancy and motherhood.",
+            image="https://www.pinterest.com/pin/437060338852687676/"  # Cultural motherhood
+        ),
+        Community(
+            name="Young Mums Circle",
+            description="For younger mothers seeking advice, friendship, and empowerment.",
+            image="https://www.pinterest.com/pin/347480927517124311/"  # Young mother holding baby
+        ),
+        Community(
+            name="Pregnancy Nutrition and Wellness",
+            description="Focused on healthy eating, supplementation, and wellness during pregnancy.",
+            image="https://www.pinterest.com/pin/222365300346750755/"  
+        ),
+        Community(
+            name="Prenatal Fitness",
+            description="Sharing safe workouts, yoga practices, and physical care tips for expecting mothers.",
+            image="https://www.pinterest.com/pin/22869910603664232/"  
+        ),
+        Community(
+            name="Mental Health in Motherhood",
+            description="Discussing emotional wellbeing, managing anxiety, and mental health during motherhood.",
+            image="https://www.pinterest.com/pin/12877548931189856/"  # Mental health peace
+        ),
+        Community(
+            name="Single Mums Empowerment",
+            description="Providing support, resources, and empowerment for single mothers.",
+            image="https://www.pinterest.com/pin/418131146674436526/"  # Single mother strength
+        ),
+        Community(
+            name="Professional Motherhood Guidance",
+            description="A professional-driven community offering expert advice on maternal and prenatal care.",
+            image="https://www.pinterest.com/pin/488148047389664512/"  # Professional guidance
+        ),
     ]
 
     db.session.add_all(communities)
