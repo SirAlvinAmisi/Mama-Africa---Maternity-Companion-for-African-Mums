@@ -31,13 +31,14 @@ const Specialists = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+         
+    <div className="flex flex-col min-h-screen bg-white w-full">
       {/* Top Profile Carousel */}
-      <section className="flex flex-col items-center justify-center bg-cyan-100 py-12 px-4">
-        <h2 className="text-4xl font-bold text-cyan-700 mb-6">Featured Specialist</h2>
+      <section className="flex flex-col items-center justify-center bg-cyan-100 py-12 px-4 w-full">
+        <h2 className="text-4xl font-bold text-cyan-700 mb-10">Featured Specialist</h2>
 
         {specialists.length > 0 && (
-          <div className="flex items-center gap-8">
+          <div className="flex flex-col sm:flex-row items-center gap-8">
             <button
               onClick={() =>
                 setCurrentSpecialistIndex(
@@ -49,7 +50,7 @@ const Specialists = () => {
               ⬅️
             </button>
 
-            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-md max-w-md">
+            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-md max-w-sm w-full">
               <img
                 src={specialists[currentSpecialistIndex].profile_picture || 'https://via.placeholder.com/150'}
                 alt="Profile"
@@ -57,7 +58,7 @@ const Specialists = () => {
               />
               <h3 className="text-2xl font-semibold text-gray-800">{specialists[currentSpecialistIndex].full_name}</h3>
               <p className="text-gray-500 mb-2">{specialists[currentSpecialistIndex].speciality}</p>
-              <button className="bg-cyan-600 text-white rounded-full px-6 py-2 mt-4 hover:bg-cyan-700">
+              <button className="bg-cyan-600 text-white rounded-full px-6 py-2 mt-4 hover:bg-cyan-700 w-full">
                 Consult
               </button>
             </div>
@@ -77,10 +78,10 @@ const Specialists = () => {
       </section>
 
       {/* All Specialists Grid */}
-      <section className="py-16 px-8 bg-gray-50">
+      <section className="py-16 px-6 bg-gray-50 w-full">
         <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Meet Our Specialists</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-7xl mx-auto w-full">
           {specialists.map((specialist, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
               <img
@@ -88,9 +89,9 @@ const Specialists = () => {
                 alt="Profile"
                 className="w-32 h-32 rounded-full object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-gray-800">{specialist.full_name}</h3>
+              <h3 className="text-xl font-semibold text-gray-800 text-center">{specialist.full_name}</h3>
               <p className="text-gray-500 text-center">{specialist.speciality}</p>
-              <button className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700">
+              <button className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700 w-full">
                 Consult
               </button>
             </div>
@@ -99,7 +100,7 @@ const Specialists = () => {
       </section>
 
       {/* Specialist Articles */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-6 w-full">
         <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Articles by {specialists[currentSpecialistIndex]?.full_name}</h2>
 
         {specialists[currentSpecialistIndex]?.articles.length > 0 ? (
