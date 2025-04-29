@@ -7,10 +7,13 @@ from flask_cors import CORS
 from datetime import timedelta
 from dotenv import load_dotenv
 from functools import wraps
+from werkzeug.utils import secure_filename
+from sqlalchemy.exc import SQLAlchemyError
 import os
 from models import *
 
 load_dotenv()
+UPLOAD_FOLDER = 'static/avatars' 
 
 def create_app():
     app = Flask(__name__)
@@ -20,12 +23,13 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = "super-secret-key"  # Replace with secure value in prod
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
     # Initialize extensions
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
-    CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins for now
+    CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)  # Allow all origins for now
 
     
     # First we need to check role of the user
@@ -298,35 +302,117 @@ def create_app():
     # Signup
     @app.route('/signup', methods=['POST'])
     def signup():
-        data = request.get_json()
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"error": "Email already registered"}), 400
-        user = User(email=data['email'], role=data['role'])
-        user.set_password(data['password'])
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({"message": "User registered"}), 201
+        try:
+            email = request.form['email']
+            password = request.form['password']
+            role = request.form['role']
+
+            if User.query.filter_by(email=email).first():
+                return jsonify({"error": "Email already registered"}), 400
+
+            user = User(email=email, role=role)
+            user.set_password(password)
+
+            # optional fields
+            if 'first_name' in request.form:
+                first_name = request.form['first_name']
+                middle_name = request.form.get('middle_name', '')
+                last_name = request.form['last_name']
+
+                full_name = f"{first_name} {middle_name} {last_name}".strip()
+
+                user.profile = Profile(
+                    full_name=full_name,
+                    bio=request.form.get('bio', ''),
+                )
+
+            if role == 'Health Professional' and 'license_number' in request.form:
+                user.profile.license_number = request.form['license_number']
+
+            # handle avatar upload
+            if 'avatar' in request.files:
+                avatar = request.files['avatar']
+                filename = secure_filename(avatar.filename)
+                avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                avatar.save(avatar_path)
+                user.profile.avatar_url = f"/{avatar_path}"
+
+            db.session.add(user)
+            db.session.commit()
+
+            print(f"Verification email should be sent to {email}")  # Replace later with real email service
+
+            return jsonify({"message": "User registered. Please check email to verify."}), 201
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print("Database error:", str(e))
+            return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
+
+        except Exception as e:
+            print("Signup failed with error:", str(e))
+            return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
 
     # Login
     @app.route('/login', methods=['POST'])
     def login():
-        data = request.get_json()
-        user = User.query.filter_by(email=data['email']).first()
-        if user and user.check_password(data['password']):
-            token = create_access_token(identity={"id": user.id, "role": user.role})
-            return jsonify(access_token=token)
-        return jsonify({"error": "Invalid credentials"}), 401
+        try:
+            data = request.get_json()
+            email = data.get('email')
+            password = data.get('password')
+
+            if not email or not password:
+                return jsonify({"error": "Email and password required"}), 400
+
+            user = User.query.filter_by(email=email).first()
+
+            if user and user.check_password(password):
+                token = create_access_token(identity=str(user.id))  # Force identity as string
+                return jsonify(access_token=token), 200
+            
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print("Database error during login:", str(e))
+            return jsonify({"error": "Database error during login", "details": str(e)}), 500
+
+        except Exception as e:
+            print("General error during login:", str(e))
+            return jsonify({"error": "Login failed", "details": str(e)}), 500
+
 
     # individual user profile
     @app.route('/me', methods=['GET'])
     @jwt_required()
     def get_me():
-        identity = get_jwt_identity()
-        user = User.query.get(identity['id'])
+        user_id = get_jwt_identity()
+        user = User.query.get(int(user_id))
         return {
             "email": user.email,
             "role": user.role,
             "created_at": user.created_at
+        }
+
+
+    @app.route('/admin/users', methods=['GET'])
+    @role_required("admin")
+    def get_users():
+        users = User.query.all()
+        return {
+            "users": [
+                {
+                    "id": user.id,
+                    "email": user.email,
+                    "role": user.role,
+                    "is_active": user.is_active,
+                    "created_at": user.created_at,
+                    "profile": {
+                        "full_name": user.profile.full_name if user.profile else None
+                    }
+                } for user in users
+            ]
         }
 
     # Admin add user
@@ -464,7 +550,7 @@ def create_app():
         data = request.get_json()
         identity = get_jwt_identity()
         profile = Profile(user_id=identity['id'], full_name=data['full_name'],
-                          region=data['region'], bio=data.get('bio'))
+                        region=data['region'], bio=data.get('bio'))
         db.session.add(profile)
         db.session.commit()
         return jsonify({"message": "Profile created"}), 201
@@ -507,7 +593,7 @@ def create_app():
         data = request.get_json()
         identity = get_jwt_identity()
         upload = MedicalUpload(user_id=identity['id'], file_url=data['file_url'],
-                               file_type="scan", notes=data['notes'])
+                            file_type="scan", notes=data['notes'])
         db.session.add(upload)
         db.session.commit()
         return jsonify({"message": "Scan uploaded"}), 201
@@ -523,7 +609,7 @@ def create_app():
         db.session.add(question)
         db.session.commit()
         return jsonify({"message": "Question posted"}), 201
-   
+
     # Mums view answers and articles
     @app.route('/mums/content', methods=['GET'])
     @role_required("mum")
@@ -542,4 +628,6 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app = create_app()
+    app.run(host="0.0.0.0", port=5000, debug=True)
+   
