@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Calendar from './Calendar'; 
+import Calendar from './Calendar';
 import { format } from 'date-fns';
 import { PregnancyService } from '../../services/PregnancyService';
-
+import { NotificationService } from '../../services/NotificationService';
 
 const MomCalendar = ({ userId }) => {
   const [events, setEvents] = useState([]);
@@ -10,31 +10,28 @@ const MomCalendar = ({ userId }) => {
   const [newEvent, setNewEvent] = useState({
     title: '',
     date: new Date(),
-    type: 'appointment'
+    type: 'appointment',
   });
   const [pregnancyInfo, setPregnancyInfo] = useState(null);
 
   useEffect(() => {
     const fetchPregnancyData = async () => {
-      // Mock API call
       const mockEDD = new Date('2025-12-15'); // Example EDD
-
       const milestones = PregnancyService.calculateMilestones(mockEDD);
       setPregnancyInfo(milestones);
 
-      setEvents(prevEvents => [
+      setEvents((prevEvents) => [
         ...prevEvents,
         ...milestones.recommendedAppointments.map((appt, index) => ({
           ...appt,
           id: 1000 + index,
-          isRecommended: true
-        }))
+          isRecommended: true,
+        })),
       ]);
     };
 
     fetchPregnancyData();
 
-    // Dummy existing events
     const dummyEvents = [
       { id: 1, title: 'Prenatal Checkup', date: new Date('2025-04-30T10:00:00'), type: 'appointment', notes: 'Bring insurance card' },
       { id: 2, title: 'Ultrasound', date: new Date('2025-05-15T14:30:00'), type: 'scan', doctor: 'Dr. Smith' },
@@ -66,19 +63,22 @@ const MomCalendar = ({ userId }) => {
   };
 
   const handleDateSelect = (date) => {
-    
-    setShowAddForm(true);    
-    setNewEvent(prev => ({
+    setShowAddForm(true);
+    setNewEvent((prev) => ({
       ...prev,
-      date: date
+      date: date,
     }));
   };
 
-  const handleSaveEvent = () => {
-    const newId = events.length ? Math.max(...events.map(ev => ev.id)) + 1 : 1;
+  const handleSaveEvent = async () => {
+    const newId = events.length ? Math.max(...events.map((ev) => ev.id)) + 1 : 1;
     setEvents([...events, { ...newEvent, id: newId }]);
     setShowAddForm(false);
     setNewEvent({ title: '', date: new Date(), type: 'appointment' });
+
+    // Trigger email notifications
+    await NotificationService.sendNotificationToHealthProf(userId, newEvent);
+    await NotificationService.sendNotificationToMom(userId, newEvent);
   };
 
   return (
@@ -88,7 +88,7 @@ const MomCalendar = ({ userId }) => {
       {renderPregnancyInfo()}
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <Calendar 
+        <Calendar
           userType="mom"
           events={events}
           onDateSelect={handleDateSelect}
@@ -96,7 +96,6 @@ const MomCalendar = ({ userId }) => {
         />
       </div>
 
-      {/* Add Event Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl shadow-lg p-6 w-96 relative animate-fade-in-up">
