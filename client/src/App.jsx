@@ -7,6 +7,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Login from './components/Login';
 import Signup from './components/SignUp';
+import Profile from './pages/Profile'
+import EditProfile from './pages/EditProfile'
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
 import Specialists from './pages/Specialists';
@@ -28,7 +30,7 @@ import MomAskQuestion from './pages/MomAskQuestion';
 import MomContent     from './pages/MomContent';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
-
+import HealthProDashboard from './pages/HealthProDashboard'; 
 
 
 
@@ -56,13 +58,21 @@ function App() {
             <Route path="/article/:id" element={<ArticleDetail />} />
             <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
             <Route path="/baby-corner" element={<BabyCornerPage />} />
-            {/* <Route path="/health-professional" element={<HealthProfessional />} /> */}
+            <Route path="/healthpro/:id" element={<HealthProfessional />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
+            {/* <Route path="/healthpro/post-article" element={<PostArticle />} />
+            <Route path="/healthpro/answer-questions" element={<AnswerQuestions />} />
+            <Route path="/healthpro/upload-scan" element={<UploadScan />} />
+            <Route path="/healthpro/recommend-clinic" element={<RecommendClinic />} /> */}
+            <Route path="/mom" element={<MomProfile />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />

@@ -21,6 +21,7 @@ const Admin = () => {
           Authorization: `Bearer ${token}`
         }
       });
+      console.log('Fetched users:', response.data.users); // 👈 Add this
       setUsers(response.data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -31,6 +32,7 @@ const Admin = () => {
       setLoading(false);
     }
   };
+  
 
   const tabs = [
     { key: 'users', label: 'Manage Users' },
