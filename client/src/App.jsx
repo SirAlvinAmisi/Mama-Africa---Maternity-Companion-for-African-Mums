@@ -16,7 +16,7 @@ import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
 
-import MomLayout      from './components/MomLayout';
+import MomLayout      from './components/Momlayout';
 import MomRegister    from './pages/MomRegister';
 import MomProfile     from './pages/MomProfile';
 import MomPregnancy   from './pages/MomPregnancy';
@@ -46,6 +46,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/specialists" element={<Specialists />} />
+            <Route path="/specialist/:id" element={<HealthProfessional />} />
             {/* <Route path="/health-professional" element={<HealthProfessional />} /> */}
             <Route path="/communities" element={<Communities />} />
             <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
