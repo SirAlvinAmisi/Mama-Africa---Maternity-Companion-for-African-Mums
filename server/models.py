@@ -133,5 +133,6 @@ class Community(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
-
+    image = db.Column(db.String(255))
+    member_count = db.Column(db.Integer, default=0) 
     posts = db.relationship('Post', backref='community', lazy=True)

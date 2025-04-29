@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
@@ -84,6 +85,30 @@ def create_app():
         return jsonify({"specialists": results})
 
     
+    # Get a single health professional by ID
+    @app.route('/healthpros/<int:id>', methods=['GET'])
+    def get_healthpro_by_id(id):
+        specialist = User.query.filter_by(id=id, role='health_pro').first()
+        if not specialist:
+            return jsonify({"error": "Health professional not found"}), 404
+
+        profile = specialist.profile
+        result = {
+            "id": specialist.id,
+            "full_name": profile.full_name,
+            "speciality": profile.bio,
+            "region": profile.region,
+            "profile_picture": profile.profile_picture,
+            "articles": [
+                {
+                    "title": article.title,
+                    "category": article.category
+                } for article in specialist.posts if article.is_medical and article.is_approved
+            ]
+        }
+        return jsonify({"health_professional": result})
+
+    
     # Communities
     @app.route('/communities', methods=['GET'])
     def get_communities():
@@ -93,11 +118,48 @@ def create_app():
                 {
                     "id": c.id,
                     "name": c.name,
-                    "description": c.description
+                    "description": c.description,
+                    "image": c.image,           
+                    "members": c.member_count,
                 } for c in communities
             ]
         }
     
+    # Get specific community details
+    @app.route('/communities/<int:id>', methods=['GET'])
+    def get_community(id):
+        community = Community.query.get(id)
+        if not community:
+            return {"error": "Community not found"}, 404
+        
+        print(f"Found community: {community.name}")  # <-- Add this for debugging!
+
+        return {
+            "community": {
+                "id": community.id,
+                "name": community.name,
+                "description": community.description,
+                "image": community.image,
+                "member_count": community.member_count
+            }
+        }
+
+
+    # Get posts for specific community
+    @app.route('/communities/<int:id>/posts', methods=['GET'])
+    def get_community_posts(id):
+        posts = Post.query.filter_by(community_id=id).all()
+        return {
+            "posts": [
+                {
+                    "id": post.id,
+                    "title": post.title,
+                    "content": post.content,
+                    "author_id": post.author_id
+                } for post in posts
+            ]
+        }
+
 
     # all clinics
     @app.route('/clinics')
@@ -155,14 +217,23 @@ def create_app():
                     "id": comment.id,
                     "post_id": comment.post_id,
                     "user_id": comment.user_id,
-                    "content": comment.content
+                    "content": comment.content,
                 } for comment in comments
             ]
         }
     
+    # all articles
     @app.route('/articles', methods=['GET'])
     def get_articles():
-        articles = Article.query.filter_by(is_approved=True).all()
+        limit = request.args.get('limit', default=None, type=int)
+
+        query = Article.query.filter_by(is_approved=True).order_by(desc(Article.created_at))
+        
+        if limit:
+            articles = query.limit(limit).all()
+        else:
+            articles = query.all()
+
         return {
             "articles": [
                 {
@@ -175,7 +246,54 @@ def create_app():
                 } for article in articles
             ]
         }
-    
+
+    # articles by specific author
+    @app.route('/articles/author/<int:author_id>', methods=['GET'])
+    def get_articles_by_author(author_id):
+        articles = Article.query.filter_by(author_id=author_id, is_approved=True).all()
+        return {
+            "articles": [
+                {
+                    "id": article.id,
+                    "title": article.title,
+                    "content": article.content,
+                    "category": article.category,
+                    "created_at": article.created_at,
+                    "author_id": article.author_id
+                } for article in articles
+            ]
+        }
+
+    # specific article by ID (NEW)
+    @app.route('/articles/<int:id>', methods=['GET'])
+    def get_article_by_id(id):
+        article = Article.query.get(id)
+
+        if not article or not article.is_approved:
+            return {"error": "Article not found"}, 404
+
+        return {
+            "article": {
+                "id": article.id,
+                "title": article.title,
+                "content": article.content,
+                "category": article.category,
+                "created_at": article.created_at,
+                "author_id": article.author_id
+            }
+        }
+
+
+    @app.route('/parenting-articles')
+    def get_parenting_articles():
+        articles = Article.query.filter_by(category='Parenting Development', is_approved=True).all()
+        return {"articles": [a.serialize() for a in articles]}
+
+    @app.route('/baby-articles')
+    def get_baby_articles():
+        articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
+        return {"articles": [a.serialize() for a in articles]}
+
     # ========= Authentication and User Management ================
     # Signup
     @app.route('/signup', methods=['POST'])
