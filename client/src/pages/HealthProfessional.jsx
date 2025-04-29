@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom'; // Needed to get the :id from URL
 import axios from 'axios';
-
+import { useNavigate } from 'react-router-dom';
 export const HealthProfessional = () => {
   const { id } = useParams(); // Get id from URL
   const [profile, setProfile] = useState(null);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchProfileAndArticles = async () => {
       try {
@@ -85,23 +85,36 @@ export const HealthProfessional = () => {
               Published Articles
             </h2>
 
-            <div className="flex flex-row gap-12 justify-center flex-wrap">
+            <div className="flex flex-wrap gap-8 justify-center">
               {articles.length > 0 ? (
-                articles.map((article, index) => (
-                  <div
-                    key={index}
-                    className="w-[298px] h-[270px] bg-white rounded-[60px] flex flex-col items-center justify-center p-4 text-center shadow-md"
+                articles.map((article) => (
+                  <div 
+                    key={article.id} 
+                    className="w-[300px] bg-white rounded-2xl p-6 flex flex-col justify-between shadow-md hover:shadow-lg transition"
                   >
-                    <span className="font-montserrat font-normal text-black text-2xl">
-                      {article.title}
-                    </span>
-                    <p className="text-gray-500 text-sm mt-2">{article.category}</p>
+                    <div>
+                      <h3 className="text-2xl font-semibold text-gray-800 mb-3 line-clamp-2">
+                        {article.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                        {article.content ? article.content.slice(0, 100) + '...' : 'No preview available.'}
+                      </p>
+                    </div>
+                    <div className="flex justify-end">
+                    <button 
+                      onClick={() => navigate(`/article/${article.id}`)}
+                      className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full transition"
+                    >
+                      Read More
+                    </button>
+                    </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-xl">No articles published yet.</p>
+                <p className="text-center text-gray-500 text-xl">No articles published yet.</p>
               )}
             </div>
+
           </div>
         </section>
 

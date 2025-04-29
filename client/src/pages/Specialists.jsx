@@ -83,9 +83,23 @@ const Specialists = () => {
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {articles.map((article) => (
-              <div key={article.id} className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-2xl font-semibold text-gray-800 mb-2">{article.title}</h3>
-                <p className="text-gray-600">{article.category}</p>
+              <div key={article.id} className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-2 line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                    {article.content.slice(0, 100)}... {/* First 100 characters */}
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => navigate(`/article/${article.id}`)}
+                    className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full transition"
+                  >
+                    Read More
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -93,6 +107,7 @@ const Specialists = () => {
           <p className="text-center text-gray-500 text-xl">No articles available yet.</p>
         )}
       </section>
+
 
 
     </div>
