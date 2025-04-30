@@ -1,39 +1,79 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Admin from './pages/Admin';
-import Home from './pages/Home';
-import About from './pages/About';
+
+
+
+// Layout & Common UI
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+
+
+//  Public Pages
+import Home from './pages/Home';
+import About from './pages/About';
 import Login from './components/Login';
 import Signup from './components/SignUp';
-import Profile from './pages/Profile'
-import EditProfile from './pages/EditProfile'
-import Communities from './pages/Communities';
-import CommunityDetail from './pages/CommunityDetail';
-import Specialists from './pages/Specialists';
+
+
+
+//  Authentication & User Profile
+import Profile from './pages/Profile';
+import EditProfile from './pages/EditProfile';
+
+
+
+//  Admin Pages
+import Admin from './pages/Admin';
+
+
+
+//  Health Professionals
 import { HealthProfessional } from './pages/HealthProfessional';
 import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
+import HealthProDashboard from './pages/HealthProDashboard';
+
+
+
+//  Articles & Content
+import { ArticleDetail } from './components/articles/ArticleDetail';
+import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
+import BabyCornerPage from './components/BabyCornerPage';
+
+
+
+//  Communities
+import Communities from './pages/Communities';
+import CommunityDetail from './pages/CommunityDetail';
+
+
+
+// Mum Layout & Pages
+import MomLayout from './components/Momlayout';
+import MomRegister from './pages/MomRegister';
+import MomProfile from './pages/MomProfile';
+import MomPregnancy from './pages/MomPregnancy';
+import MomDevelopment from './pages/MomDevelopment';
+import MomReminders from './pages/MomReminders';
+import MomUploadScan from './pages/MomUploadScan';
+import MomAskQuestion from './pages/MomAskQuestion';
+import MomContent from './pages/MomContent';
+
+
+
+// Legal & Support
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
-import { ArticleDetail } from './components/articles/ArticleDetail';
-import MomLayout      from './components/Momlayout';
-import MomRegister    from './pages/MomRegister';
-import MomProfile     from './pages/MomProfile';
-import MomPregnancy   from './pages/MomPregnancy';
-import MomDevelopment from './pages/MomDevelopment';
-import MomReminders   from './pages/MomReminders';
-import MomUploadScan  from './pages/MomUploadScan';
-import MomAskQuestion from './pages/MomAskQuestion';
-import MomContent     from './pages/MomContent';
-import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
-import BabyCornerPage from './components/BabyCornerPage';
-import HealthProDashboard from './pages/HealthProDashboard'; 
 
 
 
+// Specialists Directory
+import Specialists from './pages/Specialists';
+
+
+
+//  404 Not Found
 function NotFound() {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-white">
@@ -50,35 +90,36 @@ function App() {
         <Navbar />
         <main className="flex-grow">
           <Routes>
-            {/* Existing public routes */}
+
+            {/* Public Pages */}
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/*  Health Professionals */}
             <Route path="/specialists" element={<Specialists />} />
             <Route path="/specialist/:id" element={<HealthProfessional />} />
+            <Route path="/healthpro/:id" element={<HealthProfessional />} />
+            <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
+            <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
+
+            {/*Articles */}
             <Route path="/article/:id" element={<ArticleDetail />} />
             <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
             <Route path="/baby-corner" element={<BabyCornerPage />} />
-            <Route path="/healthpro/:id" element={<HealthProfessional />} />
+
+            {/* Communities */}
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
-            <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+
+            {/*Admin & Profile */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
-            <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
-            {/* <Route path="/healthpro/post-article" element={<PostArticle />} />
-            <Route path="/healthpro/answer-questions" element={<AnswerQuestions />} />
-            <Route path="/healthpro/upload-scan" element={<UploadScan />} />
-            <Route path="/healthpro/recommend-clinic" element={<RecommendClinic />} /> */}
-            <Route path="/mom" element={<MomProfile />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
-            <Route path="/help-center" element={<HelpCenter />} />
 
-            {/* 👶 Mum section */}
+            {/* Mum Section */}
+            <Route path="/mom" element={<MomProfile />} />
             <Route path="/moms" element={<MomLayout />}>
               <Route index element={<MomRegister />} />
               <Route path="register"     element={<MomRegister />} />
@@ -91,8 +132,15 @@ function App() {
               <Route path="content"      element={<MomContent />} />
             </Route>
 
-            {/* Fallback 404 */}
+            {/* Legal & Support */}
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/help-center" element={<HelpCenter />} />
+
+            {/*  Fallback */}
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </main>
         <Footer />

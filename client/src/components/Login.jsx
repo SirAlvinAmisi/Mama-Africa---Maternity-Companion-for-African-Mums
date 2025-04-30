@@ -36,7 +36,7 @@ const Login = () => {
       // Navigate based on role
       if (role === 'admin') {
         navigate('/admin');
-      } else if (role === 'mum') {
+      } else if (role === 'mum' || role === 'mom' || role === 'Mom' || role === 'Mum') {
         navigate('/mom');
       } else if (role === 'health_professional') {
         navigate('/healthpro/dashboard');

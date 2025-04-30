@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const Navbar = () => {
   const isLoggedIn = !!localStorage.getItem('access_token');
@@ -36,7 +37,7 @@ const Navbar = () => {
           <>
             {/* 👇 Added Profile link when logged in */}
             <Link to="/profile" className="hover:underline">Profile</Link>
-
+            
             <button
               onClick={handleLogout}
               className="hover:underline"

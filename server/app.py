@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -29,22 +29,61 @@ def create_app():
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
-    CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)  # Allow all origins for now
-
+    # CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)  # Allow all origins for now
+    CORS(app, supports_credentials=True, resources={r"/*": {
+        "origins": ["http://127.0.0.1:5173", "http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }})
     
     # First we need to check role of the user
+    # def role_required(required_role):
+    #     def decorator(f):
+    #         @wraps(f)
+    #         @jwt_required()
+    #         def wrapper(*args, **kwargs):
+    #             identity = get_jwt_identity()
+    #             if identity['role'] != required_role:
+    #                 return jsonify({"error": "Unauthorized"}), 403
+    #             return f(*args, **kwargs)
+    #         return wrapper
+    #     return decorator
+    
+    def normalize_role(role):
+        mapping = {
+            "admin": "admin",
+            "mom": "mum",
+            "mom": "mom",
+            "health professional": "health_pro",
+            "health_professional": "health_pro",
+            "health_pro": "health_pro"
+        }
+        return mapping.get(role.lower().replace(" ", "_"), role.lower())
+
     def role_required(required_role):
         def decorator(f):
             @wraps(f)
             @jwt_required()
             def wrapper(*args, **kwargs):
-                identity = get_jwt_identity()
-                if identity['role'] != required_role:
-                    return jsonify({"error": "Unauthorized"}), 403
+                claims = get_jwt()
+                role = claims.get("role", "").strip().lower()
+
+                print("JWT role:", role)
+
+                # Normalize both sides (your required_role might be underscored, claim might not)
+                normalized_claim_role = role.replace(" ", "_")
+                normalized_required = required_role.strip().lower().replace(" ", "_")
+
+                if normalized_claim_role != normalized_required:
+                    return jsonify({"error": f"Unauthorized. Needed {normalized_required}, got {normalized_claim_role}"}), 403
+
                 return f(*args, **kwargs)
             return wrapper
         return decorator
-    
+
+
+
+
     # =============== API Endpoints ======================================
     # Index
     @app.route('/')
@@ -368,7 +407,20 @@ def create_app():
             user = User.query.filter_by(email=email).first()
 
             if user and user.check_password(password):
-                token = create_access_token(identity=str(user.id))  # Force identity as string
+                # token = create_access_token(identity=str(user.id))  # Force identity as string
+                # token = create_access_token(identity={"id": user.id, "role": user.role.lower()})
+                role_map = {
+                    "admin": "admin",
+                    "mom": "mum",
+                    "mom": "mom",
+                    "health professional": "health_pro"
+                }
+                token = create_access_token(
+                    identity=str(user.id),
+                    additional_claims={"role": role_map[user.role.lower()]}
+                )
+                
+
                 return jsonify(access_token=token), 200
             
             return jsonify({"error": "Invalid credentials"}), 401
@@ -489,25 +541,59 @@ def create_app():
     @role_required("health_pro")
     def health_pro_me():
         identity = get_jwt_identity()
-        user = User.query.get(identity['id'])
+        user = User.query.get(int(identity))
         return {"email": user.email, "created_at": user.created_at}
 
     # Health Professionals Post article
-    @app.route('/healthpros/articles', methods=['POST'])
+    @app.route('/healthpros/articles', methods=['GET', 'POST'])
     @role_required("health_pro")
-    def health_pro_article():
-        data = request.get_json()
+    def health_pro_articles():
         identity = get_jwt_identity()
+        
+        if request.method == 'GET':
+            articles = Article.query.filter_by(author_id=int(identity)).all()
+            return jsonify({
+                "articles": [
+                    {
+                        "id": a.id,
+                        "title": a.title,
+                        "content": a.content,
+                        "category": a.category,
+                        "is_approved": a.is_approved,
+                        "created_at": a.created_at
+                    } for a in articles
+                ]
+            })
+
+        # Handle POST (submit new article)
+        data = request.get_json()
         article = Article(
-            author_id=identity['id'],
+            author_id=int(identity),
             title=data['title'],
             content=data['content'],
             category=data['category'],
-            is_approved=False  # Articles must be approved first
+            is_approved=False
         )
         db.session.add(article)
         db.session.commit()
         return jsonify({"message": "Article submitted for approval"}), 201
+    # Health questions
+    @app.route('/healthpros/questions', methods=['GET'])
+    @role_required("health_pro")
+    def get_healthpro_questions():
+        identity = get_jwt_identity()
+        questions = Question.query.filter_by(answered_by=None).all()
+        return jsonify({
+            "questions": [
+                {
+                    "id": q.id,
+                    "question_text": q.question_text,
+                    "user_id": q.user_id,
+                    "is_anonymous": q.is_anonymous
+                } for q in questions
+            ]
+        })
+
     
     # Health Professionals Answer questions
     @app.route('/healthpros/answers', methods=['POST'])

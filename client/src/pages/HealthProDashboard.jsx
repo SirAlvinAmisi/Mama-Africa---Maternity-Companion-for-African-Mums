@@ -13,17 +13,20 @@ const HealthProDashboard = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('access_token');
-        
+        console.log("🔑 Token:", token);
         const profileRes = await axios.get('http://localhost:5000/me', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
         });
 
         const articlesRes = await axios.get('http://localhost:5000/healthpros/articles', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
         });
 
         const questionsRes = await axios.get('http://localhost:5000/healthpros/questions', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
         });
 
         setProfile(profileRes.data);
