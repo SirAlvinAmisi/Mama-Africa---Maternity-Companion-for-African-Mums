@@ -409,11 +409,12 @@ def create_app():
                     "is_active": user.is_active,
                     "created_at": user.created_at,
                     "profile": {
-                        "full_name": user.profile.full_name if user.profile else None
+                        "full_name": user.profile.full_name if user.profile else "N/A"
                     }
                 } for user in users
             ]
         }
+
 
     # Admin add user
     @app.route('/admin/add_user', methods=['POST'])

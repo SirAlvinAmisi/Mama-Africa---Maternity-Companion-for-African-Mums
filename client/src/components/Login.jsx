@@ -28,7 +28,7 @@ const Login = () => {
       const user = userResponse.data;
       console.log("Fetched user from /me:", user);
 
-      const role = user.role.toLowerCase(); // Normalize role to lowercase
+      const role = user.role.toLowerCase().replace(/\s+/g, '_'); // Normalize role to lowercase
 
       // Save role in localStorage if needed later
       localStorage.setItem('role', role);
@@ -38,10 +38,10 @@ const Login = () => {
         navigate('/admin');
       } else if (role === 'mum') {
         navigate('/mom');
-      } else if (role === 'health_pro') {
-        navigate('/healthpro');
+      } else if (role === 'health_professional') {
+        navigate('/healthpro/dashboard');
       } else {
-        navigate('/'); // fallback
+        navigate('/home'); // fallback
       }
 
     } catch (error) {
