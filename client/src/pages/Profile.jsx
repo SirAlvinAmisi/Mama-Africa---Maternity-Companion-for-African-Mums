@@ -2,6 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const normalizeRole = (role) => {
+  if (!role) return '';
+  const lower = role.toLowerCase().trim();
+  if (lower === 'health professional') return 'health_pro';
+  if (lower === 'admin') return 'admin';
+  if (lower === 'mum') return 'mum';
+  return lower.replace(/\s+/g, '_'); // fallback
+};
+
 const Profile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -24,11 +33,16 @@ const Profile = () => {
     fetchProfile();
   }, []);
 
-  if (!user) {
-    return <p>Loading profile...</p>;
-  }
+  if (!user) return <p>Loading profile...</p>;
 
   const profile = user.profile || {};
+  const normalizedRole = normalizeRole(user.role);
+
+  const dashboardRoutes = {
+    admin: '/admin',
+    mum: '/mom',
+    health_pro: '/healthpro/dashboard'
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-12 p-8 bg-white rounded-lg shadow-md">
@@ -68,37 +82,18 @@ const Profile = () => {
           Edit Profile
         </button>
       </div>
-      {user.role && (
-      <div className="mt-6 flex flex-col gap-3">
-        {user.role.toLowerCase() === 'admin' && (
+
+      {/* Back to Dashboard Button */}
+      {dashboardRoutes[normalizedRole] && (
+        <div className="mt-4">
           <button 
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate(dashboardRoutes[normalizedRole])}
             className="bg-gray-100 text-gray-800 px-6 py-3 rounded hover:bg-gray-200 transition"
           >
-            Back to Admin Dashboard
+            Back to {normalizedRole.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} Dashboard
           </button>
-        )}
-
-        {user.role.toLowerCase() === 'mum' && (
-          <button 
-            onClick={() => navigate('/mom')}
-            className="bg-gray-100 text-gray-800 px-6 py-3 rounded hover:bg-gray-200 transition"
-          >
-            Back to Mum Profile
-          </button>
-        )}
-
-        {user.role.toLowerCase() === 'health_pro' && (
-          <button 
-            onClick={() => navigate('/healthpro')}
-            className="bg-gray-100 text-gray-800 px-6 py-3 rounded hover:bg-gray-200 transition"
-          >
-            Back to Health Professional Dashboard
-          </button>
-        )}
-      </div>
-    )}
-
+        </div>
+      )}
     </div>
   );
 };
