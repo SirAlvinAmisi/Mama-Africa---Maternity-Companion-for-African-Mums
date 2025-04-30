@@ -5,6 +5,7 @@ import Welcome from '../components/WelcomeCard';
 // import PopularGroups from '../components/PopularGroups';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
+import Nutrition from '../components/Nutrition';
 import MothersPost from '../components/MothersPosts';
 
 const Communities = () => {
@@ -117,6 +118,7 @@ const Communities = () => {
         {/* <PopularGroups groups={groups} /> */}
         <ParentingDevelopment />
         <BabyCorner />
+        <Nutrition />
       </div>
 
     </div>
