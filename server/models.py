@@ -51,9 +51,11 @@ class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150))
     bio = db.Column(db.Text)
-    region = db.Column(db.String(100))
-    profile_picture = db.Column(db.String(200))
+    region = db.Column(db.String(100))  # This is your county field
+    profile_picture = db.Column(db.String(200))  # Avatar URL
+    license_number = db.Column(db.String(100), nullable=True)  # Only for doctors
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 
 class PregnancyDetail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -145,3 +147,15 @@ class Community(db.Model):
     image = db.Column(db.String(255))
     member_count = db.Column(db.Integer, default=0) 
     posts = db.relationship('Post', backref='community', lazy=True)
+
+# Nutrition Blogs
+class NutritionBlog(db.Model):
+    __tablename__ = 'nutrition_blogs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.String(255))
+    category = db.Column(db.String(50))  # e.g., expert, seasonal, concern
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    author = db.Column(db.String(100))

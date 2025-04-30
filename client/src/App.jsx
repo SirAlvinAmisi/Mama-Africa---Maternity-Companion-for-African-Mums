@@ -38,7 +38,7 @@ import HealthProDashboard from './pages/HealthProDashboard';
 import { ArticleDetail } from './components/articles/ArticleDetail';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
-
+import Nutrition from './components/Nutrition';
 
 
 //  Communities
@@ -48,6 +48,7 @@ import CommunityDetail from './pages/CommunityDetail';
 
 
 // Mum Layout & Pages
+import MomLandingPage from './pages/MomLandingPage';
 import MomLayout from './components/Momlayout';
 import MomRegister from './pages/MomRegister';
 import MomProfile from './pages/MomProfile';
@@ -108,6 +109,7 @@ function App() {
             <Route path="/article/:id" element={<ArticleDetail />} />
             <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
             <Route path="/baby-corner" element={<BabyCornerPage />} />
+            <Route path="/nutrition" element={<Nutrition />} />
 
             {/* Communities */}
             <Route path="/communities" element={<Communities />} />
@@ -119,9 +121,9 @@ function App() {
             <Route path="/profile/edit" element={<EditProfile />} />
 
             {/* Mum Section */}
-            <Route path="/mom" element={<MomProfile />} />
+            <Route path="/mom" element={<MomLandingPage />} />
             <Route path="/moms" element={<MomLayout />}>
-              <Route index element={<MomRegister />} />
+              {/* <Route index element={<MomRegister />} /> */}
               <Route path="register"     element={<MomRegister />} />
               <Route path="profile"      element={<MomProfile />} />
               <Route path="pregnancy"    element={<MomPregnancy />} />
