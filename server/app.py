@@ -1,940 +1,977 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import desc
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import JWTManager
 from flask_cors import CORS
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from functools import wraps
-from werkzeug.utils import secure_filename
-from middleware.auth import role_required
-from sqlalchemy.exc import SQLAlchemyError
+from flask_socketio import SocketIO
 import os
-from models import *
+
+from models import db
+from routes import register_routes  # <- Custom route registration
 
 load_dotenv()
-UPLOAD_FOLDER = 'static/avatars' 
+
+socketio = SocketIO(cors_allowed_origins=["http://127.0.0.1:5173", "http://localhost:5173"], async_mode='threading')  # Enable CORS
+# You can also try `async_mode='eventlet'` if you install `eventlet`
 
 def create_app():
     app = Flask(__name__)
-    
-    #configurations
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = "super-secret-key"  # Replace with secure value in prod
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    
-    # Initialize extensions
+    app.config.from_object('config.Config')
+
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
-    # CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)  # Allow all origins for now
-    CORS(app, supports_credentials=True, resources={r"/*": {
-        "origins": ["http://127.0.0.1:5173", "http://localhost:5173"],
-        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }})
-    
-    # First we need to check role of the user
-    # def role_required(required_role):
-    #     def decorator(f):
-    #         @wraps(f)
-    #         @jwt_required()
-    #         def wrapper(*args, **kwargs):
-    #             identity = get_jwt_identity()
-    #             if identity['role'] != required_role:
-    #                 return jsonify({"error": "Unauthorized"}), 403
-    #             return f(*args, **kwargs)
-    #         return wrapper
-    #     return decorator
-    
-    def normalize_role(role):
-        mapping = {
-            "admin": "admin",
-            "mom": "mum",
-            "mom": "mom",
-            "health professional": "health_pro",
-            "health_professional": "health_pro",
-            "health_pro": "health_pro"
-        }
-        return mapping.get(role.lower().replace(" ", "_"), role.lower())
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["http://127.0.0.1:5173", "http://localhost:5173"]}})
 
-    def role_required(required_role):
-        def decorator(f):
-            @wraps(f)
-            @jwt_required()
-            def wrapper(*args, **kwargs):
-                claims = get_jwt()
-                role = claims.get("role", "").strip().lower()
-
-                print("JWT role:", role)
-
-                # Normalize both sides (your required_role might be underscored, claim might not)
-                normalized_claim_role = role.replace(" ", "_")
-                normalized_required = required_role.strip().lower().replace(" ", "_")
-
-                if normalized_claim_role != normalized_required:
-                    return jsonify({"error": f"Unauthorized. Needed {normalized_required}, got {normalized_claim_role}"}), 403
-
-                return f(*args, **kwargs)
-            return wrapper
-        return decorator
-
-
-
-
-    # =============== API Endpoints ======================================
-    # Index
-    @app.route('/')
-    def index():
-        return "Welcome to Mama Afrika!"
-
-    # All Profiles
-    @app.route('/profile')
-    def get_profile():
-        users = Profile.query.all()
-        return {
-            "users": [
-                {
-                    "id": user.id,
-                    "full_name": user.full_name,
-                    "region": user.region,
-                    "bio": user.bio
-                } for user in users
-            ]
-        }
-
-    # Health Professionals 
-    @app.route('/healthpros', methods=['GET'])
-    def get_healthpros():
-        specialists = User.query.filter_by(role='health_pro').all()
-        results = []
-        for specialist in specialists:
-            profile = specialist.profile
-            results.append({
-                "id": specialist.id,
-                "full_name": profile.full_name,
-                "speciality": profile.bio,
-                "region": profile.region,
-                "profile_picture": profile.profile_picture,
-                "articles": [
-                    {
-                        "title": article.title,
-                        "category": article.category
-                    } for article in specialist.posts if article.is_medical and article.is_approved
-                ]
-            })
-        return jsonify({"specialists": results})
-
-    
-    # Get a single health professional by ID
-    @app.route('/healthpros/<int:id>', methods=['GET'])
-    def get_healthpro_by_id(id):
-        specialist = User.query.filter_by(id=id, role='health_pro').first()
-        if not specialist:
-            return jsonify({"error": "Health professional not found"}), 404
-
-        profile = specialist.profile
-        result = {
-            "id": specialist.id,
-            "full_name": profile.full_name,
-            "speciality": profile.bio,
-            "region": profile.region,
-            "profile_picture": profile.profile_picture,
-            "articles": [
-                {
-                    "title": article.title,
-                    "category": article.category
-                } for article in specialist.posts if article.is_medical and article.is_approved
-            ]
-        }
-        return jsonify({"health_professional": result})
-
-    
-    # Communities
-    @app.route('/communities', methods=['GET'])
-    def get_communities():
-        communities = Community.query.all()
-        return {
-            "communities": [
-                {
-                    "id": c.id,
-                    "name": c.name,
-                    "description": c.description,
-                    "image": c.image,           
-                    "members": c.member_count,
-                } for c in communities
-            ]
-        }
-    
-    # Get specific community details
-    @app.route('/communities/<int:id>', methods=['GET'])
-    def get_community(id):
-        community = Community.query.get(id)
-        if not community:
-            return {"error": "Community not found"}, 404
-        
-        print(f"Found community: {community.name}")  # <-- Add this for debugging!
-
-        return {
-            "community": {
-                "id": community.id,
-                "name": community.name,
-                "description": community.description,
-                "image": community.image,
-                "member_count": community.member_count
-            }
-        }
-
-
-    # Get posts for specific community
-    @app.route('/communities/<int:id>/posts', methods=['GET'])
-    def get_community_posts(id):
-        posts = Post.query.filter_by(community_id=id).all()
-        return {
-            "posts": [
-                {
-                    "id": post.id,
-                    "title": post.title,
-                    "content": post.content,
-                    "author_id": post.author_id
-                } for post in posts
-            ]
-        }
-
-
-    # all clinics
-    @app.route('/clinics')
-    def get_clinics():
-        clinics = Clinic.query.all()
-        return {
-            "clinics": [
-                {
-                    "id": clinic.id,
-                    "name": clinic.name,
-                    "location": clinic.location,
-                    "contact_info": clinic.contact_info
-                } for clinic in clinics
-            ]
-        }
-        
-    # all Uploads (might require authentication to add later)
-    @app.route('/uploads')
-    def get_uploads():
-        uploads = MedicalUpload.query.all()
-        return {
-            "uploads": [
-                {
-                    "id": upload.id,
-                    "file_url": upload.file_url,
-                    "file_type": upload.file_type,
-                    "notes": upload.notes
-                } for upload in uploads
-            ]
-        }
-        
-    # All Posts
-    @app.route('/posts')
-    def get_posts():
-        posts = Post.query.all()
-        return {
-            "posts": [
-                {
-                    "id": post.id,
-                    "title": post.title,
-                    "content": post.content,
-                    "is_medical": post.is_medical,
-                    "is_approved": post.is_approved,
-                    "category": post.category
-                } for post in posts
-            ]
-        }
-    # all Comments
-    @app.route('/comments')
-    def get_comments():
-        comments = Comment.query.all()
-        return {
-            "comments": [
-                {
-                    "id": comment.id,
-                    "post_id": comment.post_id,
-                    "user_id": comment.user_id,
-                    "content": comment.content,
-                } for comment in comments
-            ]
-        }
-    
-    # all articles
-    @app.route('/articles', methods=['GET'])
-    def get_articles():
-        limit = request.args.get('limit', default=None, type=int)
-
-        query = Article.query.filter_by(is_approved=True).order_by(desc(Article.created_at))
-        
-        if limit:
-            articles = query.limit(limit).all()
-        else:
-            articles = query.all()
-
-        return {
-            "articles": [
-                {
-                    "id": article.id,
-                    "title": article.title,
-                    "content": article.content,
-                    "category": article.category,
-                    "created_at": article.created_at,
-                    "author_id": article.author_id
-                } for article in articles
-            ]
-        }
-
-    # articles by specific author
-    @app.route('/articles/author/<int:author_id>', methods=['GET'])
-    def get_articles_by_author(author_id):
-        articles = Article.query.filter_by(author_id=author_id, is_approved=True).all()
-        return {
-            "articles": [
-                {
-                    "id": article.id,
-                    "title": article.title,
-                    "content": article.content,
-                    "category": article.category,
-                    "created_at": article.created_at,
-                    "author_id": article.author_id
-                } for article in articles
-            ]
-        }
-
-    # specific article by ID (NEW)
-    @app.route('/articles/<int:id>', methods=['GET'])
-    def get_article_by_id(id):
-        article = Article.query.get(id)
-
-        if not article or not article.is_approved:
-            return {"error": "Article not found"}, 404
-
-        return {
-            "article": {
-                "id": article.id,
-                "title": article.title,
-                "content": article.content,
-                "category": article.category,
-                "created_at": article.created_at,
-                "author_id": article.author_id
-            }
-        }
-
-
-    @app.route('/parenting-articles')
-    def get_parenting_articles():
-        articles = Article.query.filter_by(category='Parenting Development', is_approved=True).all()
-        return {"articles": [a.serialize() for a in articles]}
-
-    @app.route('/baby-articles')
-    def get_baby_articles():
-        articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
-        return {"articles": [a.serialize() for a in articles]}
-
-    # ========= Authentication and User Management ================
-    # Signup
-   
-    @app.route('/signup', methods=['POST'])
-    def signup():
-        try:
-            # Get main fields
-            email = request.form['email']
-            password = request.form['password']
-            role = request.form['role']
-
-            # ✅ Password Validation
-            if len(password) < 6 or not any(c.islower() for c in password) or not any(c.isupper() for c in password):
-                return jsonify({
-                    "error": "Password must be at least 6 characters long and contain both uppercase and lowercase letters."
-                }), 400
-
-            # Check if email already exists
-            if User.query.filter_by(email=email).first():
-                return jsonify({"error": "Email already registered"}), 400
-
-            # Create new user
-            user = User(email=email, role=role)
-            user.set_password(password)
-
-            # ✅ Optional fields from form
-            first_name = request.form.get('first_name', '')
-            middle_name = request.form.get('middle_name', '')
-            last_name = request.form.get('last_name', '')
-            bio = request.form.get('bio', '')
-            region = request.form.get('county')  # from the dropdown
-
-            full_name = f"{first_name} {middle_name} {last_name}".strip()
-
-            # Build profile object
-            profile_data = {
-                "full_name": full_name,
-                "bio": bio,
-                "region": region
-            }
-
-            # ✅ Only include license if role is Health Professional
-            if role == 'Health Professional' and 'license_number' in request.form:
-                profile_data["license_number"] = request.form['license_number']
-
-            # ✅ Create and attach profile
-            user.profile = Profile(**profile_data)
-
-            # ✅ Handle avatar upload
-            if 'avatar' in request.files:
-                avatar = request.files['avatar']
-                if avatar.filename:
-                    filename = secure_filename(avatar.filename)
-                    avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    avatar.save(avatar_path)
-                    user.profile.profile_picture = f"/{avatar_path}"
-
-            db.session.add(user)
-            db.session.commit()
-
-            print(f"Verification email should be sent to {email}")  # TODO: implement real email
-
-            return jsonify({"message": "User registered. Please check email to verify."}), 201
-
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            print("Database error:", str(e))
-            return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
-
-        except Exception as e:
-            print("Signup failed with error:", str(e))
-            return jsonify({"error": "Signup failed.", "details": str(e)}), 500
-
-    # @app.route('/signup', methods=['POST'])
-    # def signup():
-    #     try:
-    #         email = request.form['email']
-    #         password = request.form['password']
-    #         role = request.form['role']
-
-    #         if User.query.filter_by(email=email).first():
-    #             return jsonify({"error": "Email already registered"}), 400
-
-    #         user = User(email=email, role=role)
-    #         user.set_password(password)
-
-    #         # optional fields
-    #         if 'first_name' in request.form:
-    #             first_name = request.form['first_name']
-    #             middle_name = request.form.get('middle_name', '')
-    #             last_name = request.form['last_name']
-
-    #             full_name = f"{first_name} {middle_name} {last_name}".strip()
-
-    #             user.profile = Profile(
-    #                 full_name=full_name,
-    #                 bio=request.form.get('bio', ''),
-    #             )
-
-    #         if role == 'Health Professional' and 'license_number' in request.form:
-    #             user.profile.license_number = request.form['license_number']
-
-    #         # handle avatar upload
-    #         if 'avatar' in request.files:
-    #             avatar = request.files['avatar']
-    #             filename = secure_filename(avatar.filename)
-    #             avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    #             avatar.save(avatar_path)
-    #             user.profile.avatar_url = f"/{avatar_path}"
-
-    #         db.session.add(user)
-    #         db.session.commit()
-
-    #         print(f"Verification email should be sent to {email}")  # Replace later with real email service
-
-    #         return jsonify({"message": "User registered. Please check email to verify."}), 201
-
-    #     except SQLAlchemyError as e:
-    #         db.session.rollback()
-    #         print("Database error:", str(e))
-    #         return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
-
-        # except Exception as e:
-        #     print("Signup failed with error:", str(e))
-        #     return jsonify({"error": "Signup failed.", "details": str(e)}), 500
-
-
-    # Login
-    @app.route('/login', methods=['POST'])
-    def login():
-        try:
-            data = request.get_json()
-            email = data.get('email')
-            password = data.get('password')
-
-            if not email or not password:
-                return jsonify({"error": "Email and password required"}), 400
-
-            user = User.query.filter_by(email=email).first()
-
-            if user and user.check_password(password):
-                # token = create_access_token(identity=str(user.id))  # Force identity as string
-                # token = create_access_token(identity={"id": user.id, "role": user.role.lower()})
-                role_map = {
-                    "admin": "admin",
-                    "mom": "mum",
-                    "mom": "mom",
-                    "health professional": "health_pro"
-                }
-                token = create_access_token(
-                    identity=str(user.id),
-                    additional_claims={"role": role_map[user.role.lower()]}
-                )
-                
-
-                return jsonify(access_token=token), 200
-            
-            return jsonify({"error": "Invalid credentials"}), 401
-
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            print("Database error during login:", str(e))
-            return jsonify({"error": "Database error during login", "details": str(e)}), 500
-
-        except Exception as e:
-            print("General error during login:", str(e))
-            return jsonify({"error": "Login failed", "details": str(e)}), 500
-
-
-    # individual user profile
-    @app.route('/me', methods=['GET'])
-    @jwt_required()
-    def get_me():
-        user_id = get_jwt_identity()
-        user = User.query.get(int(user_id))
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        profile = user.profile
-
-        return jsonify({
-            "email": user.email,
-            "role": user.role,
-            "created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "profile": {
-                "full_name": profile.full_name if profile else None,
-                "bio": profile.bio if profile else None,
-                "region": profile.region if profile else None,
-                "license_number": profile.license_number if profile else None,
-                "profile_picture": profile.profile_picture if profile else None
-            }
-        })
-
-
-    @app.route('/admin/users', methods=['GET'])
-    @role_required("admin")
-    def get_users():
-        users = User.query.all()
-        return {
-            "users": [
-                {
-                    "id": user.id,
-                    "email": user.email,
-                    "role": user.role,
-                    "is_active": user.is_active,
-                    "created_at": user.created_at,
-                    "profile": {
-                        "full_name": user.profile.full_name if user.profile else "N/A"
-                    }
-                } for user in users
-            ]
-        }
-
-
-    # Admin add user
-    @app.route('/admin/add_user', methods=['POST'])
-    @role_required("admin")
-    def add_user():
-        data = request.get_json()
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"error": "User already exists"}), 400
-        user = User(email=data['email'], role=data['role'])
-        user.set_password(data['password'])
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({"message": f"{data['role']} added"}), 201
-
-    # Admin delete user   
-    @app.route('/admin/deactivate_user/<int:user_id>', methods=['PATCH'])
-    @role_required("admin")
-    def deactivate_user(user_id):
-        user = User.query.get_or_404(user_id)
-        user.is_active = False
-        db.session.commit()
-        return jsonify({"message": "User deactivated"})
-   
-    # admin delete user
-    @app.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
-    @role_required("admin")
-    def delete_user(user_id):
-        user = User.query.get_or_404(user_id)
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({"message": "User deleted"}), 200
-
-
-    # Admin remove content
-    @app.route('/admin/remove_content/<int:content_id>', methods=['DELETE'])
-    @role_required("admin")
-    def remove_content(content_id):
-        post = Post.query.get_or_404(content_id)
-        db.session.delete(post)
-        db.session.commit()
-        return jsonify({"message": "Content removed"})
-
-    # Admin approve content
-    @app.route('/admin/approve_content/<int:content_id>', methods=['POST'])
-    @role_required("admin")
-    def approve_content(content_id):
-        post = Post.query.get_or_404(content_id)
-        post.is_approved = True
-        db.session.commit()
-        return jsonify({"message": "Content approved"})
-
-    # Admin add category
-    @app.route('/admin/add_category', methods=['POST'])
-    @role_required("admin")
-    def add_category():
-        data = request.get_json()
-        return jsonify({"message": f"Category '{data['category']}' recorded (stub)"}), 200
-    
-    #Admin to approve Articles
-    @app.route('/admin/approve_article/<int:article_id>', methods=['POST'])
-    @role_required("admin")
-    def approve_article(article_id):
-        article = Article.query.get_or_404(article_id)
-        article.is_approved = True
-        db.session.commit()
-        return jsonify({"message": "Article approved"}), 200
-    
-    # Health Professionals Registration 
-    @app.route('/healthpros/register', methods=['POST'])
-    def register_health_pro():
-        data = request.get_json()
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"error": "User already exists"}), 400
-        user = User(email=data['email'], role="health_pro")
-        user.set_password(data['password'])
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({"message": "Health Professional registered"}), 201
-
-    # Health Professionals Profile
-    @app.route('/healthpros/me', methods=['GET'])
-    @role_required("health_pro")
-    def health_pro_me():
-        identity = get_jwt_identity()
-        user = User.query.get(int(identity))
-        return {"email": user.email, "created_at": user.created_at}
-
-    # Health Professionals Post article
-    @app.route('/healthpros/articles', methods=['GET', 'POST'])
-    @role_required("health_pro")
-    def health_pro_articles():
-        identity = get_jwt_identity()
-        
-        if request.method == 'GET':
-            articles = Article.query.filter_by(author_id=int(identity)).all()
-            return jsonify({
-                "articles": [
-                    {
-                        "id": a.id,
-                        "title": a.title,
-                        "content": a.content,
-                        "category": a.category,
-                        "is_approved": a.is_approved,
-                        "created_at": a.created_at
-                    } for a in articles
-                ]
-            })
-
-        # Handle POST (submit new article)
-        data = request.get_json()
-        article = Article(
-            author_id=int(identity),
-            title=data['title'],
-            content=data['content'],
-            category=data['category'],
-            is_approved=False
-        )
-        db.session.add(article)
-        db.session.commit()
-        return jsonify({"message": "Article submitted for approval"}), 201
-    
-    # Health questions
-    @app.route('/healthpros/questions', methods=['GET'])
-    @role_required("health_pro")
-    def get_healthpro_questions():
-        identity = get_jwt_identity()
-        questions = Question.query.filter_by(answered_by=None).all()
-        return jsonify({
-            "questions": [
-                {
-                    "id": q.id,
-                    "question_text": q.question_text,
-                    "user_id": q.user_id,
-                    "is_anonymous": q.is_anonymous
-                } for q in questions
-            ]
-        })
-
-    
-    # Health Professionals Answer questions
-    @app.route('/healthpros/answers', methods=['POST'])
-    @role_required("health_pro")
-    def health_pro_answer():
-        data = request.get_json()
-        question = Question.query.get_or_404(data['question_id'])
-        question.answer_text = data['answer_text']
-        question.answered_by = get_jwt_identity()['id']
-        db.session.commit()
-        return jsonify({"message": "Answer submitted"}), 200
-    
-    # Health Professionals Recommendations
-    @app.route('/healthpros/recommendations', methods=['POST'])
-    @role_required("health_pro")
-    def recommend_clinic():
-        data = request.get_json()
-        identity = get_jwt_identity()
-        clinic = Clinic(name=data['name'], location=data['location'],
-                        contact_info=data['contact_info'], recommended_by=identity['id'])
-        db.session.add(clinic)
-        db.session.commit()
-        return jsonify({"message": "Clinic recommendation added"}), 201
-
-    # Mums registration
-    @app.route('/mums/register', methods=['POST'])
-    def register_mum():
-        data = request.get_json()
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"error": "User already exists"}), 400
-        user = User(email=data['email'], role="mum")
-        user.set_password(data['password'])
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({"message": "Mum registered successfully"}), 201
-    
-    # Mums Profile
-    @app.route('/mums/profile', methods=['POST'])
-    @role_required("mum")
-    def update_mum_profile():
-        data = request.get_json()
-        identity = get_jwt_identity()
-        # profile = Profile(user_id=identity['id'], full_name=data['full_name'],
-        #                 region=data['region'], bio=data.get('bio'))
-        # db.session.add(profile)
-        # db.session.commit()
-        existing_profile = Profile.query.filter_by(user_id=identity['id']).first()
-        if not existing_profile:
-            existing_profile = Profile(user_id=identity['id'])
-
-        existing_profile.region = data['region']
-        existing_profile.bio = data.get('bio')
-
-        db.session.add(existing_profile)
-        db.session.commit()
-
-        return jsonify({"message": "Profile created"}), 201
-    
-    # Mums Update Profile
-    # @app.route('/mums/pregnancy', methods=['POST'])
-    # @role_required("mum")
-    # def add_pregnancy_details():
-    #     try:
-    #         data = request.get_json()
-    #         print("Received data:", data)
-
-    #         user_id = get_jwt_identity()  # ✅ FIXED
-    #         print("User ID:", user_id)
-
-    #         pregnancy = PregnancyDetail(
-    #             user_id=user_id,
-    #             last_period_date=data['last_period_date'],
-    #             due_date=data['due_date'],
-    #             current_week=data['current_week'],
-    #             pregnancy_status=data['pregnancy_status']
-    #         )
-    #         db.session.add(pregnancy)
-    #         db.session.commit()
-
-    #         return jsonify({"message": "Pregnancy details added"}), 201
-
-    #     except Exception as e:
-    #         print("Error saving pregnancy data:", str(e))
-    #         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
-
-    @app.route('/mums/pregnancy', methods=['POST'])
-    @role_required("mum")
-    def add_pregnancy_details():
-        try:
-            data = request.get_json()
-            user_id = get_jwt_identity()
-
-            lmp = datetime.strptime(data['last_period_date'], '%Y-%m-%d')
-            edd = lmp + timedelta(days=280)
-            current_week = (datetime.utcnow() - lmp).days // 7
-            pregnancy_status = "active" if current_week < 40 else "completed"
-
-            existing = PregnancyDetail.query.filter_by(user_id=user_id).first()
-            if not existing:
-                existing = PregnancyDetail(user_id=user_id)
-                db.session.add(existing)
-
-            existing.last_period_date = lmp
-            existing.due_date = edd
-            existing.current_week = current_week
-            existing.pregnancy_status = pregnancy_status
-            db.session.commit()
-
-            # Optional: Add auto-generated reminders
-            Reminder.query.filter_by(user_id=user_id).delete()
-            reminders = [
-                Reminder(user_id=user_id, reminder_text='Initial Prenatal Visit', reminder_date=lmp + timedelta(weeks=8), type='checkup'),
-                Reminder(user_id=user_id, reminder_text='Anatomy Scan', reminder_date=lmp + timedelta(weeks=20), type='scan'),
-                Reminder(user_id=user_id, reminder_text='Glucose Test', reminder_date=lmp + timedelta(weeks=26), type='test'),
-                Reminder(user_id=user_id, reminder_text='Group B Strep Test', reminder_date=lmp + timedelta(weeks=36), type='test'),
-            ]
-            db.session.add_all(reminders)
-            db.session.commit()
-
-            return jsonify({"message": "Pregnancy info saved and reminders set."}), 201
-
-        except Exception as e:
-            return jsonify({"error": "Internal server error", "details": str(e)}), 500
-
-    # Mums Get Pregnancy Details
-    @app.route('/mums/pregnancy-info', methods=['GET'])
-    @role_required("mum")
-    def get_pregnancy_info():
-        user_id = get_jwt_identity()
-        preg = PregnancyDetail.query.filter_by(user_id=user_id).first()
-
-        if not preg:
-            return jsonify({"error": "Pregnancy details not found"}), 404
-
-        lmp = preg.last_period_date
-        edd = preg.due_date
-        current_week = preg.current_week
-
-        trimester = (
-            "First Trimester" if current_week < 13 else
-            "Second Trimester" if current_week < 28 else
-            "Third Trimester" if current_week < 40 else
-            "Postpartum"
-        )
-
-        milestones = [
-            {"title": "Initial Prenatal Visit", "date": (lmp + timedelta(weeks=8)).strftime('%Y-%m-%d')},
-            {"title": "Anatomy Scan", "date": (lmp + timedelta(weeks=20)).strftime('%Y-%m-%d')},
-            {"title": "Glucose Test", "date": (lmp + timedelta(weeks=26)).strftime('%Y-%m-%d')},
-            {"title": "Group B Strep Test", "date": (lmp + timedelta(weeks=36)).strftime('%Y-%m-%d')}
-        ]
-
-        return jsonify({
-            "lmp": lmp.strftime('%Y-%m-%d'),
-            "edd": edd.strftime('%Y-%m-%d'),
-            "current_week": current_week,
-            "trimester": trimester,
-            "appointments": milestones
-    })
-    # Mums Get Pregnancy Details
-    @app.route('/mums/fetal_development', methods=['GET'])
-    @role_required("mum")
-    def fetal_development():
-        return jsonify({"tip": "Your baby is growing strong — eat healthy!"})
-    
-    # Mums Get Reminders
-    @app.route('/mums/reminders', methods=['GET'])
-    @role_required("mum")
-    def get_reminders():
-        identity = get_jwt_identity()
-        reminders = Reminder.query.filter_by(user_id=identity['id']).all()
-        return {"reminders": [{"text": r.reminder_text, "date": r.reminder_date} for r in reminders]}
-
-    # Add Reminder
-    @app.route('/mums/reminders', methods=['POST'])
-    @role_required("mum")
-    def add_reminder():
-        identity = get_jwt_identity()
-        data = request.get_json()
-        new_reminder = Reminder(
-            user_id=identity['id'],
-            reminder_text=data.get('reminder_text'),
-            reminder_date=data.get('reminder_date')
-        )
-        db.session.add(new_reminder)
-        db.session.commit()
-        return {"message": "Reminder added successfully."}, 201
-
-    # Mums upload medical files
-    @app.route('/mums/upload_scan', methods=['POST'])
-    @role_required("mum")
-    def upload_scan():
-        data = request.get_json()
-        identity = get_jwt_identity()
-        upload = MedicalUpload(user_id=identity['id'], file_url=data['file_url'],
-                            file_type="scan", notes=data['notes'])
-        db.session.add(upload)
-        db.session.commit()
-        return jsonify({"message": "Scan uploaded"}), 201
-
-    # Mums ask questions
-    @app.route('/mums/questions', methods=['POST'])
-    @role_required("mum")
-    def ask_question():
-        data = request.get_json()
-        identity = get_jwt_identity()
-        question = Question(user_id=identity['id'], question_text=data['question_text'],
-                            is_anonymous=data.get('is_anonymous', False))
-        db.session.add(question)
-        db.session.commit()
-        return jsonify({"message": "Question posted"}), 201
-
-    # Mums view answers and articles
-    @app.route('/mums/content', methods=['GET'])
-    @role_required("mum")
-    def view_content():
-        posts = Post.query.all()
-        articles = Article.query.filter_by(is_approved=True).all()
-        return {
-            "posts": [{"title": p.title, "content": p.content} for p in posts],
-            "articles": [{"title": a.title, "content": a.content, "category": a.category} for a in articles]
-    }
-
-    
-    # Nutrition Blogs
-    @app.route('/api/nutrition-blogs', methods=['GET'])
-    def get_blogs():
-        blogs = NutritionBlog.query.all()
-        data = [{
-            "id": blog.id,
-            "title": blog.title,
-            "content": blog.content,
-            "image_url": blog.image_url,
-            "category": blog.category,
-            "author": blog.author,
-            "created_at": blog.created_at.strftime("%Y-%m-%d")
-        } for blog in blogs]
-        return jsonify(data), 200
+    register_routes(app)
+    socketio.init_app(app)  # <-- Initialize SocketIO with the app
 
     return app
 
 app = create_app()
 
-
-
 if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, debug=True)  # <-- Run using socketio instead of app.run
+
+
+# from flask import Flask, request, jsonify
+# from flask_sqlalchemy import SQLAlchemy
+# from sqlalchemy import desc
+# from flask_migrate import Migrate
+# from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+# from flask_cors import CORS
+# from datetime import datetime, timedelta
+# from dotenv import load_dotenv
+# from functools import wraps
+# from werkzeug.utils import secure_filename
+# from middleware.auth import role_required
+# from sqlalchemy.exc import SQLAlchemyError
+# import os
+# from models import *
+
+# load_dotenv()
+# UPLOAD_FOLDER = 'static/avatars' 
+
+# def create_app():
+#     app = Flask(__name__)
+    
+#     #configurations
+#     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#     app.config['JWT_SECRET_KEY'] = "super-secret-key"  # Replace with secure value in prod
+#     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
+#     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
+#     # Initialize extensions
+#     db.init_app(app)
+#     Migrate(app, db)
+#     JWTManager(app)
+#     # CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)  # Allow all origins for now
+#     CORS(app, supports_credentials=True, resources={r"/*": {
+#         "origins": ["http://127.0.0.1:5173", "http://localhost:5173"],
+#         "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+#         "allow_headers": ["Content-Type", "Authorization"]
+#     }})
+    
+#     # First we need to check role of the user
+#     # def role_required(required_role):
+#     #     def decorator(f):
+#     #         @wraps(f)
+#     #         @jwt_required()
+#     #         def wrapper(*args, **kwargs):
+#     #             identity = get_jwt_identity()
+#     #             if identity['role'] != required_role:
+#     #                 return jsonify({"error": "Unauthorized"}), 403
+#     #             return f(*args, **kwargs)
+#     #         return wrapper
+#     #     return decorator
+    
+#     def normalize_role(role):
+#         mapping = {
+#             "admin": "admin",
+#             "mom": "mum",
+#             "mom": "mom",
+#             "health professional": "health_pro",
+#             "health_professional": "health_pro",
+#             "health_pro": "health_pro"
+#         }
+#         return mapping.get(role.lower().replace(" ", "_"), role.lower())
+
+#     def role_required(required_role):
+#         def decorator(f):
+#             @wraps(f)
+#             @jwt_required()
+#             def wrapper(*args, **kwargs):
+#                 claims = get_jwt()
+#                 role = claims.get("role", "").strip().lower()
+
+#                 print("JWT role:", role)
+
+#                 # Normalize both sides (your required_role might be underscored, claim might not)
+#                 normalized_claim_role = role.replace(" ", "_")
+#                 normalized_required = required_role.strip().lower().replace(" ", "_")
+
+#                 if normalized_claim_role != normalized_required:
+#                     return jsonify({"error": f"Unauthorized. Needed {normalized_required}, got {normalized_claim_role}"}), 403
+
+#                 return f(*args, **kwargs)
+#             return wrapper
+#         return decorator
+
+
+
+
+#     # =============== API Endpoints ======================================
+#     # Index
+#     @app.route('/')
+#     def index():
+#         return "Welcome to Mama Afrika!"
+
+#     # All Profiles
+#     @app.route('/profile')
+#     def get_profile():
+#         users = Profile.query.all()
+#         return {
+#             "users": [
+#                 {
+#                     "id": user.id,
+#                     "full_name": user.full_name,
+#                     "region": user.region,
+#                     "bio": user.bio
+#                 } for user in users
+#             ]
+#         }
+
+#     # Health Professionals 
+#     @app.route('/healthpros', methods=['GET'])
+#     def get_healthpros():
+#         specialists = User.query.filter_by(role='health_pro').all()
+#         results = []
+#         for specialist in specialists:
+#             profile = specialist.profile
+#             results.append({
+#                 "id": specialist.id,
+#                 "full_name": profile.full_name,
+#                 "speciality": profile.bio,
+#                 "region": profile.region,
+#                 "profile_picture": profile.profile_picture,
+#                 "articles": [
+#                     {
+#                         "title": article.title,
+#                         "category": article.category
+#                     } for article in specialist.posts if article.is_medical and article.is_approved
+#                 ]
+#             })
+#         return jsonify({"specialists": results})
+
+    
+#     # Get a single health professional by ID
+#     @app.route('/healthpros/<int:id>', methods=['GET'])
+#     def get_healthpro_by_id(id):
+#         specialist = User.query.filter_by(id=id, role='health_pro').first()
+#         if not specialist:
+#             return jsonify({"error": "Health professional not found"}), 404
+
+#         profile = specialist.profile
+#         result = {
+#             "id": specialist.id,
+#             "full_name": profile.full_name,
+#             "speciality": profile.bio,
+#             "region": profile.region,
+#             "profile_picture": profile.profile_picture,
+#             "articles": [
+#                 {
+#                     "title": article.title,
+#                     "category": article.category
+#                 } for article in specialist.posts if article.is_medical and article.is_approved
+#             ]
+#         }
+#         return jsonify({"health_professional": result})
+
+    
+#     # Communities
+#     @app.route('/communities', methods=['GET'])
+#     def get_communities():
+#         communities = Community.query.all()
+#         return {
+#             "communities": [
+#                 {
+#                     "id": c.id,
+#                     "name": c.name,
+#                     "description": c.description,
+#                     "image": c.image,           
+#                     "members": c.member_count,
+#                 } for c in communities
+#             ]
+#         }
+    
+#     # Get specific community details
+#     @app.route('/communities/<int:id>', methods=['GET'])
+#     def get_community(id):
+#         community = Community.query.get(id)
+#         if not community:
+#             return {"error": "Community not found"}, 404
+        
+#         print(f"Found community: {community.name}")  # <-- Add this for debugging!
+
+#         return {
+#             "community": {
+#                 "id": community.id,
+#                 "name": community.name,
+#                 "description": community.description,
+#                 "image": community.image,
+#                 "member_count": community.member_count
+#             }
+#         }
+
+
+#     # Get posts for specific community
+#     @app.route('/communities/<int:id>/posts', methods=['GET'])
+#     def get_community_posts(id):
+#         posts = Post.query.filter_by(community_id=id).all()
+#         return {
+#             "posts": [
+#                 {
+#                     "id": post.id,
+#                     "title": post.title,
+#                     "content": post.content,
+#                     "author_id": post.author_id
+#                 } for post in posts
+#             ]
+#         }
+
+
+#     # all clinics
+#     @app.route('/clinics')
+#     def get_clinics():
+#         clinics = Clinic.query.all()
+#         return {
+#             "clinics": [
+#                 {
+#                     "id": clinic.id,
+#                     "name": clinic.name,
+#                     "location": clinic.location,
+#                     "contact_info": clinic.contact_info
+#                 } for clinic in clinics
+#             ]
+#         }
+        
+#     # all Uploads (might require authentication to add later)
+#     @app.route('/uploads')
+#     def get_uploads():
+#         uploads = MedicalUpload.query.all()
+#         return {
+#             "uploads": [
+#                 {
+#                     "id": upload.id,
+#                     "file_url": upload.file_url,
+#                     "file_type": upload.file_type,
+#                     "notes": upload.notes
+#                 } for upload in uploads
+#             ]
+#         }
+        
+#     # All Posts
+#     @app.route('/posts')
+#     def get_posts():
+#         posts = Post.query.all()
+#         return {
+#             "posts": [
+#                 {
+#                     "id": post.id,
+#                     "title": post.title,
+#                     "content": post.content,
+#                     "is_medical": post.is_medical,
+#                     "is_approved": post.is_approved,
+#                     "category": post.category
+#                 } for post in posts
+#             ]
+#         }
+#     # all Comments
+#     @app.route('/comments')
+#     def get_comments():
+#         comments = Comment.query.all()
+#         return {
+#             "comments": [
+#                 {
+#                     "id": comment.id,
+#                     "post_id": comment.post_id,
+#                     "user_id": comment.user_id,
+#                     "content": comment.content,
+#                 } for comment in comments
+#             ]
+#         }
+    
+#     # all articles
+#     @app.route('/articles', methods=['GET'])
+#     def get_articles():
+#         limit = request.args.get('limit', default=None, type=int)
+
+#         query = Article.query.filter_by(is_approved=True).order_by(desc(Article.created_at))
+        
+#         if limit:
+#             articles = query.limit(limit).all()
+#         else:
+#             articles = query.all()
+
+#         return {
+#             "articles": [
+#                 {
+#                     "id": article.id,
+#                     "title": article.title,
+#                     "content": article.content,
+#                     "category": article.category,
+#                     "created_at": article.created_at,
+#                     "author_id": article.author_id
+#                 } for article in articles
+#             ]
+#         }
+
+#     # articles by specific author
+#     @app.route('/articles/author/<int:author_id>', methods=['GET'])
+#     def get_articles_by_author(author_id):
+#         articles = Article.query.filter_by(author_id=author_id, is_approved=True).all()
+#         return {
+#             "articles": [
+#                 {
+#                     "id": article.id,
+#                     "title": article.title,
+#                     "content": article.content,
+#                     "category": article.category,
+#                     "created_at": article.created_at,
+#                     "author_id": article.author_id
+#                 } for article in articles
+#             ]
+#         }
+
+#     # specific article by ID (NEW)
+#     @app.route('/articles/<int:id>', methods=['GET'])
+#     def get_article_by_id(id):
+#         article = Article.query.get(id)
+
+#         if not article or not article.is_approved:
+#             return {"error": "Article not found"}, 404
+
+#         return {
+#             "article": {
+#                 "id": article.id,
+#                 "title": article.title,
+#                 "content": article.content,
+#                 "category": article.category,
+#                 "created_at": article.created_at,
+#                 "author_id": article.author_id
+#             }
+#         }
+
+
+#     @app.route('/parenting-articles')
+#     def get_parenting_articles():
+#         articles = Article.query.filter_by(category='Parenting Development', is_approved=True).all()
+#         return {"articles": [a.serialize() for a in articles]}
+
+#     @app.route('/baby-articles')
+#     def get_baby_articles():
+#         articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
+#         return {"articles": [a.serialize() for a in articles]}
+
+#     # ========= Authentication and User Management ================
+#     # Signup
+   
+#     @app.route('/signup', methods=['POST'])
+#     def signup():
+#         try:
+#             # Get main fields
+#             email = request.form['email']
+#             password = request.form['password']
+#             role = request.form['role']
+
+#             # ✅ Password Validation
+#             if len(password) < 6 or not any(c.islower() for c in password) or not any(c.isupper() for c in password):
+#                 return jsonify({
+#                     "error": "Password must be at least 6 characters long and contain both uppercase and lowercase letters."
+#                 }), 400
+
+#             # Check if email already exists
+#             if User.query.filter_by(email=email).first():
+#                 return jsonify({"error": "Email already registered"}), 400
+
+#             # Create new user
+#             user = User(email=email, role=role)
+#             user.set_password(password)
+
+#             # ✅ Optional fields from form
+#             first_name = request.form.get('first_name', '')
+#             middle_name = request.form.get('middle_name', '')
+#             last_name = request.form.get('last_name', '')
+#             bio = request.form.get('bio', '')
+#             region = request.form.get('county')  # from the dropdown
+
+#             full_name = f"{first_name} {middle_name} {last_name}".strip()
+
+#             # Build profile object
+#             profile_data = {
+#                 "full_name": full_name,
+#                 "bio": bio,
+#                 "region": region
+#             }
+
+#             # ✅ Only include license if role is Health Professional
+#             if role == 'Health Professional' and 'license_number' in request.form:
+#                 profile_data["license_number"] = request.form['license_number']
+
+#             # ✅ Create and attach profile
+#             user.profile = Profile(**profile_data)
+
+#             # ✅ Handle avatar upload
+#             if 'avatar' in request.files:
+#                 avatar = request.files['avatar']
+#                 if avatar.filename:
+#                     filename = secure_filename(avatar.filename)
+#                     avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#                     avatar.save(avatar_path)
+#                     user.profile.profile_picture = f"/{avatar_path}"
+
+#             db.session.add(user)
+#             db.session.commit()
+
+#             print(f"Verification email should be sent to {email}")  # TODO: implement real email
+
+#             return jsonify({"message": "User registered. Please check email to verify."}), 201
+
+#         except SQLAlchemyError as e:
+#             db.session.rollback()
+#             print("Database error:", str(e))
+#             return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
+
+#         except Exception as e:
+#             print("Signup failed with error:", str(e))
+#             return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
+#     # @app.route('/signup', methods=['POST'])
+#     # def signup():
+#     #     try:
+#     #         email = request.form['email']
+#     #         password = request.form['password']
+#     #         role = request.form['role']
+
+#     #         if User.query.filter_by(email=email).first():
+#     #             return jsonify({"error": "Email already registered"}), 400
+
+#     #         user = User(email=email, role=role)
+#     #         user.set_password(password)
+
+#     #         # optional fields
+#     #         if 'first_name' in request.form:
+#     #             first_name = request.form['first_name']
+#     #             middle_name = request.form.get('middle_name', '')
+#     #             last_name = request.form['last_name']
+
+#     #             full_name = f"{first_name} {middle_name} {last_name}".strip()
+
+#     #             user.profile = Profile(
+#     #                 full_name=full_name,
+#     #                 bio=request.form.get('bio', ''),
+#     #             )
+
+#     #         if role == 'Health Professional' and 'license_number' in request.form:
+#     #             user.profile.license_number = request.form['license_number']
+
+#     #         # handle avatar upload
+#     #         if 'avatar' in request.files:
+#     #             avatar = request.files['avatar']
+#     #             filename = secure_filename(avatar.filename)
+#     #             avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#     #             avatar.save(avatar_path)
+#     #             user.profile.avatar_url = f"/{avatar_path}"
+
+#     #         db.session.add(user)
+#     #         db.session.commit()
+
+#     #         print(f"Verification email should be sent to {email}")  # Replace later with real email service
+
+#     #         return jsonify({"message": "User registered. Please check email to verify."}), 201
+
+#     #     except SQLAlchemyError as e:
+#     #         db.session.rollback()
+#     #         print("Database error:", str(e))
+#     #         return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
+
+#         # except Exception as e:
+#         #     print("Signup failed with error:", str(e))
+#         #     return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
+
+#     # Login
+#     @app.route('/login', methods=['POST'])
+#     def login():
+#         try:
+#             data = request.get_json()
+#             email = data.get('email')
+#             password = data.get('password')
+
+#             if not email or not password:
+#                 return jsonify({"error": "Email and password required"}), 400
+
+#             user = User.query.filter_by(email=email).first()
+
+#             if user and user.check_password(password):
+#                 # token = create_access_token(identity=str(user.id))  # Force identity as string
+#                 # token = create_access_token(identity={"id": user.id, "role": user.role.lower()})
+#                 role_map = {
+#                     "admin": "admin",
+#                     "mom": "mum",
+#                     "mom": "mom",
+#                     "health professional": "health_pro"
+#                 }
+#                 token = create_access_token(
+#                     identity=str(user.id),
+#                     additional_claims={"role": role_map[user.role.lower()]}
+#                 )
+                
+
+#                 return jsonify(access_token=token), 200
+            
+#             return jsonify({"error": "Invalid credentials"}), 401
+
+#         except SQLAlchemyError as e:
+#             db.session.rollback()
+#             print("Database error during login:", str(e))
+#             return jsonify({"error": "Database error during login", "details": str(e)}), 500
+
+#         except Exception as e:
+#             print("General error during login:", str(e))
+#             return jsonify({"error": "Login failed", "details": str(e)}), 500
+
+
+#     # individual user profile
+#     @app.route('/me', methods=['GET'])
+#     @jwt_required()
+#     def get_me():
+#         user_id = get_jwt_identity()
+#         user = User.query.get(int(user_id))
+#         if not user:
+#             return jsonify({"error": "User not found"}), 404
+
+#         profile = user.profile
+
+#         return jsonify({
+#             "email": user.email,
+#             "role": user.role,
+#             "created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+#             "profile": {
+#                 "full_name": profile.full_name if profile else None,
+#                 "bio": profile.bio if profile else None,
+#                 "region": profile.region if profile else None,
+#                 "license_number": profile.license_number if profile else None,
+#                 "profile_picture": profile.profile_picture if profile else None
+#             }
+#         })
+
+
+#     @app.route('/admin/users', methods=['GET'])
+#     @role_required("admin")
+#     def get_users():
+#         users = User.query.all()
+#         return {
+#             "users": [
+#                 {
+#                     "id": user.id,
+#                     "email": user.email,
+#                     "role": user.role,
+#                     "is_active": user.is_active,
+#                     "created_at": user.created_at,
+#                     "profile": {
+#                         "full_name": user.profile.full_name if user.profile else "N/A"
+#                     }
+#                 } for user in users
+#             ]
+#         }
+
+
+#     # Admin add user
+#     @app.route('/admin/add_user', methods=['POST'])
+#     @role_required("admin")
+#     def add_user():
+#         data = request.get_json()
+#         if User.query.filter_by(email=data['email']).first():
+#             return jsonify({"error": "User already exists"}), 400
+#         user = User(email=data['email'], role=data['role'])
+#         user.set_password(data['password'])
+#         db.session.add(user)
+#         db.session.commit()
+#         return jsonify({"message": f"{data['role']} added"}), 201
+
+#     # Admin delete user   
+#     @app.route('/admin/deactivate_user/<int:user_id>', methods=['PATCH'])
+#     @role_required("admin")
+#     def deactivate_user(user_id):
+#         user = User.query.get_or_404(user_id)
+#         user.is_active = False
+#         db.session.commit()
+#         return jsonify({"message": "User deactivated"})
+   
+#     # admin delete user
+#     @app.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
+#     @role_required("admin")
+#     def delete_user(user_id):
+#         user = User.query.get_or_404(user_id)
+#         db.session.delete(user)
+#         db.session.commit()
+#         return jsonify({"message": "User deleted"}), 200
+
+
+#     # Admin remove content
+#     @app.route('/admin/remove_content/<int:content_id>', methods=['DELETE'])
+#     @role_required("admin")
+#     def remove_content(content_id):
+#         post = Post.query.get_or_404(content_id)
+#         db.session.delete(post)
+#         db.session.commit()
+#         return jsonify({"message": "Content removed"})
+
+#     # Admin approve content
+#     @app.route('/admin/approve_content/<int:content_id>', methods=['POST'])
+#     @role_required("admin")
+#     def approve_content(content_id):
+#         post = Post.query.get_or_404(content_id)
+#         post.is_approved = True
+#         db.session.commit()
+#         return jsonify({"message": "Content approved"})
+
+#     # Admin add category
+#     @app.route('/admin/add_category', methods=['POST'])
+#     @role_required("admin")
+#     def add_category():
+#         data = request.get_json()
+#         return jsonify({"message": f"Category '{data['category']}' recorded (stub)"}), 200
+    
+#     #Admin to approve Articles
+#     @app.route('/admin/approve_article/<int:article_id>', methods=['POST'])
+#     @role_required("admin")
+#     def approve_article(article_id):
+#         article = Article.query.get_or_404(article_id)
+#         article.is_approved = True
+#         db.session.commit()
+#         return jsonify({"message": "Article approved"}), 200
+    
+#     # Health Professionals Registration 
+#     @app.route('/healthpros/register', methods=['POST'])
+#     def register_health_pro():
+#         data = request.get_json()
+#         if User.query.filter_by(email=data['email']).first():
+#             return jsonify({"error": "User already exists"}), 400
+#         user = User(email=data['email'], role="health_pro")
+#         user.set_password(data['password'])
+#         db.session.add(user)
+#         db.session.commit()
+#         return jsonify({"message": "Health Professional registered"}), 201
+
+#     # Health Professionals Profile
+#     @app.route('/healthpros/me', methods=['GET'])
+#     @role_required("health_pro")
+#     def health_pro_me():
+#         identity = get_jwt_identity()
+#         user = User.query.get(int(identity))
+#         return {"email": user.email, "created_at": user.created_at}
+
+#     # Health Professionals Post article
+#     @app.route('/healthpros/articles', methods=['GET', 'POST'])
+#     @role_required("health_pro")
+#     def health_pro_articles():
+#         identity = get_jwt_identity()
+        
+#         if request.method == 'GET':
+#             articles = Article.query.filter_by(author_id=int(identity)).all()
+#             return jsonify({
+#                 "articles": [
+#                     {
+#                         "id": a.id,
+#                         "title": a.title,
+#                         "content": a.content,
+#                         "category": a.category,
+#                         "is_approved": a.is_approved,
+#                         "created_at": a.created_at
+#                     } for a in articles
+#                 ]
+#             })
+
+#         # Handle POST (submit new article)
+#         data = request.get_json()
+#         article = Article(
+#             author_id=int(identity),
+#             title=data['title'],
+#             content=data['content'],
+#             category=data['category'],
+#             is_approved=False
+#         )
+#         db.session.add(article)
+#         db.session.commit()
+#         return jsonify({"message": "Article submitted for approval"}), 201
+    
+#     # Health questions
+#     @app.route('/healthpros/questions', methods=['GET'])
+#     @role_required("health_pro")
+#     def get_healthpro_questions():
+#         identity = get_jwt_identity()
+#         questions = Question.query.filter_by(answered_by=None).all()
+#         return jsonify({
+#             "questions": [
+#                 {
+#                     "id": q.id,
+#                     "question_text": q.question_text,
+#                     "user_id": q.user_id,
+#                     "is_anonymous": q.is_anonymous
+#                 } for q in questions
+#             ]
+#         })
+
+    
+#     # Health Professionals Answer questions
+#     @app.route('/healthpros/answers', methods=['POST'])
+#     @role_required("health_pro")
+#     def health_pro_answer():
+#         data = request.get_json()
+#         question = Question.query.get_or_404(data['question_id'])
+#         question.answer_text = data['answer_text']
+#         question.answered_by = get_jwt_identity()['id']
+#         db.session.commit()
+#         return jsonify({"message": "Answer submitted"}), 200
+    
+#     # Health Professionals Recommendations
+#     @app.route('/healthpros/recommendations', methods=['POST'])
+#     @role_required("health_pro")
+#     def recommend_clinic():
+#         data = request.get_json()
+#         identity = get_jwt_identity()
+#         clinic = Clinic(name=data['name'], location=data['location'],
+#                         contact_info=data['contact_info'], recommended_by=identity['id'])
+#         db.session.add(clinic)
+#         db.session.commit()
+#         return jsonify({"message": "Clinic recommendation added"}), 201
+
+#     # Mums registration
+#     @app.route('/mums/register', methods=['POST'])
+#     def register_mum():
+#         data = request.get_json()
+#         if User.query.filter_by(email=data['email']).first():
+#             return jsonify({"error": "User already exists"}), 400
+#         user = User(email=data['email'], role="mum")
+#         user.set_password(data['password'])
+#         db.session.add(user)
+#         db.session.commit()
+#         return jsonify({"message": "Mum registered successfully"}), 201
+    
+#     # Mums Profile
+#     @app.route('/mums/profile', methods=['POST'])
+#     @role_required("mum")
+#     def update_mum_profile():
+#         data = request.get_json()
+#         identity = get_jwt_identity()
+#         # profile = Profile(user_id=identity['id'], full_name=data['full_name'],
+#         #                 region=data['region'], bio=data.get('bio'))
+#         # db.session.add(profile)
+#         # db.session.commit()
+#         existing_profile = Profile.query.filter_by(user_id=identity['id']).first()
+#         if not existing_profile:
+#             existing_profile = Profile(user_id=identity['id'])
+
+#         existing_profile.region = data['region']
+#         existing_profile.bio = data.get('bio')
+
+#         db.session.add(existing_profile)
+#         db.session.commit()
+
+#         return jsonify({"message": "Profile created"}), 201
+    
+#     # Mums Update Profile
+#     # @app.route('/mums/pregnancy', methods=['POST'])
+#     # @role_required("mum")
+#     # def add_pregnancy_details():
+#     #     try:
+#     #         data = request.get_json()
+#     #         print("Received data:", data)
+
+#     #         user_id = get_jwt_identity()  # ✅ FIXED
+#     #         print("User ID:", user_id)
+
+#     #         pregnancy = PregnancyDetail(
+#     #             user_id=user_id,
+#     #             last_period_date=data['last_period_date'],
+#     #             due_date=data['due_date'],
+#     #             current_week=data['current_week'],
+#     #             pregnancy_status=data['pregnancy_status']
+#     #         )
+#     #         db.session.add(pregnancy)
+#     #         db.session.commit()
+
+#     #         return jsonify({"message": "Pregnancy details added"}), 201
+
+#     #     except Exception as e:
+#     #         print("Error saving pregnancy data:", str(e))
+#     #         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+
+#     @app.route('/mums/pregnancy', methods=['POST'])
+#     @role_required("mum")
+#     def add_pregnancy_details():
+#         try:
+#             data = request.get_json()
+#             user_id = get_jwt_identity()
+
+#             lmp = datetime.strptime(data['last_period_date'], '%Y-%m-%d')
+#             edd = lmp + timedelta(days=280)
+#             current_week = (datetime.utcnow() - lmp).days // 7
+#             pregnancy_status = "active" if current_week < 40 else "completed"
+
+#             existing = PregnancyDetail.query.filter_by(user_id=user_id).first()
+#             if not existing:
+#                 existing = PregnancyDetail(user_id=user_id)
+#                 db.session.add(existing)
+
+#             existing.last_period_date = lmp
+#             existing.due_date = edd
+#             existing.current_week = current_week
+#             existing.pregnancy_status = pregnancy_status
+#             db.session.commit()
+
+#             # Optional: Add auto-generated reminders
+#             Reminder.query.filter_by(user_id=user_id).delete()
+#             reminders = [
+#                 Reminder(user_id=user_id, reminder_text='Initial Prenatal Visit', reminder_date=lmp + timedelta(weeks=8), type='checkup'),
+#                 Reminder(user_id=user_id, reminder_text='Anatomy Scan', reminder_date=lmp + timedelta(weeks=20), type='scan'),
+#                 Reminder(user_id=user_id, reminder_text='Glucose Test', reminder_date=lmp + timedelta(weeks=26), type='test'),
+#                 Reminder(user_id=user_id, reminder_text='Group B Strep Test', reminder_date=lmp + timedelta(weeks=36), type='test'),
+#             ]
+#             db.session.add_all(reminders)
+#             db.session.commit()
+
+#             return jsonify({"message": "Pregnancy info saved and reminders set."}), 201
+
+#         except Exception as e:
+#             return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+#     # Mums Get Pregnancy Details
+#     @app.route('/mums/pregnancy-info', methods=['GET'])
+#     @role_required("mum")
+#     def get_pregnancy_info():
+#         user_id = get_jwt_identity()
+#         preg = PregnancyDetail.query.filter_by(user_id=user_id).first()
+
+#         if not preg:
+#             return jsonify({"error": "Pregnancy details not found"}), 404
+
+#         lmp = preg.last_period_date
+#         edd = preg.due_date
+#         current_week = preg.current_week
+
+#         trimester = (
+#             "First Trimester" if current_week < 13 else
+#             "Second Trimester" if current_week < 28 else
+#             "Third Trimester" if current_week < 40 else
+#             "Postpartum"
+#         )
+
+#         milestones = [
+#             {"title": "Initial Prenatal Visit", "date": (lmp + timedelta(weeks=8)).strftime('%Y-%m-%d')},
+#             {"title": "Anatomy Scan", "date": (lmp + timedelta(weeks=20)).strftime('%Y-%m-%d')},
+#             {"title": "Glucose Test", "date": (lmp + timedelta(weeks=26)).strftime('%Y-%m-%d')},
+#             {"title": "Group B Strep Test", "date": (lmp + timedelta(weeks=36)).strftime('%Y-%m-%d')}
+#         ]
+
+#         return jsonify({
+#             "lmp": lmp.strftime('%Y-%m-%d'),
+#             "edd": edd.strftime('%Y-%m-%d'),
+#             "current_week": current_week,
+#             "trimester": trimester,
+#             "appointments": milestones
+#     })
+#     # Mums Get Pregnancy Details
+#     @app.route('/mums/fetal_development', methods=['GET'])
+#     @role_required("mum")
+#     def fetal_development():
+#         return jsonify({"tip": "Your baby is growing strong — eat healthy!"})
+    
+#     # Mums Get Reminders
+#     @app.route('/mums/reminders', methods=['GET'])
+#     @role_required("mum")
+#     def get_reminders():
+#         identity = get_jwt_identity()
+#         reminders = Reminder.query.filter_by(user_id=identity['id']).all()
+#         return {"reminders": [{"text": r.reminder_text, "date": r.reminder_date} for r in reminders]}
+
+#     # Add Reminder
+#     @app.route('/mums/reminders', methods=['POST'])
+#     @role_required("mum")
+#     def add_reminder():
+#         identity = get_jwt_identity()
+#         data = request.get_json()
+#         new_reminder = Reminder(
+#             user_id=identity['id'],
+#             reminder_text=data.get('reminder_text'),
+#             reminder_date=data.get('reminder_date')
+#         )
+#         db.session.add(new_reminder)
+#         db.session.commit()
+#         return {"message": "Reminder added successfully."}, 201
+
+#     # Mums upload medical files
+#     @app.route('/mums/upload_scan', methods=['POST'])
+#     @role_required("mum")
+#     def upload_scan():
+#         data = request.get_json()
+#         identity = get_jwt_identity()
+#         upload = MedicalUpload(user_id=identity['id'], file_url=data['file_url'],
+#                             file_type="scan", notes=data['notes'])
+#         db.session.add(upload)
+#         db.session.commit()
+#         return jsonify({"message": "Scan uploaded"}), 201
+
+#     # Mums ask questions
+#     @app.route('/mums/questions', methods=['POST'])
+#     @role_required("mum")
+#     def ask_question():
+#         data = request.get_json()
+#         identity = get_jwt_identity()
+#         question = Question(user_id=identity['id'], question_text=data['question_text'],
+#                             is_anonymous=data.get('is_anonymous', False))
+#         db.session.add(question)
+#         db.session.commit()
+#         return jsonify({"message": "Question posted"}), 201
+
+#     # Mums view answers and articles
+#     @app.route('/mums/content', methods=['GET'])
+#     @role_required("mum")
+#     def view_content():
+#         posts = Post.query.all()
+#         articles = Article.query.filter_by(is_approved=True).all()
+#         return {
+#             "posts": [{"title": p.title, "content": p.content} for p in posts],
+#             "articles": [{"title": a.title, "content": a.content, "category": a.category} for a in articles]
+#     }
+
+    
+#     # Nutrition Blogs
+#     @app.route('/api/nutrition-blogs', methods=['GET'])
+#     def get_blogs():
+#         blogs = NutritionBlog.query.all()
+#         data = [{
+#             "id": blog.id,
+#             "title": blog.title,
+#             "content": blog.content,
+#             "image_url": blog.image_url,
+#             "category": blog.category,
+#             "author": blog.author,
+#             "created_at": blog.created_at.strftime("%Y-%m-%d")
+#         } for blog in blogs]
+#         return jsonify(data), 200
+
+#     return app
+
+# app = create_app()
+
+
+
+# if __name__ == "__main__":
+#     app = create_app()
+#     app.run(host="0.0.0.0", port=5000, debug=True)
    
