@@ -1,36 +1,83 @@
 // src/components/posts/QuestionCard.jsx
-export default function QuestionCard({ question }) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 border-cyan-500">
-        <div className="flex items-start mb-3">
-          <div className="bg-cyan-100 text-cyan-800 rounded-full w-10 h-10 flex items-center justify-center mr-3">
-            Q
-          </div>
-          <div>
-            <h3 className="font-semibold">
-              {question.is_anonymous ? "Anonymous" : question.asker.profile.full_name}
-            </h3>
-            <p className="text-gray-500 text-sm">
-              Asked on {new Date(question.created_at).toLocaleDateString()}
-            </p>
-          </div>
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import  api  from '../../lib/api';
+
+const QuestionCard = ({ question, onCommentSubmit }) => {
+  const queryClient = useQueryClient();
+  const [commentText, setCommentText] = useState('');
+  const [shareMsg, setShareMsg] = useState('');
+
+  const shareMutation = useMutation({
+    mutationFn: ({ contentType, contentId, recipientEmail }) =>
+      recipientEmail
+        ? api.shareViaEmail(contentType, contentId, recipientEmail)
+        : api.shareContent(contentType, contentId),
+    onSuccess: () => {
+      setShareMsg('Content shared successfully!');
+      setTimeout(() => setShareMsg(''), 3000);
+    },
+    onError: () => {
+      setShareMsg('Error sharing content');
+      setTimeout(() => setShareMsg(''), 3000);
+    },
+  });
+
+  const handleShare = (recipientEmail = null) => {
+    shareMutation.mutate({ contentType: 'question', contentId: question.id, recipientEmail });
+  };
+
+  return (
+    <div className="p-4">
+      <h3 className="text-lg font-semibold">
+        {question.is_anonymous ? 'Anonymous' : 'User'} asked:
+      </h3>
+      <p className="text-gray-600 mb-2">{question.question_text}</p>
+      {question.answer_text && (
+        <div className="bg-gray-100 p-3 rounded mb-2">
+          <p className="font-semibold">Health Professional Answer:</p>
+          <p>{question.answer_text}</p>
         </div>
-  
-        <div className="mb-4">
-          <p className="text-gray-800">{question.question_text}</p>
-        </div>
-  
-        {question.answer_text && (
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <div className="flex items-center mb-2">
-              <div className="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                A
-              </div>
-              <span className="font-medium">Dr. {question.responder.profile.full_name}</span>
-            </div>
-            <p className="text-gray-700">{question.answer_text}</p>
-          </div>
-        )}
+      )}
+      <div className="flex gap-4 mb-4">
+        <button
+          className="bg-cyan-600 text-white px-4 py-1 rounded hover:bg-cyan-700"
+          onClick={() => handleShare()}
+        >
+          Share
+        </button>
+        <button
+          className="bg-cyan-600 text-white px-4 py-1 rounded hover:bg-cyan-700"
+          onClick={() => {
+            const email = prompt('Enter recipient email:');
+            if (email) handleShare(email);
+          }}
+        >
+          Share via Email
+        </button>
       </div>
-    );
-  }
+      <textarea
+        className="w-full p-3 border rounded mb-2"
+        placeholder="Add a comment..."
+        value={commentText}
+        onChange={(e) => setCommentText(e.target.value)}
+      />
+      <button
+        className="bg-blue-button text-white px-4 py-2 rounded"
+        onClick={() => {
+          onCommentSubmit(question.id, commentText);
+          setCommentText('');
+        }}
+      >
+        Comment
+      </button>
+      {shareMsg && (
+        <p className={`mt-2 ${shareMsg.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+          {shareMsg}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default QuestionCard;

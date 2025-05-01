@@ -1,5 +1,8 @@
+// src/components/PopularGroups.jsx
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import  api  from '../lib/api';
 
 function PopularGroups({ groups }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -8,8 +11,32 @@ function PopularGroups({ groups }) {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentGroups = groups.slice(indexOfFirstItem, indexOfLastItem);
-
   const totalPages = Math.ceil(groups.length / itemsPerPage);
+
+  const queryClient = useQueryClient();
+
+  const { data: joinedGroups } = useQuery({
+    queryKey: ['joinedGroups'],
+    queryFn: () => api.getJoinedCommunities().then(res => res.data.map(g => g.id)),
+  });
+
+  const joinMutation = useMutation({
+    mutationFn: (communityId) => api.joinCommunity(communityId),
+    onSuccess: () => queryClient.invalidateQueries(['joinedGroups']),
+  });
+
+  const leaveMutation = useMutation({
+    mutationFn: (communityId) => api.leaveCommunity(communityId),
+    onSuccess: () => queryClient.invalidateQueries(['joinedGroups']),
+  });
+
+  const handleJoin = (groupId) => {
+    joinMutation.mutate(groupId);
+  };
+
+  const handleLeave = (groupId) => {
+    leaveMutation.mutate(groupId);
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -29,16 +56,25 @@ function PopularGroups({ groups }) {
             </div>
           </Link>
 
-          <Link
-            to={`/communities/${group.id}`}
-            className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700 transition"
-          >
-            JOIN
-          </Link>
+          {joinedGroups?.includes(group.id) ? (
+            <button
+              onClick={() => handleLeave(group.id)}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+            >
+              LEAVE
+            </button>
+          ) : (
+            <button
+              onClick={() => handleJoin(group.id)}
+              className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700 transition"
+            >
+              JOIN
+            </button>
+          )}
         </div>
       ))}
 
-      {/* Pagination for Popular Groups */}
+      {/* Pagination Controls */}
       <div className="flex justify-center mt-4 gap-4">
         <button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -60,9 +96,9 @@ function PopularGroups({ groups }) {
           Next
         </button>
       </div>
-
     </div>
   );
 }
 
 export default PopularGroups;
+
