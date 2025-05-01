@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import AdminCardList from '../components/admin/AdminCardList';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import ArticleReview from '../components/admin/ArticlesReview';
+import PostReview from '../components/admin/PostReview';
+import CommunityReview from '../components/admin/CommunityReview';
+import CategoryReview from '../components/admin/CategoryReview';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('users');
@@ -69,6 +73,10 @@ const Admin = () => {
           {activeTab === 'users' && (
             <AdminCardList users={users} />
           )}
+          {activeTab === 'articles' && <ArticleReview />}
+          {activeTab === 'posts' && <PostReview />}
+          {activeTab === 'communities' && <CommunityReview />}
+          {activeTab === 'categories' && <CategoryReview />}
           {activeTab === 'articles' && (
             <div>Article review section coming soon!</div>
           )}
@@ -81,6 +89,7 @@ const Admin = () => {
           {/* {activeTab === 'categories' && (
             <div>Category management section coming soon!</div>
           )} */}
+
         </>
       )}
     </div>
