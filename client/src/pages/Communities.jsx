@@ -9,6 +9,8 @@ import PopularGroups from '../components/PopularGroups';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
 import PostList from '../components/posts/PostList';
+import Nutrition from '../components/Nutrition';
+import MothersPost from '../components/MothersPosts';
 
 const Communities = () => {
   const queryClient = useQueryClient();
@@ -133,6 +135,7 @@ const Communities = () => {
         />
         <ParentingDevelopment />
         <BabyCorner />
+        <Nutrition />
       </div>
     </div>
   );

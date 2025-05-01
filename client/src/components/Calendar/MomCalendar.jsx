@@ -3,6 +3,7 @@ import Calendar from './Calendar';
 import { format } from 'date-fns';
 import { PregnancyService } from '../../services/PregnancyService';
 import { NotificationService } from '../../services/NotificationService';
+import axios from 'axios';
 
 const MomCalendar = ({ userId }) => {
   const [events, setEvents] = useState([]);
@@ -13,45 +14,47 @@ const MomCalendar = ({ userId }) => {
     type: 'appointment',
   });
   const [pregnancyInfo, setPregnancyInfo] = useState(null);
+  const [lmp, setLmp] = useState('');
+  const [edd, setEdd] = useState(null);
 
-  useEffect(() => {
-    const fetchPregnancyData = async () => {
-      const mockEDD = new Date('2025-12-15'); // Example EDD
-      const milestones = PregnancyService.calculateMilestones(mockEDD);
+  const fetchPregnancyData = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/mums/pregnancy-info`, {
+        headers: { Authorization: `Bearer ${localStorage.token}` },
+      });
+      const pregnancyData = res.data;
+      setLmp(pregnancyData.lmp);
+      const calculatedEDD = new Date(pregnancyData.lmp);
+      calculatedEDD.setDate(calculatedEDD.getDate() + 280);
+      setEdd(calculatedEDD);
+      const milestones = PregnancyService.calculateMilestones(calculatedEDD);
       setPregnancyInfo(milestones);
 
-      setEvents((prevEvents) => [
-        ...prevEvents,
-        ...milestones.recommendedAppointments.map((appt, index) => ({
-          ...appt,
-          id: 1000 + index,
-          isRecommended: true,
-        })),
-      ]);
-    };
+      const eventResponse = await axios.get(`http://localhost:5000/mums/events`, {
+        headers: { Authorization: `Bearer ${localStorage.token}` },
+      });
+      setEvents(eventResponse.data.events);
+    } catch (error) {
+      console.error('Error fetching pregnancy data or events:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchPregnancyData();
-
-    const dummyEvents = [
-      { id: 1, title: 'Prenatal Checkup', date: new Date('2025-04-30T10:00:00'), type: 'appointment', notes: 'Bring insurance card' },
-      { id: 2, title: 'Ultrasound', date: new Date('2025-05-15T14:30:00'), type: 'scan', doctor: 'Dr. Smith' },
-      { id: 3, title: 'Lamaze Class', date: new Date('2025-05-20T18:00:00'), type: 'class', location: 'Community Center' },
-    ];
-    setEvents(dummyEvents);
   }, [userId]);
 
   const renderPregnancyInfo = () => {
     if (!pregnancyInfo) return null;
 
     const now = new Date();
-    let currentTrimester = "";
+    let currentTrimester = '';
 
     if (now >= pregnancyInfo.firstTrimester.start && now < pregnancyInfo.firstTrimester.end) {
-      currentTrimester = "First Trimester";
+      currentTrimester = 'First Trimester';
     } else if (now >= pregnancyInfo.secondTrimester.start && now < pregnancyInfo.secondTrimester.end) {
-      currentTrimester = "Second Trimester";
+      currentTrimester = 'Second Trimester';
     } else if (now >= pregnancyInfo.thirdTrimester.start && now <= pregnancyInfo.thirdTrimester.end) {
-      currentTrimester = "Third Trimester";
+      currentTrimester = 'Third Trimester';
     }
 
     return (
@@ -71,14 +74,29 @@ const MomCalendar = ({ userId }) => {
   };
 
   const handleSaveEvent = async () => {
-    const newId = events.length ? Math.max(...events.map((ev) => ev.id)) + 1 : 1;
-    setEvents([...events, { ...newEvent, id: newId }]);
+    const eventToAdd = { ...newEvent };
+    try {
+      const res = await axios.post(`http://localhost:5000/mums/events`, eventToAdd, {
+        headers: { Authorization: `Bearer ${localStorage.token}` },
+      });
+      setEvents([...events, res.data.event]);
+
+      if (eventToAdd.type === 'reminder') {
+        await axios.post('http://localhost:5000/mums/reminders', {
+          text: eventToAdd.title,
+          date: eventToAdd.date
+        }, {
+          headers: { Authorization: `Bearer ${localStorage.token}` }
+        });
+      }
+
+      await NotificationService.sendNotificationToHealthProf(userId, eventToAdd);
+      await NotificationService.sendNotificationToMom(userId, eventToAdd);
+    } catch (error) {
+      console.error('Error saving event:', error);
+    }
     setShowAddForm(false);
     setNewEvent({ title: '', date: new Date(), type: 'appointment' });
-
-    // Trigger email notifications
-    await NotificationService.sendNotificationToHealthProf(userId, newEvent);
-    await NotificationService.sendNotificationToMom(userId, newEvent);
   };
 
   return (
@@ -120,8 +138,10 @@ const MomCalendar = ({ userId }) => {
                 className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
               >
                 <option value="appointment">Appointment</option>
-                <option value="scan">Scan</option>
-                <option value="class">Class</option>
+                <option value="scan">Ultrasound Scan</option>
+                <option value="class">Education Class</option>
+                <option value="reminder">Reminder</option>
+                <option value="checkup">Check-up</option>
               </select>
               <button
                 onClick={handleSaveEvent}

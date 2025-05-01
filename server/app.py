@@ -4,10 +4,11 @@ from sqlalchemy import desc
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS
-from datetime import timedelta
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
+from middleware.auth import role_required
 from sqlalchemy.exc import SQLAlchemyError
 import os
 from models import *
@@ -339,47 +340,65 @@ def create_app():
 
     # ========= Authentication and User Management ================
     # Signup
+   
     @app.route('/signup', methods=['POST'])
     def signup():
         try:
+            # Get main fields
             email = request.form['email']
             password = request.form['password']
             role = request.form['role']
 
+            # ✅ Password Validation
+            if len(password) < 6 or not any(c.islower() for c in password) or not any(c.isupper() for c in password):
+                return jsonify({
+                    "error": "Password must be at least 6 characters long and contain both uppercase and lowercase letters."
+                }), 400
+
+            # Check if email already exists
             if User.query.filter_by(email=email).first():
                 return jsonify({"error": "Email already registered"}), 400
 
+            # Create new user
             user = User(email=email, role=role)
             user.set_password(password)
 
-            # optional fields
-            if 'first_name' in request.form:
-                first_name = request.form['first_name']
-                middle_name = request.form.get('middle_name', '')
-                last_name = request.form['last_name']
+            # ✅ Optional fields from form
+            first_name = request.form.get('first_name', '')
+            middle_name = request.form.get('middle_name', '')
+            last_name = request.form.get('last_name', '')
+            bio = request.form.get('bio', '')
+            region = request.form.get('county')  # from the dropdown
 
-                full_name = f"{first_name} {middle_name} {last_name}".strip()
+            full_name = f"{first_name} {middle_name} {last_name}".strip()
 
-                user.profile = Profile(
-                    full_name=full_name,
-                    bio=request.form.get('bio', ''),
-                )
+            # Build profile object
+            profile_data = {
+                "full_name": full_name,
+                "bio": bio,
+                "region": region
+            }
 
+            # ✅ Only include license if role is Health Professional
             if role == 'Health Professional' and 'license_number' in request.form:
-                user.profile.license_number = request.form['license_number']
+                profile_data["license_number"] = request.form['license_number']
 
-            # handle avatar upload
+            # ✅ Create and attach profile
+            user.profile = Profile(**profile_data)
+
+            # ✅ Handle avatar upload
             if 'avatar' in request.files:
                 avatar = request.files['avatar']
-                filename = secure_filename(avatar.filename)
-                avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                avatar.save(avatar_path)
-                user.profile.avatar_url = f"/{avatar_path}"
+                if avatar.filename:
+                    filename = secure_filename(avatar.filename)
+                    avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    avatar.save(avatar_path)
+                    user.profile.profile_picture = f"/{avatar_path}"
 
             db.session.add(user)
             db.session.commit()
 
-            print(f"Verification email should be sent to {email}")  # Replace later with real email service
+            print(f"Verification email should be sent to {email}")  # TODO: implement real email
 
             return jsonify({"message": "User registered. Please check email to verify."}), 201
 
@@ -391,6 +410,59 @@ def create_app():
         except Exception as e:
             print("Signup failed with error:", str(e))
             return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
+    # @app.route('/signup', methods=['POST'])
+    # def signup():
+    #     try:
+    #         email = request.form['email']
+    #         password = request.form['password']
+    #         role = request.form['role']
+
+    #         if User.query.filter_by(email=email).first():
+    #             return jsonify({"error": "Email already registered"}), 400
+
+    #         user = User(email=email, role=role)
+    #         user.set_password(password)
+
+    #         # optional fields
+    #         if 'first_name' in request.form:
+    #             first_name = request.form['first_name']
+    #             middle_name = request.form.get('middle_name', '')
+    #             last_name = request.form['last_name']
+
+    #             full_name = f"{first_name} {middle_name} {last_name}".strip()
+
+    #             user.profile = Profile(
+    #                 full_name=full_name,
+    #                 bio=request.form.get('bio', ''),
+    #             )
+
+    #         if role == 'Health Professional' and 'license_number' in request.form:
+    #             user.profile.license_number = request.form['license_number']
+
+    #         # handle avatar upload
+    #         if 'avatar' in request.files:
+    #             avatar = request.files['avatar']
+    #             filename = secure_filename(avatar.filename)
+    #             avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #             avatar.save(avatar_path)
+    #             user.profile.avatar_url = f"/{avatar_path}"
+
+    #         db.session.add(user)
+    #         db.session.commit()
+
+    #         print(f"Verification email should be sent to {email}")  # Replace later with real email service
+
+    #         return jsonify({"message": "User registered. Please check email to verify."}), 201
+
+    #     except SQLAlchemyError as e:
+    #         db.session.rollback()
+    #         print("Database error:", str(e))
+    #         return jsonify({"error": "A database error occurred.", "details": str(e)}), 500
+
+        # except Exception as e:
+        #     print("Signup failed with error:", str(e))
+        #     return jsonify({"error": "Signup failed.", "details": str(e)}), 500
 
 
     # Login
@@ -441,11 +513,23 @@ def create_app():
     def get_me():
         user_id = get_jwt_identity()
         user = User.query.get(int(user_id))
-        return {
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        profile = user.profile
+
+        return jsonify({
             "email": user.email,
             "role": user.role,
-            "created_at": user.created_at
-        }
+            "created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "profile": {
+                "full_name": profile.full_name if profile else None,
+                "bio": profile.bio if profile else None,
+                "region": profile.region if profile else None,
+                "license_number": profile.license_number if profile else None,
+                "profile_picture": profile.profile_picture if profile else None
+            }
+        })
 
 
     @app.route('/admin/users', methods=['GET'])
@@ -489,6 +573,16 @@ def create_app():
         user.is_active = False
         db.session.commit()
         return jsonify({"message": "User deactivated"})
+   
+    # admin delete user
+    @app.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
+    @role_required("admin")
+    def delete_user(user_id):
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted"}), 200
+
 
     # Admin remove content
     @app.route('/admin/remove_content/<int:content_id>', methods=['DELETE'])
@@ -577,6 +671,7 @@ def create_app():
         db.session.add(article)
         db.session.commit()
         return jsonify({"message": "Article submitted for approval"}), 201
+    
     # Health questions
     @app.route('/healthpros/questions', methods=['GET'])
     @role_required("health_pro")
@@ -636,29 +731,123 @@ def create_app():
     def update_mum_profile():
         data = request.get_json()
         identity = get_jwt_identity()
-        profile = Profile(user_id=identity['id'], full_name=data['full_name'],
-                        region=data['region'], bio=data.get('bio'))
-        db.session.add(profile)
+        # profile = Profile(user_id=identity['id'], full_name=data['full_name'],
+        #                 region=data['region'], bio=data.get('bio'))
+        # db.session.add(profile)
+        # db.session.commit()
+        existing_profile = Profile.query.filter_by(user_id=identity['id']).first()
+        if not existing_profile:
+            existing_profile = Profile(user_id=identity['id'])
+
+        existing_profile.region = data['region']
+        existing_profile.bio = data.get('bio')
+
+        db.session.add(existing_profile)
         db.session.commit()
+
         return jsonify({"message": "Profile created"}), 201
     
     # Mums Update Profile
+    # @app.route('/mums/pregnancy', methods=['POST'])
+    # @role_required("mum")
+    # def add_pregnancy_details():
+    #     try:
+    #         data = request.get_json()
+    #         print("Received data:", data)
+
+    #         user_id = get_jwt_identity()  # ✅ FIXED
+    #         print("User ID:", user_id)
+
+    #         pregnancy = PregnancyDetail(
+    #             user_id=user_id,
+    #             last_period_date=data['last_period_date'],
+    #             due_date=data['due_date'],
+    #             current_week=data['current_week'],
+    #             pregnancy_status=data['pregnancy_status']
+    #         )
+    #         db.session.add(pregnancy)
+    #         db.session.commit()
+
+    #         return jsonify({"message": "Pregnancy details added"}), 201
+
+    #     except Exception as e:
+    #         print("Error saving pregnancy data:", str(e))
+    #         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+
     @app.route('/mums/pregnancy', methods=['POST'])
     @role_required("mum")
     def add_pregnancy_details():
-        data = request.get_json()
-        identity = get_jwt_identity()
-        pregnancy = PregnancyDetail(
-            user_id=identity['id'],
-            last_period_date=data['last_period_date'],
-            due_date=data['due_date'],
-            current_week=data['current_week'],
-            pregnancy_status=data['pregnancy_status']
+        try:
+            data = request.get_json()
+            user_id = get_jwt_identity()
+
+            lmp = datetime.strptime(data['last_period_date'], '%Y-%m-%d')
+            edd = lmp + timedelta(days=280)
+            current_week = (datetime.utcnow() - lmp).days // 7
+            pregnancy_status = "active" if current_week < 40 else "completed"
+
+            existing = PregnancyDetail.query.filter_by(user_id=user_id).first()
+            if not existing:
+                existing = PregnancyDetail(user_id=user_id)
+                db.session.add(existing)
+
+            existing.last_period_date = lmp
+            existing.due_date = edd
+            existing.current_week = current_week
+            existing.pregnancy_status = pregnancy_status
+            db.session.commit()
+
+            # Optional: Add auto-generated reminders
+            Reminder.query.filter_by(user_id=user_id).delete()
+            reminders = [
+                Reminder(user_id=user_id, reminder_text='Initial Prenatal Visit', reminder_date=lmp + timedelta(weeks=8), type='checkup'),
+                Reminder(user_id=user_id, reminder_text='Anatomy Scan', reminder_date=lmp + timedelta(weeks=20), type='scan'),
+                Reminder(user_id=user_id, reminder_text='Glucose Test', reminder_date=lmp + timedelta(weeks=26), type='test'),
+                Reminder(user_id=user_id, reminder_text='Group B Strep Test', reminder_date=lmp + timedelta(weeks=36), type='test'),
+            ]
+            db.session.add_all(reminders)
+            db.session.commit()
+
+            return jsonify({"message": "Pregnancy info saved and reminders set."}), 201
+
+        except Exception as e:
+            return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+    # Mums Get Pregnancy Details
+    @app.route('/mums/pregnancy-info', methods=['GET'])
+    @role_required("mum")
+    def get_pregnancy_info():
+        user_id = get_jwt_identity()
+        preg = PregnancyDetail.query.filter_by(user_id=user_id).first()
+
+        if not preg:
+            return jsonify({"error": "Pregnancy details not found"}), 404
+
+        lmp = preg.last_period_date
+        edd = preg.due_date
+        current_week = preg.current_week
+
+        trimester = (
+            "First Trimester" if current_week < 13 else
+            "Second Trimester" if current_week < 28 else
+            "Third Trimester" if current_week < 40 else
+            "Postpartum"
         )
-        db.session.add(pregnancy)
-        db.session.commit()
-        return jsonify({"message": "Pregnancy details added"}), 201
-    
+
+        milestones = [
+            {"title": "Initial Prenatal Visit", "date": (lmp + timedelta(weeks=8)).strftime('%Y-%m-%d')},
+            {"title": "Anatomy Scan", "date": (lmp + timedelta(weeks=20)).strftime('%Y-%m-%d')},
+            {"title": "Glucose Test", "date": (lmp + timedelta(weeks=26)).strftime('%Y-%m-%d')},
+            {"title": "Group B Strep Test", "date": (lmp + timedelta(weeks=36)).strftime('%Y-%m-%d')}
+        ]
+
+        return jsonify({
+            "lmp": lmp.strftime('%Y-%m-%d'),
+            "edd": edd.strftime('%Y-%m-%d'),
+            "current_week": current_week,
+            "trimester": trimester,
+            "appointments": milestones
+    })
     # Mums Get Pregnancy Details
     @app.route('/mums/fetal_development', methods=['GET'])
     @role_required("mum")
@@ -672,6 +861,21 @@ def create_app():
         identity = get_jwt_identity()
         reminders = Reminder.query.filter_by(user_id=identity['id']).all()
         return {"reminders": [{"text": r.reminder_text, "date": r.reminder_date} for r in reminders]}
+
+    # Add Reminder
+    @app.route('/mums/reminders', methods=['POST'])
+    @role_required("mum")
+    def add_reminder():
+        identity = get_jwt_identity()
+        data = request.get_json()
+        new_reminder = Reminder(
+            user_id=identity['id'],
+            reminder_text=data.get('reminder_text'),
+            reminder_date=data.get('reminder_date')
+        )
+        db.session.add(new_reminder)
+        db.session.commit()
+        return {"message": "Reminder added successfully."}, 201
 
     # Mums upload medical files
     @app.route('/mums/upload_scan', methods=['POST'])
@@ -707,6 +911,22 @@ def create_app():
             "posts": [{"title": p.title, "content": p.content} for p in posts],
             "articles": [{"title": a.title, "content": a.content, "category": a.category} for a in articles]
     }
+
+    
+    # Nutrition Blogs
+    @app.route('/api/nutrition-blogs', methods=['GET'])
+    def get_blogs():
+        blogs = NutritionBlog.query.all()
+        data = [{
+            "id": blog.id,
+            "title": blog.title,
+            "content": blog.content,
+            "image_url": blog.image_url,
+            "category": blog.category,
+            "author": blog.author,
+            "created_at": blog.created_at.strftime("%Y-%m-%d")
+        } for blog in blogs]
+        return jsonify(data), 200
 
     return app
 

@@ -5,13 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Layout & Common UI
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Notification from './components/Notification';
 
-// Public Pages
+//  Public Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './components/Login';
 import Signup from './components/SignUp';
+import ViewPage from './pages/ViewPage';
+import Notification from './components/Notification';
 
 // Authentication & User Profile
 import Profile from './pages/Profile';
@@ -31,12 +32,14 @@ import { ArticleDetail } from './components/articles/ArticleDetail';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
 
-// Communities
+//  Communities
+
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
-
+import Nutrition from './components/Nutrition';
 // Mum Layout & Pages
-import MomLayout from './components/MomLayout';
+import MomLandingPage from './pages/MomLandingPage';
+import MomLayout from './components/Momlayout';
 import MomRegister from './pages/MomRegister';
 import MomProfile from './pages/MomProfile';
 import MomPregnancy from './pages/MomPregnancy';
@@ -137,7 +140,4 @@ function App() {
         </div>
       </Router>
     </QueryClientProvider>
-  );
-}
-
 export default App;

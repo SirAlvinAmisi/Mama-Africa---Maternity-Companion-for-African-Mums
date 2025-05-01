@@ -337,5 +337,122 @@ with app.app_context():
 
     db.session.add_all(communities)
     db.session.commit()
+    
+    #12 Nutrion Blog
+    sample_blogs = [
+    # Seasonal Blogs
+        NutritionBlog(
+            title="Iron-Rich Foods for Second Trimester",
+            content="Explore iron-packed foods to boost blood levels during your second trimester...",
+            image_url="https://example.com/iron.jpg",
+            category="seasonal",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Hydration Essentials in the Third Trimester",
+            content="Water isn't the only thing! Learn hydrating foods to prepare for delivery...",
+            image_url="https://example.com/hydration.jpg",
+            category="seasonal",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Protein Sources for Early Pregnancy",
+            content="A balanced intake of legumes, eggs, and fish builds baby’s foundation...",
+            image_url="https://example.com/protein.jpg",
+            category="seasonal",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Vitamins for Each Trimester",
+            content="Your body’s nutritional needs change each trimester—here’s what to focus on.",
+            image_url="https://example.com/vitamins.jpg",
+            category="seasonal",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Boosting Energy Naturally in Pregnancy",
+            content="Combat fatigue with energy-sustaining foods ideal for pregnancy...",
+            image_url="https://example.com/energy.jpg",
+            category="seasonal",
+            author="Mama Africa Health Team"
+        ),
+
+        # Expert Blogs
+        NutritionBlog(
+            title="Ask the Expert: Daily Supplements During Pregnancy",
+            content="Dr. Nyambura answers your top supplement questions...",
+            image_url="https://example.com/supplements.jpg",
+            category="expert",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Interview: Local Midwives Share Nutritional Wisdom",
+            content="Traditional meets modern nutrition advice in this village midwives’ roundtable...",
+            image_url="https://example.com/midwives.jpg",
+            category="expert",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Prenatal Nutrition for Vegetarians",
+            content="Worried about missing out on nutrients? Here’s a vegetarian-safe plan...",
+            image_url="https://example.com/vegetarian.jpg",
+            category="expert",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Balancing Cravings and Nutrients",
+            content="Dr. Nyambura discusses managing cravings without compromising health.",
+            image_url="https://example.com/cravings.jpg",
+            category="expert",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Understanding Food Labels When Pregnant",
+            content="What’s hidden in packaged foods? Learn how to read food labels wisely...",
+            image_url="https://example.com/labels.jpg",
+            category="expert",
+            author="Mama Africa Health Team"
+        ),
+
+        # Concern Blogs
+        NutritionBlog(
+            title="Morning Sickness and Nutrition Hacks",
+            content="Discover small meals that ease nausea while still giving baby nutrients...",
+            image_url="https://example.com/morningsickness.jpg",
+            category="concern",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Managing Weight Gain During Pregnancy",
+            content="Learn about healthy weight gain goals and portion control ideas.",
+            image_url="https://example.com/weight.jpg",
+            category="concern",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Foods That Cause Discomfort and Alternatives",
+            content="Avoid bloating and indigestion by replacing problem foods with gentler choices...",
+            image_url="https://example.com/discomfort.jpg",
+            category="concern",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="Coping with Food Aversions",
+            content="Can’t stand once-loved meals? Try these substitution hacks backed by nutritionists.",
+            image_url="https://example.com/aversions.jpg",
+            category="concern",
+            author="Mama Africa Health Team"
+        ),
+        NutritionBlog(
+            title="What To Eat If You’re Diagnosed With Gestational Diabetes",
+            content="Low GI meals and balanced carbs become key. Here’s a starter meal plan.",
+            image_url="https://example.com/gestationaldiabetes.jpg",
+            category="concern",
+            author="Mama Africa Health Team"
+        ),
+    ]
+
+    db.session.bulk_save_objects(sample_blogs)
+    db.session.commit()
 
     print("✅ Database seeded successfully.")
