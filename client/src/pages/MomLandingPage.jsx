@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import MomPage from "./MomPage";
+import MomPregnancy from "./MomPregnancy";
+import MomUploadScan from "./MomUploadScan";
+import MomReminders from "./MomReminders";
+import MomCalendar from "../components/Calendar/MomCalendar";
+import PopularGroups from '../components/PopularGroups';
+import { getRandomWeeklyUpdate, getWeeklyUpdateByDate } from '../utils/weeklyUpdateHelper';
 export default function MomLandingPage() {
   const [formData, setFormData] = useState({
     edd: '',
@@ -13,19 +19,42 @@ export default function MomLandingPage() {
   const [question, setQuestion] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
   const [message, setMessage] = useState('');
-
+  const [groups, setGroups] = useState([]);
   const token = localStorage.getItem('access_token');
 
+  // Fetch 
   useEffect(() => {
-    setWeeklyUpdate("This week your baby is the size of a mango! 🥭");
+    // Set a random weekly update while profile is not yet configured
+    const random = getRandomWeeklyUpdate();
+    setWeeklyUpdate(random);
+
+    // Temporary record just to simulate file list
     setRecords([{ name: 'Scan Report.pdf', date: '2025-03-15' }]);
+
+    // Fetch mum groups from the backend
+    const fetchGroups = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/communities', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        console.log("Fetched groups:", res.data);
+        setGroups(res.data.groups || res.data); // Adjust depending on actual backend structure
+      } catch (err) {
+        console.error("Failed to fetch groups:", err);
+      }
+    };
+
+    fetchGroups();
   }, []);
+
 
   const handleChange = e => {
     const { name, value } = e.target;
     let updatedForm = { ...formData, [name]: value };
 
-    // Auto-calculate EDD (40 weeks from last period)
     if (name === 'last_period_date') {
       const lpd = new Date(value);
       const eddDate = new Date(lpd.setDate(lpd.getDate() + 280));
@@ -45,8 +74,6 @@ export default function MomLandingPage() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      console.log("Submitting form data:", formData);
-
       if (!formData.last_period_date || !formData.edd) {
         setMessage("Please enter both EDD and Last Period Date.");
         return;
@@ -66,20 +93,14 @@ export default function MomLandingPage() {
         }
       });
 
-      console.log("Response:", response.data);
       setMessage('Pregnancy details saved!');
     } catch (err) {
       console.error("Error during profile update:", err);
       if (err.response) {
-        console.error("Response Data:", err.response.data);
-        console.error("Status Code:", err.response.status);
-        console.error("Headers:", err.response.headers);
         setMessage(`Error ${err.response.status}: ${err.response.data.error || 'Failed to update profile'}`);
       } else if (err.request) {
-        console.error("No response received:", err.request);
         setMessage("No response from server. Please check your network.");
       } else {
-        console.error("Error:", err.message);
         setMessage("Unexpected error occurred.");
       }
     }
@@ -114,58 +135,54 @@ export default function MomLandingPage() {
 
       {activeTab === 'profile' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Complete Your Pregnancy Info</h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Last Period Date</label>
-              <input type="date" name="last_period_date" value={formData.last_period_date} onChange={handleChange} className="p-3 border rounded w-full" />
-            </div>
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Expected Due Date (EDD)</label>
-              <input name="edd" type="date" value={formData.edd} onChange={handleChange} className="p-3 border rounded w-full" disabled />
-            </div>
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Gravida</label>
-              <select name="gravida" value={formData.gravida} onChange={handleChange} className="p-3 border rounded w-full">
-                <option value="">Select Gravida</option>
-                <option value="Nulligravida">Nulligravida (Never been pregnant)</option>
-                <option value="Primigravida">Primigravida (First time pregnant)</option>
-                <option value="Multigravida">Multigravida (Pregnant More than once)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700">Pregnancy Status</label>
-              <select name="pregnancy_status" value={formData.pregnancy_status} onChange={handleChange} className="p-3 border rounded w-full">
-                <option value="">Select Status</option>
-                <option value="Normal">Normal</option>
-                <option value="High Risk">High Risk</option>
-                <option value="Complicated">Complicated</option>
-                <option value="Postpartum">Postpartum</option>
-                <option value="Early Pregnancy">Early Pregnancy</option>
-              </select>
-            </div>
-            <button className="md:col-span-2 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">Save Pregnancy Info</button>
-          </form>
-          {message && <p className="text-green-600 mt-2">{message}</p>}
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">My Tracker</h3>
+          <MomPage />
         </section>
       )}
 
-      {activeTab === 'weekly' && (
+      {/* {activeTab === 'weekly' && (
         <section>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">Weekly Baby Update</h3>
           <div className="p-4 bg-yellow-50 rounded text-gray-700 shadow-inner">{weeklyUpdate}</div>
+          
         </section>
-      )}
+      )} */}
+      {activeTab === 'weekly' && weeklyUpdate && (
+      <section>
+        <h3 className="text-2xl font-bold text-gray-800 mb-4">Week {weeklyUpdate.week} Baby Update</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">👶 Baby Size</p>
+            <p>{weeklyUpdate.babySize}</p>
+          </div>
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">🧠 Development</p>
+            <p>{weeklyUpdate.development}</p>
+          </div>
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">🤰 Mama Tip</p>
+            <p>{weeklyUpdate.mamaTip}</p>
+          </div>
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">🌿 Proverb</p>
+            <p>{weeklyUpdate.proverb}</p>
+          </div>
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">🥗 Nutrition Tip</p>
+            <p>{weeklyUpdate.nutritionTip}</p>
+          </div>
+          <div className="bg-yellow-50 rounded shadow p-4">
+            <p className="font-semibold text-purple-800">💬 Ask Your Midwife</p>
+            <p>{weeklyUpdate.askMidwife}</p>
+          </div>
+        </div>
+      </section>
+    )}
 
       {activeTab === 'records' && (
         <section>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">Medical Records</h3>
-          <input type="file" onChange={handleUpload} className="mb-2" />
-          <ul className="list-disc pl-6 text-gray-700">
-            {records.map((rec, i) => (
-              <li key={i}>{rec.name} - <span className="text-sm text-gray-500">{rec.date}</span></li>
-            ))}
-          </ul>
+          <MomUploadScan />
         </section>
       )}
 
@@ -193,15 +210,21 @@ export default function MomLandingPage() {
 
       {activeTab === 'appointments' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Your Appointments</h3>
-          <div className="p-4 border rounded text-gray-600">Upcoming scans and appointments will appear here.</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">My Appointments</h3>
+          <MomCalendar />
+          <MomReminders />
         </section>
       )}
 
       {activeTab === 'groups' && (
         <section>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">Mum Groups</h3>
-          <p className="text-gray-600">You can explore and join existing trimester-based communities here. (fetched from backend)</p>
+          <p className="text-gray-600">You can explore communities here.</p>
+          {/* {groups.length === 0 ? (
+            <p className="text-gray-400 italic">No groups available or still loading...</p>
+          ) : (
+            <PopularGroups groups={groups} />
+          )} */}
         </section>
       )}
     </div>

@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // Layout & Common UI
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-
+import ViewPage from './pages/ViewPage';
 
 //  Public Pages
 import Home from './pages/Home';
@@ -97,7 +97,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-
+            {/* <Route path="/view" element={<ViewPage />} /> */}
             {/*  Health Professionals */}
             <Route path="/specialists" element={<Specialists />} />
             <Route path="/specialist/:id" element={<HealthProfessional />} />
