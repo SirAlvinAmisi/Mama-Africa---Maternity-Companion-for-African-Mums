@@ -1,54 +1,42 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Layout & Common UI
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import Notification from './components/Notification';
 
-
-//  Public Pages
+// Public Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './components/Login';
 import Signup from './components/SignUp';
 
-
-
-//  Authentication & User Profile
+// Authentication & User Profile
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 
-
-
-//  Admin Pages
+// Admin Pages
 import Admin from './pages/Admin';
 
-
-
-//  Health Professionals
+// Health Professionals
+import Specialists from './pages/Specialists';
 import { HealthProfessional } from './pages/HealthProfessional';
 import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
 import HealthProDashboard from './pages/HealthProDashboard';
 
-
-
-//  Articles & Content
+// Articles & Content
 import { ArticleDetail } from './components/articles/ArticleDetail';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
 
-
-
-//  Communities
+// Communities
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
 
-
-
 // Mum Layout & Pages
-import MomLayout from './components/Momlayout';
+import MomLayout from './components/MomLayout';
 import MomRegister from './pages/MomRegister';
 import MomProfile from './pages/MomProfile';
 import MomPregnancy from './pages/MomPregnancy';
@@ -58,22 +46,20 @@ import MomUploadScan from './pages/MomUploadScan';
 import MomAskQuestion from './pages/MomAskQuestion';
 import MomContent from './pages/MomContent';
 
-
-
 // Legal & Support
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
 import CommunityGuidelines from './pages/CommunityGuidelines';
 import HelpCenter from './pages/HelpCenter';
+import Questions from './pages/Questions';
+import ChatList from './components/chat/ChatList';
 
+// Topics
+import Topics from './pages/Topics';
 
+const queryClient = new QueryClient();
 
-// Specialists Directory
-import Specialists from './pages/Specialists';
-
-
-
-//  404 Not Found
+// 404 Not Found Page
 function NotFound() {
   return (
     <div className="flex flex-col min-h-screen justify-center items-center bg-white">
@@ -85,67 +71,72 @@ function NotFound() {
 
 function App() {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <Notification />
+          <main className="flex-grow">
+            <Routes>
+              {/* Public Pages */}
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            {/* Public Pages */}
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+              {/* Health Professionals */}
+              <Route path="/specialists" element={<Specialists />} />
+              <Route path="/specialist/:id" element={<HealthProfessional />} />
+              <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
+              <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
 
-            {/*  Health Professionals */}
-            <Route path="/specialists" element={<Specialists />} />
-            <Route path="/specialist/:id" element={<HealthProfessional />} />
-            <Route path="/healthpro/:id" element={<HealthProfessional />} />
-            <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
-            <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
+              {/* Articles */}
+              <Route path="/article/:id" element={<ArticleDetail />} />
+              <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
+              <Route path="/baby-corner" element={<BabyCornerPage />} />
 
-            {/*Articles */}
-            <Route path="/article/:id" element={<ArticleDetail />} />
-            <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
-            <Route path="/baby-corner" element={<BabyCornerPage />} />
+              {/* Communities */}
+              <Route path="/communities" element={<Communities />} />
+              <Route path="/communities/:id" element={<CommunityDetail />} />
 
-            {/* Communities */}
-            <Route path="/communities" element={<Communities />} />
-            <Route path="/communities/:id" element={<CommunityDetail />} />
+              {/* Topics */}
+              <Route path="/topics" element={<Topics />} />
 
-            {/*Admin & Profile */}
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/edit" element={<EditProfile />} />
+              {/* Admin & Profile */}
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/edit" element={<EditProfile />} />
 
-            {/* Mum Section */}
-            <Route path="/mom" element={<MomProfile />} />
-            <Route path="/moms" element={<MomLayout />}>
-              <Route index element={<MomRegister />} />
-              <Route path="register"     element={<MomRegister />} />
-              <Route path="profile"      element={<MomProfile />} />
-              <Route path="pregnancy"    element={<MomPregnancy />} />
-              <Route path="development"  element={<MomDevelopment />} />
-              <Route path="reminders"    element={<MomReminders />} />
-              <Route path="upload-scan"  element={<MomUploadScan />} />
-              <Route path="ask-question" element={<MomAskQuestion />} />
-              <Route path="content"      element={<MomContent />} />
-            </Route>
+              {/* Mum Section */}
+              <Route path="/mom" element={<MomProfile />} />
+              <Route path="/moms" element={<MomLayout />}>
+                <Route index element={<MomRegister />} />
+                <Route path="register" element={<MomRegister />} />
+                <Route path="profile" element={<MomProfile />} />
+                <Route path="pregnancy" element={<MomPregnancy />} />
+                <Route path="development" element={<MomDevelopment />} />
+                <Route path="reminders" element={<MomReminders />} />
+                <Route path="upload-scan" element={<MomUploadScan />} />
+                <Route path="ask-question" element={<MomAskQuestion />} />
+                <Route path="content" element={<MomContent />} />
+              </Route>
 
-            {/* Legal & Support */}
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
-            <Route path="/help-center" element={<HelpCenter />} />
+              {/* Legal & Support */}
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+              <Route path="/help-center" element={<HelpCenter />} />
+              <Route path="/questions" element={<Questions />} />
+              <Route path="/chat/:specialistId" element={<ChatList />} />
 
-            {/*  Fallback */}
-            <Route path="*" element={<NotFound />} />
-
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+              {/* Fallback */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
