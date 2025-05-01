@@ -573,6 +573,16 @@ def create_app():
         user.is_active = False
         db.session.commit()
         return jsonify({"message": "User deactivated"})
+   
+    # admin delete user
+    @app.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
+    @role_required("admin")
+    def delete_user(user_id):
+        user = User.query.get_or_404(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "User deleted"}), 200
+
 
     # Admin remove content
     @app.route('/admin/remove_content/<int:content_id>', methods=['DELETE'])
