@@ -24,11 +24,21 @@ export default function AdminCardList({ users, refreshUsers }) {
     }
   };
   
-
-  const handleViewActivity = (userId) => {
-    console.log(`Activity log for user ${userId}`);
+  const handleResetPassword = async (userId) => {
+    try {
+      await axios.post(`http://localhost:5000/admin/reset_password/${userId}`);
+      alert('Password reset email sent!');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+    }
   };
-
+  
+  // const handleViewActivity = (userId) => {
+  //   console.log(`Activity log for user ${userId}`);
+  // };
+  const handleViewActivity = (userId) => {
+    window.location.href = `/profile/${userId}`;
+  };
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {users.map(user => (
@@ -38,6 +48,7 @@ export default function AdminCardList({ users, refreshUsers }) {
           onDeactivate={() => handleDeactivate(user.id)}
           onDelete={() => handleDelete(user.id)}
           onViewActivity={() => handleViewActivity(user.id)}
+          onResetPassword={handleResetPassword}
         />
       ))}
     </div>
