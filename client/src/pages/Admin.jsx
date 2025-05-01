@@ -38,8 +38,8 @@ const Admin = () => {
     { key: 'users', label: 'Manage Users' },
     { key: 'articles', label: 'Review Articles' },
     { key: 'posts', label: 'Review Posts' },
-    { key: 'communities', label: 'Approve Communities' },
-    { key: 'categories', label: 'Manage Categories' }
+    { key: 'communities', label: 'Approve Communities' }
+    // { key: 'categories', label: 'Manage Categories' }
   ];
 
   return (
@@ -78,9 +78,9 @@ const Admin = () => {
           {activeTab === 'communities' && (
             <div>Community approval section coming soon!</div>
           )}
-          {activeTab === 'categories' && (
+          {/* {activeTab === 'categories' && (
             <div>Category management section coming soon!</div>
-          )}
+          )} */}
         </>
       )}
     </div>
