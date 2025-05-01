@@ -73,7 +73,7 @@ export default function Home() {
                     <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
                       <img
                         src="https://source.unsplash.com/featured/?african,motherhood"
-                        alt={`Featured Mum ${index}`}
+                        // alt={Featured Mum ${index}}
                         className="object-cover w-full h-full"
                       />
                     </div>

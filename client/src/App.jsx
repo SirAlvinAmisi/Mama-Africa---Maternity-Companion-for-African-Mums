@@ -78,7 +78,7 @@ function App() {
       <Router>
         <div className="flex flex-col min-h-screen">
           <Navbar />
-          <Notification />
+          {/* <Notification /> */}
           <main className="flex-grow">
             <Routes>
               {/* Public Pages */}
@@ -97,7 +97,7 @@ function App() {
               <Route path="/article/:id" element={<ArticleDetail />} />
               <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
               <Route path="/baby-corner" element={<BabyCornerPage />} />
-
+              {/* <Route path="/view" element={<ViewPage />} /> */}
               {/* Communities */}
               <Route path="/communities" element={<Communities />} />
               <Route path="/communities/:id" element={<CommunityDetail />} />
@@ -111,7 +111,7 @@ function App() {
               <Route path="/profile/edit" element={<EditProfile />} />
 
               {/* Mum Section */}
-              <Route path="/mom" element={<MomProfile />} />
+              <Route path="/mom" element={<MomLandingPage />} />
               <Route path="/moms" element={<MomLayout />}>
                 <Route index element={<MomRegister />} />
                 <Route path="register" element={<MomRegister />} />
@@ -140,4 +140,5 @@ function App() {
         </div>
       </Router>
     </QueryClientProvider>
+)};
 export default App;
