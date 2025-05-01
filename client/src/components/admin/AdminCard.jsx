@@ -1,4 +1,4 @@
-export default function AdminCard({ user, onDeactivate, onEdit, onViewActivity }) {
+export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity }) {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Card Header */}
@@ -48,12 +48,6 @@ export default function AdminCard({ user, onDeactivate, onEdit, onViewActivity }
         {/* Action Buttons */}
         <div className="flex space-x-2 mt-4">
           <button 
-            onClick={onEdit}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded text-sm font-medium transition"
-          >
-            Edit Profile
-          </button>
-          <button 
             onClick={onDeactivate}
             className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
               user.is_active 
@@ -63,12 +57,25 @@ export default function AdminCard({ user, onDeactivate, onEdit, onViewActivity }
           >
             {user.is_active ? 'Deactivate' : 'Activate'}
           </button>
+          <button
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${user.profile?.full_name || 'this user'}?`)) {
+                onDelete();
+              }
+            }}
+            className="flex-1 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium transition"
+          >
+            Delete
+          </button>
         </div>
 
-        {/* Additional Admin Actions */}
+        {/* Admin Tools */}
         {user.role === 'admin' && (
           <div className="mt-3 pt-3 border-t">
-            <button className="text-xs text-blue-600 hover:text-blue-800 mr-3">
+            <button 
+              onClick={onViewActivity}
+              className="text-xs text-blue-600 hover:text-blue-800 mr-3"
+            >
               View Activity Log
             </button>
             <button className="text-xs text-blue-600 hover:text-blue-800">
