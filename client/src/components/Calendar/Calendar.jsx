@@ -30,7 +30,7 @@ const Calendar = ({
           className="p-2 rounded-full hover:bg-gray-200"
           aria-label="Previous month"
         >
-          <span className="material-icons">chevron_left</span>
+          <span className="material-icons">Previous</span>
         </button>
         <h2 className="font-bold text-gray-800">
           {format(currentMonth, 'MMMM yyyy')}
@@ -40,7 +40,7 @@ const Calendar = ({
           className="p-2 rounded-full hover:bg-gray-200"
           aria-label="Next month"
         >
-          <span className="material-icons">chevron_right</span>
+          <span className="material-icons">Next</span>
         </button>
       </div>
     );

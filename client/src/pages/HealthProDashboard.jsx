@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import HealthProfCalendar from "../components/Calendar/HealthProfCalendar";
+import HealthProfessionalScheduler from "../components/Scheduler/HealthProfessionalScheduler";
+
+const tabs = [
+  "Profile",
+  "Post Article",
+  "Answer Questions",
+  "Upload Scans",
+  "Recommend Clinics",
+  "Flag Misinformation",
+  "My Articles",
+  "Calendar"
+];
 
 const HealthProDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [articles, setArticles] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("Profile"); // Tab State
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('access_token');
-        console.log("🔑 Token:", token);
         const profileRes = await axios.get('http://localhost:5000/me', {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true
@@ -50,62 +63,124 @@ const HealthProDashboard = () => {
     <div className="p-8">
       <h1 className="text-3xl font-bold text-cyan-700 mb-6">Health Professional Dashboard</h1>
 
-      {/* Profile Section */}
-      <section className="bg-white shadow rounded p-6 mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Profile Details</h2>
-        <p><strong>Name:</strong> {profile.profile?.full_name || 'N/A'}</p>
-        <p><strong>Region:</strong> {profile.profile?.region || 'N/A'}</p>
-        <p><strong>Status:</strong> <span className="text-green-600 font-bold">Verified</span></p>
-      </section>
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-4 mb-8">
+        {tabs.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`py-2 px-4 rounded ${
+              activeTab === tab
+                ? "bg-cyan-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-cyan-100"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-      {/* Actions Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Post Article */}
-        <div className="bg-cyan-100 p-6 rounded shadow hover:shadow-md transition">
-          <h3 className="text-xl font-bold mb-3">Post New Article</h3>
-          <p>Share medical articles or educational videos with Mums.</p>
-          <button onClick={() => navigate('/healthpro/post-article')} className="mt-4 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">Post Article</button>
-        </div>
-
-        {/* Answer Questions */}
-        <div className="bg-green-100 p-6 rounded shadow hover:shadow-md transition">
-          <h3 className="text-xl font-bold mb-3">Answer User Questions</h3>
-          <p>Help guide Mums by answering their questions.</p>
-          <button onClick={() => navigate('/healthpro/answer-questions')} className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">View Questions</button>
-        </div>
-
-        {/* Upload Trimester Scans */}
-        <div className="bg-purple-100 p-6 rounded shadow hover:shadow-md transition">
-          <h3 className="text-xl font-bold mb-3">Upload Trimester Scan Samples</h3>
-          <p>Upload example scans to educate Mums.</p>
-          <button onClick={() => navigate('/healthpro/upload-scan')} className="mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">Upload Scan</button>
-        </div>
-
-        {/* Recommend Clinics */}
-        <div className="bg-yellow-100 p-6 rounded shadow hover:shadow-md transition">
-          <h3 className="text-xl font-bold mb-3">Recommend Clinics</h3>
-          <p>Recommend trusted clinics for prenatal care.</p>
-          <button onClick={() => navigate('/healthpro/recommend-clinic')} className="mt-4 bg-yellow-600 text-white py-2 px-4 rounded hover:bg-yellow-700">Recommend Clinic</button>
-        </div>
-      </section>
-
-      {/* My Published Articles */}
-      <section className="mt-12">
-        <h2 className="text-2xl font-bold mb-4">My Published Articles</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.length > 0 ? (
-            articles.map(article => (
-              <div key={article.id} className="bg-white p-4 rounded shadow hover:shadow-md">
-                <h3 className="font-semibold text-lg mb-2">{article.title}</h3>
-                <p className="text-gray-600 line-clamp-3">{article.content.slice(0, 100)}...</p>
+      {/* Tab Content */}
+      <div className="bg-white p-6 rounded shadow">
+        {activeTab === "Profile" && (
+          <>
+            <h2 className="text-2xl font-semibold mb-4">Profile Details</h2>
+            <p><strong>Name:</strong> {profile.profile?.full_name || 'N/A'}</p>
+            <p><strong>Region:</strong> {profile.profile?.region || 'N/A'}</p>
+            {profile.profile?.is_verified ? (
+              <p><strong>Status:</strong> <span className="text-green-600 font-bold">Verified</span></p>
+            ) : (
+              <div className="text-red-500 mt-2">
+                <p><strong>Status:</strong> Not Verified</p>
+                <button
+                  onClick={() => navigate('/healthpro/verify')}
+                  className="mt-2 bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700"
+                >
+                  Request Verification
+                </button>
               </div>
-            ))
-          ) : (
-            <p>No articles posted yet.</p>
-          )}
-        </div>
-      </section>
+            )}
+          </>
+        )}
+
+        {activeTab === "Post Article" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Post New Article</h2>
+            <p>Share medical articles or videos with Mums.</p>
+            <button onClick={() => navigate('/healthpro/post-article')} className="mt-4 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">
+              Post Article
+            </button>
+          </>
+        )}
+
+        {activeTab === "Answer Questions" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Answer Questions</h2>
+            <p>Help guide Mums by answering their questions.</p>
+            <button onClick={() => navigate('/healthpro/answer-questions')} className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+              View Questions
+            </button>
+          </>
+        )}
+
+        {activeTab === "Upload Scans" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Upload Trimester Scan Samples</h2>
+            <p>Upload example scans for educational awareness.</p>
+            <button onClick={() => navigate('/healthpro/upload-scan')} className="mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
+              Upload Scan
+            </button>
+          </>
+        )}
+
+        {activeTab === "Recommend Clinics" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Recommend Clinics</h2>
+            <p>Recommend local clinics for prenatal and postnatal care.</p>
+            <button onClick={() => navigate('/healthpro/recommend-clinic')} className="mt-4 bg-yellow-600 text-white py-2 px-4 rounded hover:bg-yellow-700">
+              Recommend Clinic
+            </button>
+          </>
+        )}
+
+        {activeTab === "Flag Misinformation" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Flag Misinformation</h2>
+            <p>Help maintain safety by flagging incorrect health information.</p>
+            <button onClick={() => navigate('/healthpro/flag-misinformation')} className="mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
+              Review & Flag Content
+            </button>
+          </>
+        )}
+
+        {activeTab === "My Articles" && (
+          <>
+            <h2 className="text-2xl font-bold mb-4">My Published Articles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles.length > 0 ? (
+                articles.map(article => (
+                  <div key={article.id} className="bg-white p-4 rounded shadow hover:shadow-md">
+                    <h3 className="font-semibold text-lg mb-2">{article.title}</h3>
+                    <p className="text-gray-600 line-clamp-3">{article.content.slice(0, 100)}...</p>
+                  </div>
+                ))
+              ) : (
+                <p>No articles posted yet.</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === "Calendar" && (
+          <>
+            <h2 className="text-2xl font-bold mb-4">My Availability & Appointments</h2>
+            <HealthProfCalendar userId={profile.id} />
+            <HealthProfessionalScheduler />
+          </>
+        )}
+      </div>
     </div>
   );
-}
-export default HealthProDashboard
+};
+
+export default HealthProDashboard;

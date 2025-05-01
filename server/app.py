@@ -4,10 +4,11 @@ from sqlalchemy import desc
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from flask_cors import CORS
-from datetime import timedelta
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
+from middleware.auth import role_required
 from sqlalchemy.exc import SQLAlchemyError
 import os
 from models import *
@@ -738,48 +739,105 @@ def create_app():
     
     # Mums Update Profile
     # @app.route('/mums/pregnancy', methods=['POST'])
-    # @role_required("mom")
+    # @role_required("mum")
     # def add_pregnancy_details():
-    #     data = request.get_json()
-    #     identity = get_jwt_identity()
-    #     pregnancy = PregnancyDetail(
-    #         user_id=identity['id'],
-    #         last_period_date=data['last_period_date'],
-    #         due_date=data['due_date'],
-    #         current_week=data['current_week'],
-    #         pregnancy_status=data['pregnancy_status']
-    #     )
-    #     db.session.add(pregnancy)
-    #     db.session.commit()
-    #     return jsonify({"message": "Pregnancy details added"}), 201
+    #     try:
+    #         data = request.get_json()
+    #         print("Received data:", data)
+
+    #         user_id = get_jwt_identity()  # ✅ FIXED
+    #         print("User ID:", user_id)
+
+    #         pregnancy = PregnancyDetail(
+    #             user_id=user_id,
+    #             last_period_date=data['last_period_date'],
+    #             due_date=data['due_date'],
+    #             current_week=data['current_week'],
+    #             pregnancy_status=data['pregnancy_status']
+    #         )
+    #         db.session.add(pregnancy)
+    #         db.session.commit()
+
+    #         return jsonify({"message": "Pregnancy details added"}), 201
+
+    #     except Exception as e:
+    #         print("Error saving pregnancy data:", str(e))
+    #         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+
     @app.route('/mums/pregnancy', methods=['POST'])
     @role_required("mum")
     def add_pregnancy_details():
         try:
             data = request.get_json()
-            print("Received data:", data)
+            user_id = get_jwt_identity()
 
-            user_id = get_jwt_identity()  # ✅ FIXED
-            print("User ID:", user_id)
+            lmp = datetime.strptime(data['last_period_date'], '%Y-%m-%d')
+            edd = lmp + timedelta(days=280)
+            current_week = (datetime.utcnow() - lmp).days // 7
+            pregnancy_status = "active" if current_week < 40 else "completed"
 
-            pregnancy = PregnancyDetail(
-                user_id=user_id,
-                last_period_date=data['last_period_date'],
-                due_date=data['due_date'],
-                current_week=data['current_week'],
-                pregnancy_status=data['pregnancy_status']
-            )
-            db.session.add(pregnancy)
+            existing = PregnancyDetail.query.filter_by(user_id=user_id).first()
+            if not existing:
+                existing = PregnancyDetail(user_id=user_id)
+                db.session.add(existing)
+
+            existing.last_period_date = lmp
+            existing.due_date = edd
+            existing.current_week = current_week
+            existing.pregnancy_status = pregnancy_status
             db.session.commit()
 
-            return jsonify({"message": "Pregnancy details added"}), 201
+            # Optional: Add auto-generated reminders
+            Reminder.query.filter_by(user_id=user_id).delete()
+            reminders = [
+                Reminder(user_id=user_id, reminder_text='Initial Prenatal Visit', reminder_date=lmp + timedelta(weeks=8), type='checkup'),
+                Reminder(user_id=user_id, reminder_text='Anatomy Scan', reminder_date=lmp + timedelta(weeks=20), type='scan'),
+                Reminder(user_id=user_id, reminder_text='Glucose Test', reminder_date=lmp + timedelta(weeks=26), type='test'),
+                Reminder(user_id=user_id, reminder_text='Group B Strep Test', reminder_date=lmp + timedelta(weeks=36), type='test'),
+            ]
+            db.session.add_all(reminders)
+            db.session.commit()
+
+            return jsonify({"message": "Pregnancy info saved and reminders set."}), 201
 
         except Exception as e:
-            print("Error saving pregnancy data:", str(e))
-            return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+            return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+    # Mums Get Pregnancy Details
+    @app.route('/mums/pregnancy-info', methods=['GET'])
+    @role_required("mum")
+    def get_pregnancy_info():
+        user_id = get_jwt_identity()
+        preg = PregnancyDetail.query.filter_by(user_id=user_id).first()
 
+        if not preg:
+            return jsonify({"error": "Pregnancy details not found"}), 404
 
+        lmp = preg.last_period_date
+        edd = preg.due_date
+        current_week = preg.current_week
+
+        trimester = (
+            "First Trimester" if current_week < 13 else
+            "Second Trimester" if current_week < 28 else
+            "Third Trimester" if current_week < 40 else
+            "Postpartum"
+        )
+
+        milestones = [
+            {"title": "Initial Prenatal Visit", "date": (lmp + timedelta(weeks=8)).strftime('%Y-%m-%d')},
+            {"title": "Anatomy Scan", "date": (lmp + timedelta(weeks=20)).strftime('%Y-%m-%d')},
+            {"title": "Glucose Test", "date": (lmp + timedelta(weeks=26)).strftime('%Y-%m-%d')},
+            {"title": "Group B Strep Test", "date": (lmp + timedelta(weeks=36)).strftime('%Y-%m-%d')}
+        ]
+
+        return jsonify({
+            "lmp": lmp.strftime('%Y-%m-%d'),
+            "edd": edd.strftime('%Y-%m-%d'),
+            "current_week": current_week,
+            "trimester": trimester,
+            "appointments": milestones
+    })
     # Mums Get Pregnancy Details
     @app.route('/mums/fetal_development', methods=['GET'])
     @role_required("mum")
@@ -793,6 +851,21 @@ def create_app():
         identity = get_jwt_identity()
         reminders = Reminder.query.filter_by(user_id=identity['id']).all()
         return {"reminders": [{"text": r.reminder_text, "date": r.reminder_date} for r in reminders]}
+
+    # Add Reminder
+    @app.route('/mums/reminders', methods=['POST'])
+    @role_required("mum")
+    def add_reminder():
+        identity = get_jwt_identity()
+        data = request.get_json()
+        new_reminder = Reminder(
+            user_id=identity['id'],
+            reminder_text=data.get('reminder_text'),
+            reminder_date=data.get('reminder_date')
+        )
+        db.session.add(new_reminder)
+        db.session.commit()
+        return {"message": "Reminder added successfully."}, 201
 
     # Mums upload medical files
     @app.route('/mums/upload_scan', methods=['POST'])
