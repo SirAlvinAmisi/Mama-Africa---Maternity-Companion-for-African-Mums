@@ -67,7 +67,8 @@ const Profile = () => {
       )}
 
       <div className="flex flex-col gap-4 text-gray-700 text-lg">
-        <div><strong>Full Name:</strong> {profile.full_name }</div>
+        <div><strong>Full Name:</strong> {`${profile.first_name || ''} ${profile.middle_name || ''} ${profile.last_name || ''}`.trim()}
+        </div>
         <div><strong>Short Bio:</strong> {profile.bio }</div>
         <div><strong>Region:</strong> {profile.region }</div>
         {profile.license_number && (

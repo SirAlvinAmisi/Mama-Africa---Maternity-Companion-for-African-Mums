@@ -12,42 +12,30 @@ community_members = db.Table('community_members',
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    # password_hash = db.Column(db.String(128), nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
-
     role = db.Column(db.String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Password handling
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # Relationships
-    profile = db.relationship("Profile", backref="user", uselist=False)
-    pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False)
-    uploads = db.relationship("MedicalUpload", backref="user", lazy=True)
-    posts = db.relationship("Post", backref="author", lazy=True)
-    articles = db.relationship("Article", backref="author", lazy=True)
-    comments = db.relationship("Comment", backref="user", lazy=True)
-    reminders = db.relationship("Reminder", backref="user", lazy=True)
-    questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', lazy=True)
-    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', lazy=True)
-    clinics = db.relationship("Clinic", backref="recommender", lazy=True)
+    # Relationships with cascade and passive_deletes
+    profile = db.relationship("Profile", backref="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+    pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+    uploads = db.relationship("MedicalUpload", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    posts = db.relationship("Post", backref="author", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    articles = db.relationship("Article", backref="author", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    comments = db.relationship("Comment", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    reminders = db.relationship("Reminder", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    clinics = db.relationship("Clinic", backref="recommender", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
 
-
-# Profile & Pregnancy
-# class Profile(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-#     full_name = db.Column(db.String(120))
-#     dob = db.Column(db.Date)
-#     region = db.Column(db.String(100))
-#     profile_picture = db.Column(db.String(200))
-#     bio = db.Column(db.Text)
+# Profile Management
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150))
@@ -57,6 +45,7 @@ class Profile(db.Model):
     profile_picture = db.Column(db.String(200))  # Avatar URL
     license_number = db.Column(db.String(100), nullable=True)  # Only for doctors
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    is_verified = db.Column(db.Boolean, default=False)
 
 
 class PregnancyDetail(db.Model):
