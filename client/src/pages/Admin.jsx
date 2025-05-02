@@ -24,7 +24,8 @@ const Admin = () => {
 
       const response = await axios.get('http://localhost:5000/admin/users', {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          
         }
       });
       console.log('Fetched users:', response.data.users); // 👈 Add this
@@ -72,9 +73,13 @@ const Admin = () => {
         <p>Loading...</p>
       ) : (
         <>
-          {activeTab === 'users' && (
+          {/* {activeTab === 'users' && (
             <AdminCardList users={users} />
+          )} */}
+          {activeTab === 'users' && (
+            <AdminCardList users={users} refreshUsers={fetchUsers} />
           )}
+
           {/* {activeTab === 'articles' && <ArticleReview />}
           {activeTab === 'posts' && <PostReview />}
           {activeTab === 'communities' && <CommunityReview />}

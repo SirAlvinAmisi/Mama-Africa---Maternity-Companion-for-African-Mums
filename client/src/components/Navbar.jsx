@@ -21,7 +21,7 @@ const Navbar = () => {
 
       {/* Center - Static Navigation Links */}
       <div className="text-2xl font-bold flex gap-4 items-center">
-        <Link to="/" className="hover:underline text-3xl">🏠</Link>
+        <Link to="/" className="hover:underline">Home</Link>
         <Link to="/specialists" className="hover:underline">Specialists</Link>
         <Link to="/communities" className="hover:underline">Communities</Link>
         {/* <Link to="/view" className="hover:underline">ViewPage</Link> to be removed just to view other pages before intergration */}
