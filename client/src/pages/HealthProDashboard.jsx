@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import HealthProfCalendar from "../components/Calendar/HealthProfCalendar";
 import HealthProfessionalScheduler from "../components/Scheduler/HealthProfessionalScheduler";
-
+import Notification  from '../components/Notification';
 const tabs = [
   "Profile",
   "Post Article",
@@ -12,7 +12,8 @@ const tabs = [
   "Recommend Clinics",
   "Flag Misinformation",
   "My Articles",
-  "Calendar"
+  "Calendar",
+  "Notifications"
 ];
 
 const HealthProDashboard = () => {
@@ -177,6 +178,9 @@ const HealthProDashboard = () => {
             <HealthProfCalendar userId={profile.id} />
             <HealthProfessionalScheduler />
           </>
+        )}
+        {activeTab === 'Notifications' && (
+            <Notification />
         )}
       </div>
     </div>

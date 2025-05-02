@@ -78,9 +78,13 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
             >
               View Activity Log
             </button>
-            <button className="text-xs text-blue-600 hover:text-blue-800">
+            <button 
+              onClick={() => onResetPassword(user.id)}
+              className="text-xs text-blue-600 hover:text-blue-800"
+            >
               Reset Password
             </button>
+
           </div>
         )}
       </div>

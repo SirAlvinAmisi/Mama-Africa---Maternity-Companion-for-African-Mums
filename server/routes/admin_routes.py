@@ -23,13 +23,21 @@ def get_users():
         ]
     })
 
+# @admin_bp.route('/admin/deactivate_user/<int:user_id>', methods=['PATCH'])
+# @role_required("admin")
+# def deactivate_user(user_id):
+#     user = User.query.get_or_404(user_id)
+#     user.is_active = False
+#     db.session.commit()
+#     return jsonify({"message": "User deactivated"})
+
 @admin_bp.route('/admin/deactivate_user/<int:user_id>', methods=['PATCH'])
 @role_required("admin")
-def deactivate_user(user_id):
+def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
-    user.is_active = False
+    user.is_active = not user.is_active  # Toggle status
     db.session.commit()
-    return jsonify({"message": "User deactivated"})
+    return jsonify({"message": f"User {'activated' if user.is_active else 'deactivated'}"})
 
 @admin_bp.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
 @role_required("admin")

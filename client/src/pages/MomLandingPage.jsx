@@ -7,6 +7,8 @@ import MomReminders from "./MomReminders";
 import MomCalendar from "../components/Calendar/MomCalendar";
 import PopularGroups from '../components/PopularGroups';
 import { getRandomWeeklyUpdate, getWeeklyUpdateByDate } from '../utils/weeklyUpdateHelper';
+import Notification  from '../components/Notification';
+
 export default function MomLandingPage() {
   const [formData, setFormData] = useState({
     edd: '',
@@ -117,12 +119,13 @@ export default function MomLandingPage() {
     alert('Question submitted to community and health experts!');
   };
 
+  
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-3xl font-bold text-cyan-700 text-center mb-6">Welcome, Mama!</h2>
 
       <div className="flex gap-4 mb-6 border-b pb-2">
-        {['profile', 'weekly', 'records', 'questions', 'topics', 'appointments', 'groups'].map(tab => (
+        {['profile', 'weekly', 'records', 'questions', 'topics', 'appointments', 'groups', 'notifications'].map(tab => (
           <button
             key={tab}
             className={`capitalize px-4 py-2 rounded-t ${activeTab === tab ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-600'}`}
@@ -226,6 +229,10 @@ export default function MomLandingPage() {
             <PopularGroups groups={groups} />
           )} */}
         </section>
+      )}
+
+      {activeTab === 'notifications' && (
+          <Notification />
       )}
     </div>
   );

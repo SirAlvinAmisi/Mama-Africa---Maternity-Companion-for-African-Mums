@@ -51,7 +51,7 @@ export default function Home() {
         <section className="py-12 px-4 sm:px-8 md:px-16 lg:px-32 bg-cyan-50">
           <div className="max-w-screen-xl mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-700 text-center mb-8">
-              Meet Our Mamas
+              Meet Our Members and Their Stories
             </h2>
 
             <Swiper
