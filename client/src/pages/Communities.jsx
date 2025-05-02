@@ -1,46 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import axios from 'axios';
+// src/pages/Communities.jsx
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import Welcome from '../components/WelcomeCard';
-// import PopularGroups from '../components/PopularGroups';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
-import MothersPost from '../components/MothersPosts';
+import PostList from '../components/posts/PostList';
+import Nutrition from '../components/Nutrition';
 
 const Communities = () => {
-  const [groups, setGroups] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [selectedTrimester, setSelectedTrimester] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchCommunityData = async () => {
-      try {
-        const groupsResponse = await axios.get('http://localhost:5000/communities', { withCredentials: false });
-        setGroups(groupsResponse.data.communities || []);
+  const { data: groups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ['communities', selectedTrimester],
+    queryFn: async () => {
+      const url = selectedTrimester === 'all'
+        ? 'http://localhost:5000/communities'
+        : `http://localhost:5000/communities?trimester=${selectedTrimester}`;
 
-        const postsResponse = await axios.get('http://localhost:5000/posts', { withCredentials: true });
-        setPosts(postsResponse.data.posts || []);
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching community data:', error);
-        setLoading(false);
-      }
-    };
-    fetchCommunityData();
-  }, []);
+      if (!res.ok) throw new Error('Failed to fetch communities');
+      const data = await res.json();
+      return data.communities;
+    }
+  });
+
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ['posts', selectedTrimester],
+    queryFn: async () => {
+      const communityId = groups?.[0]?.id || 1;
+      const res = await fetch(`http://localhost:5000/communities/${communityId}/posts`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch posts');
+      const data = await res.json();
+      return data.posts;
+    },
+    enabled: !!groups.length
+  });
+
+  const joinMutation = useMutation({
+    mutationFn: async (communityId) => {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) throw new Error('Failed to join community');
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries(['communities'])
+  });
+
+  const leaveMutation = useMutation({
+    mutationFn: async (communityId) => {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) throw new Error('Failed to leave community');
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries(['communities'])
+  });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentGroups = groups.slice(indexOfFirstItem, indexOfLastItem);
-
   const totalPages = Math.ceil(groups.length / itemsPerPage);
 
-  if (loading) {
+  if (groupsLoading || postsLoading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl font-semibold">
         Loading community...
@@ -50,18 +103,16 @@ const Communities = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
-      
-      {/* Main Section */}
       <div className="flex-1 flex flex-col gap-6">
         <Welcome />
 
-        {/* Explore Communities */}
+        {/* Community Cards */}
         <section className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-cyan-700">Explore Communities</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-            {currentGroups.map((group) => (
-              <div 
-                key={group.id} 
+            {currentGroups.map(group => (
+              <div
+                key={group.id}
                 className="bg-gray-50 p-4 rounded-lg shadow-md hover:shadow-lg transition flex flex-col justify-between"
               >
                 <div>
@@ -70,19 +121,27 @@ const Communities = () => {
                     {group.description?.slice(0, 120)}...
                   </p>
                 </div>
-                <div className="flex justify-end">
-                  <button 
+                <div className="flex justify-between items-center">
+                  <button
                     onClick={() => navigate(`/communities/${group.id}`)}
                     className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full transition"
                   >
                     View Community
+                  </button>
+                  <button
+                    onClick={() =>
+                      joinMutation.mutate(group.id)
+                    }
+                    className="text-xs text-cyan-600 border border-cyan-600 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
+                  >
+                    Join
                   </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           <div className="flex justify-center mt-6 gap-4">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -91,11 +150,7 @@ const Communities = () => {
             >
               Previous
             </button>
-
-            <span className="text-gray-700 pt-2">
-              Page {currentPage} of {totalPages}
-            </span>
-
+            <span className="text-gray-700 pt-2">Page {currentPage} of {totalPages}</span>
             <button
               onClick={() => setCurrentPage(prev => (indexOfLastItem < groups.length ? prev + 1 : prev))}
               disabled={indexOfLastItem >= groups.length}
@@ -104,21 +159,18 @@ const Communities = () => {
               Next
             </button>
           </div>
-
         </section>
 
-        {/* Recent Mother Posts */}
-        {/* <MothersPost posts={posts} /> */}
+        {/* Posts */}
+        <PostList posts={posts} />
       </div>
 
       {/* Sidebar */}
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
-        {/* Sidebar: now passing all groups */}
-        {/* <PopularGroups groups={groups} /> */}
         <ParentingDevelopment />
         <BabyCorner />
+        <Nutrition />
       </div>
-
     </div>
   );
 };

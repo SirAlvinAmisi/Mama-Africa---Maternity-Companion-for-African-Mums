@@ -1,4 +1,28 @@
+// src/components/posts/PostCard.jsx
+import { FaShareAlt } from 'react-icons/fa';
+
 export default function PostCard({ post, isAdmin = false }) {
+  const handleShare = async () => {
+    try {
+      const response = await api.shareContent('post', post.id);
+      const shareUrl = response.data.url;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: post.title,
+          text: post.content,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing post:', error);
+      alert('Failed to share post.');
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-4 border border-gray-200">
       {/* Author Header */}
@@ -89,12 +113,20 @@ export default function PostCard({ post, isAdmin = false }) {
           </svg>
           {post.comments?.length || 0} comments
         </button>
-        <button className="text-gray-500 hover:text-red-500 text-sm flex items-center">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          Like
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleShare}
+            className="text-gray-500 hover:text-blue-500 transition"
+          >
+            <FaShareAlt size={20} />
+          </button>
+          <button className="text-gray-500 hover:text-red-500 text-sm flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            Like
+          </button>
+        </div>
       </div>
     </div>
   );

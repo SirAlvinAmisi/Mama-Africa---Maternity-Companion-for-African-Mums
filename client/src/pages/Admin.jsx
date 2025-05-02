@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import AdminCardList from '../components/admin/AdminCardList';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import ArticlesReview from '../components/admin/ArticlesReview';
+import PostReview from '../components/admin/PostReview';
+import CommunityReview from '../components/admin/CommunityReview';
+import CategoryReview from '../components/admin/CategoryReview';
+import Notification  from '../components/Notification';
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
@@ -39,7 +43,7 @@ const Admin = () => {
     { key: 'articles', label: 'Review Articles' },
     { key: 'posts', label: 'Review Posts' },
     { key: 'communities', label: 'Approve Communities' },
-    { key: 'categories', label: 'Manage Categories' }
+    { key: 'notifications', label: 'Notifications' }
   ];
 
   return (
@@ -69,18 +73,23 @@ const Admin = () => {
           {activeTab === 'users' && (
             <AdminCardList users={users} />
           )}
+          {/* {activeTab === 'articles' && <ArticleReview />}
+          {activeTab === 'posts' && <PostReview />}
+          {activeTab === 'communities' && <CommunityReview />}
+          {activeTab === 'categories' && <CategoryReview />} */}
           {activeTab === 'articles' && (
-            <div>Article review section coming soon!</div>
+            <ArticlesReview />
           )}
           {activeTab === 'posts' && (
-            <div>Post review section coming soon!</div>
+            <PostReview />
           )}
           {activeTab === 'communities' && (
-            <div>Community approval section coming soon!</div>
+            <CommunityReview />
           )}
-          {activeTab === 'categories' && (
-            <div>Category management section coming soon!</div>
+          {activeTab === 'notifications' && (
+            <Notification />
           )}
+
         </>
       )}
     </div>

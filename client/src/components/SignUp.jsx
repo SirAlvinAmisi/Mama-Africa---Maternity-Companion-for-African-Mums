@@ -11,6 +11,7 @@ const Signup = () => {
     bio: '',
     role: '',
     licenseNumber: '',
+    county: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -44,6 +45,15 @@ const Signup = () => {
       alert("Passwords do not match!");
       return;
     }
+    if (formData.password.length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password)) {
+      alert("Password must contain both uppercase and lowercase letters.");
+      return;
+    }
+    
 
     try {
       const payload = new FormData();
@@ -56,6 +66,7 @@ const Signup = () => {
       if (formData.role === "Health Professional") {
         payload.append("license_number", formData.licenseNumber);
       }
+      payload.append("county", formData.county);
       payload.append("email", formData.email);
       payload.append("password", formData.password);
       if (avatar) {
@@ -111,6 +122,23 @@ const Signup = () => {
         {formData.role === "Health Professional" && (
           <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-3 border rounded-md text-base"/>
         )}
+        <select
+          name="county"
+          onChange={handleChange}
+          className="p-3 border rounded-md text-base"
+        >
+          <option value="">Select County</option>
+          {[
+            "Nairobi", "Mombasa", "Kisumu", "Nakuru", "Kiambu", "Machakos", "Kajiado",
+            "Eldoret", "Kakamega", "Meru", "Bungoma", "Nyeri", "Murang'a", "Nanyuki",
+            "Kisii", "Kericho", "Bomet", "Embu", "Kitui", "Ol Kalou", "Siaya", "Homa Bay",
+            "Migori", "Kapsabet", "Kitale", "Lodwar", "Garissa", "Wajir", "Mandera", "Isiolo",
+            "Marsabit", "Tana River", "Lamu", "Kilifi", "Taita Taveta", "Kwale", 
+            "Nyamira", "Thika", "Nyandarua", "Laikipia", "Narok", "Naivasha"
+          ].map((county) => (
+            <option key={county} value={county}>{county}</option>
+          ))}
+        </select>
 
         {/* Email & Password */}
         <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-3 border rounded-md text-base"/>

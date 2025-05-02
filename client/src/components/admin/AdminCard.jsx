@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function AdminCard({ user, onDeactivate, onSave, onDelete }) {
+export default function AdminCard({ user, onDeactivate, onSave, onViewActivity, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
 
@@ -8,7 +8,6 @@ export default function AdminCard({ user, onDeactivate, onSave, onDelete }) {
     onSave(editedUser); // Pass the updated user to the parent component
     setIsEditing(false); // Exit edit mode
   };
-
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Card Header */}
@@ -152,6 +151,46 @@ export default function AdminCard({ user, onDeactivate, onSave, onDelete }) {
             </>
           )}
         </div>
+          <button 
+            onClick={onDeactivate}
+            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
+              user.is_active 
+                ? 'bg-red-50 hover:bg-red-100 text-red-600' 
+                : 'bg-green-50 hover:bg-green-100 text-green-600'
+            }`}
+          >
+            {user.is_active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete ${user.profile?.full_name || 'this user'}?`)) {
+                onDelete();
+              }
+            }}
+            className="flex-1 py-2 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium transition"
+          >
+            Delete
+          </button>
+        </div>
+
+        {/* Admin Tools */}
+        {user.role === 'admin' && (
+          <div className="mt-3 pt-3 border-t">
+            <button 
+              onClick={onViewActivity}
+              className="text-xs text-blue-600 hover:text-blue-800 mr-3"
+            >
+              View Activity Log
+            </button>
+            <button 
+              onClick={() => onResetPassword(user.id)}
+              className="text-xs text-blue-600 hover:text-blue-800"
+            >
+              Reset Password
+            </button>
+
+          </div>
+        )}
       </div>
     </div>
   );

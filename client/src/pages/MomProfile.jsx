@@ -11,7 +11,7 @@ export default function MomProfile() {
   const submit = async e => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/mums/profile',
+      await axios.post('http://localhost:5000/mom',
         { full_name: fullName, region, bio },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,13 +1,14 @@
 // src/pages/Specialists.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // assuming you will set up route to view specialist details
 
 const Specialists = () => {
+  const navigate = useNavigate();
   const [specialists, setSpecialists] = useState([]);
   const [articles, setArticles] = useState([]);
+  // const [currentSpecialistIndex, setCurrentSpecialistIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,12 +38,15 @@ const Specialists = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      
-      {/* What We Specialize In */}
+
+      {/* Specialization Section */}
       <section className="py-16 px-8 bg-cyan-50">
         <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Areas We Specialize In</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {["Nutrition", "Mental Health", "Fitness", "Lactation Support", "Childbirth Education", "Postpartum Care", "Family Planning", "Pregnancy Fitness"].map((specialty, index) => (
+          {[
+            "Nutrition", "Mental Health", "Fitness", "Lactation Support",
+            "Childbirth Education", "Postpartum Care", "Family Planning", "Pregnancy Fitness"
+          ].map((specialty, index) => (
             <div key={index} className="bg-white p-6 rounded-lg shadow-md flex items-center justify-center text-lg font-semibold text-cyan-700">
               {specialty}
             </div>
@@ -50,6 +54,7 @@ const Specialists = () => {
         </div>
       </section>
 
+      
       {/* Meet Our Specialists */}
       <section className="py-16 px-8 bg-gray-50">
         <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Meet Our Specialists</h2>
@@ -68,15 +73,26 @@ const Specialists = () => {
               />
               <h3 className="text-xl font-semibold text-gray-800 text-center">{specialist.full_name}</h3>
               <p className="text-gray-500 text-center">{specialist.speciality}</p>
-              <button className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700">
-                View Profile
-              </button>
+              <div className="flex gap-4">
+                {/* <button
+                  className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/chat/${specialist.id}`);
+                  }}
+                >
+                  Chat
+                </button> */}
+                <button className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700">
+                  View Profile
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Latest Articles Section */}
+      {/* Latest Articles */}
       <section className="py-16 px-8">
         <h2 className="text-4xl font-bold text-center text-cyan-700 mb-10">Latest Articles</h2>
 
@@ -89,7 +105,7 @@ const Specialists = () => {
                     {article.title}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {article.content.slice(0, 100)}... {/* First 100 characters */}
+                    {article.content.slice(0, 100)}...
                   </p>
                 </div>
                 <div className="flex justify-end">
@@ -107,9 +123,6 @@ const Specialists = () => {
           <p className="text-center text-gray-500 text-xl">No articles available yet.</p>
         )}
       </section>
-
-
-
     </div>
   );
 };
