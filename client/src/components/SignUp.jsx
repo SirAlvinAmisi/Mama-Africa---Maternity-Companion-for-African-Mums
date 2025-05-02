@@ -142,9 +142,44 @@ const Signup = () => {
 
         {/* Email & Password */}
         <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-3 border rounded-md text-base"/>
-        <input name="password" onChange={handleChange} type="password" placeholder="Password" className="p-3 border rounded-md text-base"/>
-        <input name="confirmPassword" onChange={handleChange} type="password" placeholder="Confirm Password" className="p-3 border rounded-md text-base"/>
+        {/* <input name="password" onChange={handleChange} type="password" placeholder="Password" className="p-3 border rounded-md text-base"/>
+        <input name="confirmPassword" onChange={handleChange} type="password" placeholder="Confirm Password" className="p-3 border rounded-md text-base"/> */}
+        {/* Password */}
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          className="p-3 border rounded-md text-base"
+          value={formData.password}
+          onChange={handleChange}
+        />
 
+        {/* Password Rules */}
+        <div className="text-sm mt-1">
+          <p className={`${formData.password.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>
+            • At least 6 characters
+          </p>
+          <p className={`${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+            • At least one uppercase letter
+          </p>
+          <p className={`${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+            • At least one lowercase letter
+          </p>
+          <p className={`${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
+            • At least one number
+          </p>
+        </div>
+
+        {/* Confirm Password */}
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm Password"
+          className="p-3 border rounded-md text-base"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+        />
+  
         {/* Avatar Upload */}
         <div className="flex flex-col">
           <label className="text-gray-600 mb-1">Upload Avatar</label>

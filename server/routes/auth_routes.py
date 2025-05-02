@@ -7,27 +7,46 @@ import os
 
 auth_bp = Blueprint('auth', __name__)
 
+# Signup Route
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     try:
         email = request.form['email']
         password = request.form['password']
-        role = request.form['role']
+        raw_role = request.form['role'].strip().lower()
+
+        # Normalize the role
+        role_map = {
+            "admin": "admin",
+            "mom": "mum",
+            "mother": "mum",
+            "mum": "mum",
+            "health professional": "health_pro",
+            "health_pro": "health_pro"
+        }
+        role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
+
+        # Check for duplicate email
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 400
 
+        # Create the user
         user = User(email=email, role=role)
         user.set_password(password)
 
+        # Profile info
         profile_data = {
             "full_name": f"{request.form.get('first_name', '')} {request.form.get('middle_name', '')} {request.form.get('last_name', '')}".strip(),
             "bio": request.form.get('bio', ''),
             "region": request.form.get('county')
         }
-        if role == 'Health Professional' and 'license_number' in request.form:
+
+        if role == 'health_pro' and 'license_number' in request.form:
             profile_data["license_number"] = request.form['license_number']
+
         user.profile = Profile(**profile_data)
 
+        # Handle avatar upload
         if 'avatar' in request.files:
             avatar = request.files['avatar']
             if avatar.filename:
@@ -49,6 +68,7 @@ def signup():
         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
 
 
+# Login Route
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
@@ -61,16 +81,13 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
-            role_map = {
-                "admin": "admin",
-                "mom": "mum",
-                "health professional": "health_pro"
-            }
+            # Use the exact stored role directly
             token = create_access_token(
                 identity=str(user.id),
-                additional_claims={"role": role_map.get(user.role.lower(), user.role)}
+                additional_claims={"role": user.role}  # Now correct
             )
             return jsonify(access_token=token), 200
+
         return jsonify({"error": "Invalid credentials"}), 401
 
     except SQLAlchemyError as e:
@@ -80,7 +97,7 @@ def login():
     except Exception as e:
         return jsonify({"error": "Login failed", "details": str(e)}), 500
 
-
+# me Route
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_me():

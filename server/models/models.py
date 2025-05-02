@@ -153,8 +153,6 @@ class Community(db.Model):
  
 # Nutrition Blogs
 class NutritionBlog(db.Model):
-    __tablename__ = 'nutrition_blogs'
-
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
     content = db.Column(db.Text, nullable=False)
