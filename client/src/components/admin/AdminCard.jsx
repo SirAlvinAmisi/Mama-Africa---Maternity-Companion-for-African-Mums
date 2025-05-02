@@ -1,27 +1,9 @@
-import { useState } from 'react';
-
-export default function AdminCard({ user, onDeactivate, onSave, onViewActivity, onDelete }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(user);
-
-  const handleSave = () => {
-    onSave(editedUser); // Pass the updated user to the parent component
-    setIsEditing(false); // Exit edit mode
-  };
+export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity, onResetPassword, onApproveHealthPro }) {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Card Header */}
       <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
-        {isEditing ? (
-          <input
-            type="email"
-            value={editedUser.email}
-            onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
-            className="font-semibold text-gray-800 border rounded px-2 py-1 w-full"
-          />
-        ) : (
-          <h3 className="font-semibold text-gray-800">{user.email}</h3>
-        )}
+        <h3 className="font-semibold text-gray-800">{user.email}</h3>
         <div className="flex items-center gap-2">
           <span className={`px-2 py-1 text-xs rounded-full ${
             user.role === 'admin' 
@@ -47,56 +29,7 @@ export default function AdminCard({ user, onDeactivate, onSave, onViewActivity, 
             {user.profile?.full_name?.charAt(0) || 'U'}
           </div>
           <div>
-            {isEditing ? (
-              <>
-                <input
-                  type="text"
-                  value={editedUser.profile?.full_name || ''}
-                  onChange={(e) =>
-                    setEditedUser({
-                      ...editedUser,
-                      profile: { ...editedUser.profile, full_name: e.target.value },
-                    })
-                  }
-                  className="font-medium border rounded px-2 py-1 w-full mb-2"
-                  placeholder="Full Name"
-                />
-                <input
-                  type="text"
-                  value={editedUser.profile?.region || ''}
-                  onChange={(e) =>
-                    setEditedUser({
-                      ...editedUser,
-                      profile: { ...editedUser.profile, region: e.target.value },
-                    })
-                  }
-                  className="font-medium border rounded px-2 py-1 w-full mb-2"
-                  placeholder="Region"
-                />
-                <input
-                  type="text"
-                  value={editedUser.profile?.phone || ''}
-                  onChange={(e) =>
-                    setEditedUser({
-                      ...editedUser,
-                      profile: { ...editedUser.profile, phone: e.target.value },
-                    })
-                  }
-                  className="font-medium border rounded px-2 py-1 w-full"
-                  placeholder="Phone Number"
-                />
-              </>
-            ) : (
-              <>
-                <p className="font-medium">{user.profile?.full_name || 'No name'}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {user.profile?.region || 'No region specified'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Phone: {user.profile?.phone || 'No phone number'}
-                </p>
-              </>
-            )}
+            <p className="font-medium">{user.profile?.full_name || 'No name'}</p>
             <p className="text-sm text-gray-500">
               Joined: {new Date(user.created_at).toLocaleDateString('en-US', { 
                 year: 'numeric', 
@@ -104,53 +37,26 @@ export default function AdminCard({ user, onDeactivate, onSave, onViewActivity, 
                 day: 'numeric' 
               })}
             </p>
+            {user.role === 'health_pro' && (
+              <>
+                <p className="text-xs text-gray-500 mt-1">
+                  {user.profile?.region || 'No region specified'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  License: {user.profile?.license_number || 'Not provided'}
+                </p>
+                <p className={`text-xs mt-1 font-semibold ${
+                  user.profile?.is_verified ? 'text-green-600' : 'text-yellow-600'
+                }`}>
+                  {user.profile?.is_verified ? '✅ Verified' : '❌ Not Verified'}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex space-x-2 mt-4">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleSave}
-                className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 py-2 px-3 rounded text-sm font-medium transition"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded text-sm font-medium transition"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-3 rounded text-sm font-medium transition"
-              >
-                Edit Profile
-              </button>
-              <button
-                onClick={onDeactivate}
-                className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
-                  user.is_active 
-                    ? 'bg-red-50 hover:bg-red-100 text-red-600' 
-                    : 'bg-green-50 hover:bg-green-100 text-green-600'
-                }`}
-              >
-                {user.is_active ? 'Deactivate' : 'Activate'}
-              </button>
-              <button
-                onClick={() => onDelete(user.id)}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded text-sm font-medium transition"
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
           <button 
             onClick={onDeactivate}
             className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
@@ -183,12 +89,23 @@ export default function AdminCard({ user, onDeactivate, onSave, onViewActivity, 
               View Activity Log
             </button>
             <button 
-              onClick={() => onResetPassword(user.id)}
+              onClick={onResetPassword}
               className="text-xs text-blue-600 hover:text-blue-800"
             >
               Reset Password
             </button>
+          </div>
+        )}
 
+        {/* Health Pro Verification */}
+        {user.role === 'health_pro' && !user.profile?.is_verified && (
+          <div className="mt-3 pt-3 border-t">
+            <button 
+              onClick={onApproveHealthPro}
+              className="w-full text-xs text-green-600 hover:text-green-800"
+            >
+              Mark as Verified (after manual check)
+            </button>
           </div>
         )}
       </div>

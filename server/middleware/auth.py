@@ -8,6 +8,7 @@ def role_required(required_role):
         @jwt_required()
         def wrapper(*args, **kwargs):
             claims = get_jwt()
+            print("JWT claims from DELETE request:", claims)  # ✅ Add this
             role = claims.get("role", "").strip().lower()
             normalized_claim_role = role.replace(" ", "_")
             normalized_required = required_role.strip().lower().replace(" ", "_")

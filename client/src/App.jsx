@@ -104,7 +104,7 @@ function App() {
 
               {/* Topics */}
               <Route path="/topics" element={<Topics />} />
-
+              <Route path="/nutrition" element={<Nutrition />} />
               {/* Admin & Profile */}
               <Route path="/admin" element={<Admin />} />
               <Route path="/profile" element={<Profile />} />

@@ -20,6 +20,8 @@ const Admin = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('access_token');
+      // const token = localStorage.getItem('token');
+
       const response = await axios.get('http://localhost:5000/admin/users', {
         headers: {
           Authorization: `Bearer ${token}`

@@ -1,147 +1,71 @@
-import { useState } from 'react';
 import AdminCard from './AdminCard';
 import axios from 'axios';
 
-// export default function AdminCardList() {
-//   const [localUsers, setLocalUsers] = useState([
-//     {
-//       id: 1,
-//       email: 'admin@mama.africa',
-//       role: 'admin',
-//       is_active: true,
-//       profile: {
-//         full_name: 'Admin User',
-//         region: 'Nairobi',
-//         phone: '123-456-7890',
-//       },
-//       created_at: '2025-04-30T12:00:00Z',
-//     },
-//     {
-//       id: 2,
-//       email: 'dr.ouma@mama.africa',
-//       role: 'health_pro',
-//       is_active: false,
-//       profile: {
-//         full_name: 'Dr. Auma Ouma',
-//         region: 'Kisumu',
-//         phone: '987-654-3210',
-//       },
-//       created_at: '2025-04-30T12:00:00Z',
-//     },
-//     {
-//       id: 3,
-//       email: 'mum.jane@mama.africa',
-//       role: 'mum',
-//       is_active: true,
-//       profile: {
-//         full_name: 'Jane Doe',
-//         region: 'Mombasa',
-//         phone: '555-555-5555',
-//       },
-//       created_at: '2025-04-30T12:00:00Z',
-//     },
-//   ]);
-
-//   const fetchNewUsers = () => {
-//     const generateMockUser = (id) => ({
-//       id,
-//       email: `user${id}@mama.africa`,
-//       role: id % 2 === 0 ? 'health_pro' : 'mum',
-//       is_active: id % 2 === 0,
-//       profile: {
-//         full_name: `User ${id}`,
-//         region: `Region ${id}`,
-//         phone: `123-456-${String(id).padStart(4, '0')}`,
-//       },
-//       created_at: new Date().toISOString(),
-//     });
-
-//     const newUsers = Array.from({ length: 5 }, (_, i) => generateMockUser(localUsers.length + i + 1));
-
-//     setLocalUsers((prevUsers) => [...prevUsers, ...newUsers]);
-//     console.log('Fetched new users:', newUsers);
-//   };
-
-//   const handleDeactivate = (userId) => {
-//     setLocalUsers((prevUsers) =>
-//       prevUsers.map((user) =>
-//         user.id === userId ? { ...user, is_active: !user.is_active } : user
-//       )
-//     );
-//     console.log(`Toggled active status for user ID: ${userId}`);
-//   };
-
-//   const handleSave = (updatedUser) => {
-//     setLocalUsers((prevUsers) =>
-//       prevUsers.map((user) =>
-//         user.id === updatedUser.id ? updatedUser : user
-//       )
-//     );
-//     console.log(`Saved changes for user ID: ${updatedUser.id}`);
-//   };
-
-//   const handleDelete = (userId) => {
-//     setLocalUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-//     console.log(`Deleted user ID: ${userId}`);
 export default function AdminCardList({ users, refreshUsers }) {
   const handleDeactivate = async (userId) => {
     try {
-      await axios.patch(`http://localhost:5000/admin/deactivate_user/${userId}`);
-      console.log(`User ${userId} deactivated`);
+      const token = localStorage.getItem("token");
+      await axios.patch(`http://localhost:5000/admin/deactivate_user/${userId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       refreshUsers();
     } catch (error) {
       console.error('Error deactivating user:', error);
+      alert(error?.response?.data?.error || "Deactivation failed");
     }
   };
+  
 
   const handleDelete = async (userId) => {
     try {
-      const confirmed = window.confirm("Are you sure you want to delete this user?");
+      const token = localStorage.getItem("token");
+      if (!token) return alert("No token");
+  
+      const confirmed = window.confirm("Delete user?");
       if (!confirmed) return;
   
-      await axios.delete(`http://localhost:5000/admin/delete_user/${userId}`);
-      refreshUsers(); // Re-fetch list
-    } catch (error) {
-      console.error("Error deleting user:", error);
+      await axios.delete(`http://localhost:5000/admin/delete_user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      refreshUsers();
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      alert(err?.response?.data?.error || "Delete failed");
     }
   };
+  
   
   const handleResetPassword = async (userId) => {
     try {
       await axios.post(`http://localhost:5000/admin/reset_password/${userId}`);
-      alert('Password reset email sent!');
+      alert("Password reset email sent.");
     } catch (error) {
-      console.error('Error resetting password:', error);
+      console.error("Error resetting password:", error);
     }
   };
-  
-  // const handleViewActivity = (userId) => {
-  //   console.log(`Activity log for user ${userId}`);
-  // };
+
   const handleViewActivity = (userId) => {
     window.location.href = `/profile/${userId}`;
   };
+
+  const handleApproveHealthPro = async (userId) => {
+    try {
+      const confirmed = window.confirm("Have you confirmed the license number is valid?");
+      if (!confirmed) return;
+
+      const res = await axios.post(`http://localhost:5000/admin/approve_healthpro/${userId}`);
+      alert(res.data.message);
+      refreshUsers();
+    } catch (error) {
+      alert(error.response?.data?.error || "Verification failed");
+    }
+  };
+
   return (
-    <div>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={fetchNewUsers}
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-        >
-          Fetch New Users
-        </button>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {localUsers.map((user) => (
-          <AdminCard
-            key={user.id}
-            user={user}
-            onDeactivate={() => handleDeactivate(user.id)}
-            onSave={handleSave}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {users.map(user => (
         <AdminCard
@@ -150,7 +74,8 @@ export default function AdminCardList({ users, refreshUsers }) {
           onDeactivate={() => handleDeactivate(user.id)}
           onDelete={() => handleDelete(user.id)}
           onViewActivity={() => handleViewActivity(user.id)}
-          onResetPassword={handleResetPassword}
+          onResetPassword={() => handleResetPassword(user.id)}
+          onApproveHealthPro={() => handleApproveHealthPro(user.id)}
         />
       ))}
     </div>
