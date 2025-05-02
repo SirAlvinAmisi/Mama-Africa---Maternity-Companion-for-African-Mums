@@ -76,7 +76,7 @@ class Post(db.Model):
     content = db.Column(db.Text)
     media_url = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    is_approved = db.Column(db.Boolean, default=False)
     comments = db.relationship("Comment", backref="post", lazy=True)
 
 class Article(db.Model):
@@ -88,6 +88,7 @@ class Article(db.Model):
     category = db.Column(db.String(100))   # e.g., Nutrition, Mental Health, Exercise
     is_approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    flagged = db.Column(db.Boolean, default=False)
 
     comments = db.relationship("Comment", backref="article", lazy=True)
 

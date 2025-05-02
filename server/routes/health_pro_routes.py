@@ -127,3 +127,20 @@ def recommend_clinic():
     db.session.add(clinic)
     db.session.commit()
     return jsonify({"message": "Clinic recommendation added"})
+
+@health_bp.route('/healthpros/flag_article/<int:article_id>', methods=['POST'])
+@role_required("health_pro")
+def flag_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    article.flagged = True
+    db.session.commit()
+    # Optionally send notification to admin (e.g., via Notification model)
+    return jsonify({"message": "Article flagged for review"})
+
+@health_bp.route('/healthpros/request_verification', methods=['POST'])
+@role_required("health_pro")
+def request_verification():
+    identity = get_jwt_identity()
+    user = User.query.get(identity)
+    # e.g., log it or send notification
+    return jsonify({"message": "Verification request submitted to admin"})

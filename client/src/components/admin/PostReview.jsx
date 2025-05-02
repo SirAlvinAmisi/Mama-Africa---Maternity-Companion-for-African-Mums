@@ -5,44 +5,74 @@ export default function PostReview() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     try {
+  //       const token = localStorage.getItem("access_token");
+  //       const response = await axios.get("https://jsonplaceholder.typicode.com/posts", {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setPosts(response.data || []);
+  //     } catch (error) {
+  //       console.error("Failed to fetch posts!:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchPosts();
+  // }, []);
+
+  // const handleAction = async (id, action) => {
+  //   try {
+  //     const token = localStorage.getItem("access_token");
+  //     const response = await axios.patch(
+  //       `https://jsonplaceholder.typicode.com/posts/${id}`,
+  //       { status: action },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     setPosts((prev) =>
+  //       prev.map((post) =>
+  //         post.id === id ? { ...post, status: action } : post
+  //       )
+  //     );
+  //   } catch (error) {
+  //     console.log(`Error trying to ${action} the post!:`, error);
+  //   }
+  // };
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("https://jsonplaceholder.typicode.com/posts", {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await axios.get("http://localhost:5000/admin/posts", {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        setPosts(response.data || []);
+        setPosts(response.data.posts || []);
       } catch (error) {
-        console.error("Failed to fetch posts!:", error);
+        console.error("Failed to fetch posts:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchPosts();
   }, []);
-
+  
   const handleAction = async (id, action) => {
     try {
       const token = localStorage.getItem("access_token");
-      const response = await axios.patch(
-        `https://jsonplaceholder.typicode.com/posts/${id}`,
-        { status: action },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setPosts((prev) =>
-        prev.map((post) =>
-          post.id === id ? { ...post, status: action } : post
-        )
-      );
+      await axios.patch(`http://localhost:5000/admin/posts/${id}`, { status: action }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPosts((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
-      console.log(`Error trying to ${action} the post!:`, error);
+      console.error(`Error trying to ${action} the post:`, error);
     }
   };
-
+  
   if (loading) {
     return <p>Loading pending posts...</p>;
   }
