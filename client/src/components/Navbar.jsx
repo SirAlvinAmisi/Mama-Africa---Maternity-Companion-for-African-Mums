@@ -24,7 +24,7 @@ const Navbar = () => {
         <Link to="/" className="hover:underline">Home</Link>
         <Link to="/specialists" className="hover:underline">Specialists</Link>
         <Link to="/communities" className="hover:underline">Communities</Link>
-        {/* <Link to="/view" className="hover:underline">ViewPage</Link> to be removed just to view other pages before intergration */}
+        {/* <Link to="/view" className="hover:underline">ViewPage</Link>   */}
       </div>
 
       {/* Right side - Auth Links */}

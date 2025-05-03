@@ -138,7 +138,7 @@ export default function MomLandingPage() {
 
       {activeTab === 'profile' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">My Tracker</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">My Tracker</h3>
           <MomPage />
         </section>
       )}

@@ -366,3 +366,41 @@ def approve_health_pro(user_id):
     db.session.commit()
     return jsonify({"message": "Health professional verified"})
 
+@admin_bp.route('/admin/posts', methods=['GET', 'OPTIONS'])
+@cross_origin(origins=["http://localhost:5173"], supports_credentials=True)
+@jwt_required()
+def list_all_posts():
+    if request.method == 'OPTIONS':
+        return preflight_ok()
+
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return jsonify({"posts": [
+        {
+            "id": p.id,
+            "title": p.title,
+            "content": p.content,
+            "media_url": p.media_url,
+            "created_at": p.created_at,
+            "author_id": p.author_id,
+            "community_id": p.community_id,
+            "is_approved": getattr(p, "is_approved", False)
+        } for p in posts
+    ]})
+
+@admin_bp.route('/admin/posts/<int:id>', methods=['PATCH'])
+@cross_origin(origins=["http://localhost:5173"], supports_credentials=True)
+@jwt_required()
+def update_post_status(id):
+    data = request.get_json()
+    action = data.get("status")
+
+    post = Post.query.get_or_404(id)
+    if action == "approved":
+        post.is_approved = True
+        db.session.commit()
+        return jsonify({"message": "Post approved"})
+    elif action == "rejected":
+        db.session.delete(post)
+        db.session.commit()
+        return jsonify({"message": "Post rejected and deleted"})
+    return jsonify({"error": "Invalid action"}), 400

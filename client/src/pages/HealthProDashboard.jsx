@@ -4,6 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import HealthProfCalendar from "../components/Calendar/HealthProfCalendar";
 import HealthProfessionalScheduler from "../components/Scheduler/HealthProfessionalScheduler";
 import Notification  from '../components/Notification';
+import ArticleForm from "../components/health-pro/ArticleForm";
+import QAModeration from "../components/health-pro/QAModeration";
+import ScanUpload from "../components/health-pro/ScanUpload";
+import ClinicRecommendations from "../components/health-pro/ClinicRecommendations";
+
 const tabs = [
   "Profile",
   "Post Article",
@@ -104,7 +109,7 @@ const HealthProDashboard = () => {
           </>
         )}
 
-        {activeTab === "Post Article" && (
+        {/* {activeTab === "Post Article" && (
           <>
             <h2 className="text-xl font-bold mb-2">Post New Article</h2>
             <p>Share medical articles or videos with Mums.</p>
@@ -112,9 +117,36 @@ const HealthProDashboard = () => {
               Post Article
             </button>
           </>
+        )} */}
+        {activeTab === "Post Article" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Post New Article</h2>
+            <p>Share medical articles or videos with Mums.</p>
+            
+            <ArticleForm onSubmit={(articleData) => {
+              const token = localStorage.getItem("access_token");
+
+              axios.post('http://127.0.0.1:5000/api/articles', articleData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json"
+                },
+                withCredentials: true
+              })
+              .then(() => {
+                alert("Article posted!");
+                navigate('/healthpro/my-articles'); // or wherever you want to redirect
+              })
+              .catch(err => {
+                console.error("Submission error:", err);
+                alert("Failed to post article");
+              });
+            }} />
+
+          </>
         )}
 
-        {activeTab === "Answer Questions" && (
+        {/* {activeTab === "Answer Questions" && (
           <>
             <h2 className="text-xl font-bold mb-2">Answer Questions</h2>
             <p>Help guide Mums by answering their questions.</p>
@@ -122,15 +154,28 @@ const HealthProDashboard = () => {
               View Questions
             </button>
           </>
+        )} */}
+        {activeTab === "Answer Questions" && (
+          <>
+            <h2 className="text-xl font-bold mb-2">Answer Questions</h2>
+            <p>Help guide Mums by answering their questions.</p>
+            <QAModeration questions={questions} setQuestions={setQuestions} />
+            {/* <button 
+              onClick={() => navigate('/healthpro/answer-questions')}
+              className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+            >
+              View Questions
+            </button> */}
+          </>
         )}
 
         {activeTab === "Upload Scans" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Upload Trimester Scan Samples</h2>
-            <p>Upload example scans for educational awareness.</p>
-            <button onClick={() => navigate('/healthpro/upload-scan')} className="mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
+            <h2 className="text-xl font-bold mb-2">Upload example scans for educational awareness.</h2>
+            <ScanUpload />
+            {/* <button onClick={() => navigate('/healthpro/upload-scan')} className="mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
               Upload Scan
-            </button>
+            </button> */}
           </>
         )}
 
@@ -138,9 +183,7 @@ const HealthProDashboard = () => {
           <>
             <h2 className="text-xl font-bold mb-2">Recommend Clinics</h2>
             <p>Recommend local clinics for prenatal and postnatal care.</p>
-            <button onClick={() => navigate('/healthpro/recommend-clinic')} className="mt-4 bg-yellow-600 text-white py-2 px-4 rounded hover:bg-yellow-700">
-              Recommend Clinic
-            </button>
+            <ClinicRecommendations />
           </>
         )}
 

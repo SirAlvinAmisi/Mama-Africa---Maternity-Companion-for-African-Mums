@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models import Article
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models import db, Article
 from sqlalchemy import desc
 
 article_bp = Blueprint('article', __name__)
@@ -19,6 +20,25 @@ def get_articles():
             "author_id": a.author_id
         } for a in articles
     ]})
+
+@article_bp.route('/articles', methods=['POST'])
+@jwt_required()
+def post_article():
+    data = request.get_json()
+    title = data.get('title')
+    category = data.get('category')
+    content = data.get('content')
+
+    article = Article(
+        title=title,
+        category=category,
+        content=content,
+        author_id=get_jwt_identity()
+    )
+    db.session.add(article)
+    db.session.commit()
+
+    return jsonify({"message": "Article created"}), 201
 
 @article_bp.route('/articles/author/<int:author_id>', methods=['GET'])
 def get_articles_by_author(author_id):

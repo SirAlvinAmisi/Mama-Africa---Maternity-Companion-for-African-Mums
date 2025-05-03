@@ -38,7 +38,7 @@ const Login = () => {
         navigate('/admin');
       } else if (role === 'mum' || role === 'mom' || role === 'Mom' || role === 'Mum') {
         navigate('/mom');
-      } else if (role === 'health_professional') {
+      } else if (role === 'health_pro') {
         navigate('/healthpro/dashboard');
       } else {
         navigate('/home'); // fallback
