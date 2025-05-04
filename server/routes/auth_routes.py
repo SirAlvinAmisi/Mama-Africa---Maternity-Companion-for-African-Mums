@@ -82,11 +82,12 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             # Use the exact stored role directly
-            token = create_access_token(
+            access_token = create_access_token(
                 identity=str(user.id),
+                # identity=user.id,
                 additional_claims={"role": user.role}  # Now correct
             )
-            return jsonify(access_token=token), 200
+            return jsonify(access_token=access_token), 200
 
         return jsonify({"error": "Invalid credentials"}), 401
 
