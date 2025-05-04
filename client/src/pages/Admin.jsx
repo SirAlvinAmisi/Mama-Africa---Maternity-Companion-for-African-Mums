@@ -6,7 +6,8 @@ import ArticlesReview from '../components/admin/ArticlesReview';
 import PostReview from '../components/admin/PostReview';
 import CommunityReview from '../components/admin/CommunityReview';
 import CategoryReview from '../components/admin/CategoryReview';
-import Notification  from '../components/Notification';
+import Notification from '../components/Notification';
+
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
@@ -14,21 +15,17 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers(); // default load users first
+    fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      // const token = localStorage.getItem('token');
-
       const response = await axios.get('http://localhost:5000/admin/users', {
         headers: {
           Authorization: `Bearer ${token}`,
-          
         }
       });
-      console.log('Fetched users:', response.data.users); // 👈 Add this
       setUsers(response.data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -39,29 +36,33 @@ const Admin = () => {
       setLoading(false);
     }
   };
-  
 
   const tabs = [
     { key: 'users', label: 'Manage Users' },
     { key: 'articles', label: 'Review Articles' },
     { key: 'posts', label: 'Review Posts' },
     { key: 'communities', label: 'Approve Communities' },
-    { key: 'notifications', label: 'Notifications' }
+    { key: 'notifications', label: 'Notifications' },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-cyan-700 mb-6">Admin Dashboard</h1>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 text-center sm:text-left mb-6">
+        Admin Dashboard
+      </h1>
 
-      {/* Tab Navigation */}
-      <div className="flex space-x-4 mb-8">
-        {tabs.map(tab => (
+      {/* Tabs */}
+      <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
+        {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`py-2 px-4 rounded ${
-              activeTab === tab.key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
+              ${
+                activeTab === tab.key
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             {tab.label}
           </button>
@@ -69,36 +70,19 @@ const Admin = () => {
       </div>
 
       {/* Tab Content */}
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          {/* {activeTab === 'users' && (
-            <AdminCardList users={users} />
-          )} */}
-          {activeTab === 'users' && (
-            <AdminCardList users={users} refreshUsers={fetchUsers} />
-          )}
-
-          {/* {activeTab === 'articles' && <ArticleReview />}
-          {activeTab === 'posts' && <PostReview />}
-          {activeTab === 'communities' && <CommunityReview />}
-          {activeTab === 'categories' && <CategoryReview />} */}
-          {activeTab === 'articles' && (
-            <ArticlesReview />
-          )}
-          {activeTab === 'posts' && (
-            <PostReview />
-          )}
-          {activeTab === 'communities' && (
-            <CommunityReview />
-          )}
-          {activeTab === 'notifications' && (
-            <Notification />
-          )}
-
-        </>
-      )}
+      <div className="bg-white rounded-xl shadow-md p-6 min-h-[300px]">
+        {loading ? (
+          <div className="text-center text-gray-500">Loading...</div>
+        ) : (
+          <>
+            {activeTab === 'users' && <AdminCardList users={users} refreshUsers={fetchUsers} />}
+            {activeTab === 'articles' && <ArticlesReview />}
+            {activeTab === 'posts' && <PostReview />}
+            {activeTab === 'communities' && <CommunityReview />}
+            {activeTab === 'notifications' && <Notification />}
+          </>
+        )}
+      </div>
     </div>
   );
 };

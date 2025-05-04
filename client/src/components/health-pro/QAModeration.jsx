@@ -36,7 +36,7 @@ export default function QAModeration() {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow mt-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Q&A Moderation</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Q&A Moderation</h2>
 
       <div className="flex border-b mb-4">
         {['unanswered', 'answered'].map(tab => (

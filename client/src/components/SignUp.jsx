@@ -21,7 +21,7 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleAvatarChange = (e) => {
@@ -53,7 +53,6 @@ const Signup = () => {
       alert("Password must contain both uppercase and lowercase letters.");
       return;
     }
-    
 
     try {
       const payload = new FormData();
@@ -88,13 +87,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 p-8 bg-white rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold text-center mb-2">Sign Up</h2>
-      <p className="text-center text-gray-500 mb-6">Join Mama Afrika Community</p>
-      
+    <div className="container max-w-2xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 py-8 bg-white rounded-2xl shadow-lg">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-2">Sign Up</h2>
+      <p className="text-sm sm:text-base text-center text-gray-500 mb-6">Join Mama Afrika Community</p>
+
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        {/* Title */}
-        <select name="title" onChange={handleChange} className="p-3 border rounded-md text-base">
+        <select name="title" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
           <option value="">Select Title</option>
           <option value="Miss">Miss</option>
           <option value="Mrs">Mrs</option>
@@ -102,31 +100,24 @@ const Signup = () => {
           <option value="Dr">Dr</option>
         </select>
 
-        {/* Names */}
-        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-3 border rounded-md text-base"/>
-        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-3 border rounded-md text-base"/>
-        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-3 border rounded-md text-base"/>
+        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
+        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
+        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
 
-        {/* Short Bio */}
-        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-3 border rounded-md text-base h-24"/>
+        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base h-24" />
 
-        {/* Role */}
-        <select name="role" onChange={handleChange} value={formData.role} className="p-3 border rounded-md text-base">
+        <select name="role" onChange={handleChange} value={formData.role} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
           <option value="">Select Role</option>
           <option value="Mom">Mom</option>
           <option value="Health Professional">Health Professional</option>
           <option value="Admin">Admin</option>
         </select>
 
-        {/* License number if Health Professional */}
         {formData.role === "Health Professional" && (
-          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-3 border rounded-md text-base"/>
+          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
         )}
-        <select
-          name="county"
-          onChange={handleChange}
-          className="p-3 border rounded-md text-base"
-        >
+
+        <select name="county" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
           <option value="">Select County</option>
           {[
             "Nairobi", "Mombasa", "Kisumu", "Nakuru", "Kiambu", "Machakos", "Kajiado",
@@ -140,62 +131,32 @@ const Signup = () => {
           ))}
         </select>
 
-        {/* Email & Password */}
-        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-3 border rounded-md text-base"/>
-        {/* <input name="password" onChange={handleChange} type="password" placeholder="Password" className="p-3 border rounded-md text-base"/>
-        <input name="confirmPassword" onChange={handleChange} type="password" placeholder="Confirm Password" className="p-3 border rounded-md text-base"/> */}
-        {/* Password */}
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          className="p-3 border rounded-md text-base"
-          value={formData.password}
-          onChange={handleChange}
-        />
+        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
 
-        {/* Password Rules */}
-        <div className="text-sm mt-1">
-          <p className={`${formData.password.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>
-            • At least 6 characters
-          </p>
-          <p className={`${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
-            • At least one uppercase letter
-          </p>
-          <p className={`${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
-            • At least one lowercase letter
-          </p>
-          <p className={`${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>
-            • At least one number
-          </p>
+        <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" value={formData.password} onChange={handleChange} />
+
+        <div className="text-xs sm:text-sm mt-1">
+          <p className={`${formData.password.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>• At least 6 characters</p>
+          <p className={`${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>• At least one uppercase letter</p>
+          <p className={`${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>• At least one lowercase letter</p>
+          <p className={`${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>• At least one number</p>
         </div>
 
-        {/* Confirm Password */}
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm Password"
-          className="p-3 border rounded-md text-base"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-        />
-  
-        {/* Avatar Upload */}
+        <input name="confirmPassword" type="password" placeholder="Confirm Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" value={formData.confirmPassword} onChange={handleChange} />
+
         <div className="flex flex-col">
-          <label className="text-gray-600 mb-1">Upload Avatar</label>
-          <input type="file" accept="image/*" onChange={handleAvatarChange} className="p-2 border rounded-md"/>
+          <label className="text-gray-600 mb-1 text-sm sm:text-base">Upload Avatar</label>
+          <input type="file" accept="image/*" onChange={handleAvatarChange} className="p-2 border rounded-md text-sm sm:text-base" />
           {avatarPreview && (
-            <img src={avatarPreview} alt="Avatar Preview" className="mt-4 w-32 h-32 rounded-full object-cover mx-auto shadow-md"/>
+            <img src={avatarPreview} alt="Avatar Preview" className="mt-4 w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover mx-auto shadow-md" />
           )}
         </div>
 
-        {/* Submit */}
         <button type="submit" className="p-3 bg-cyan-600 text-white rounded-md text-base hover:bg-cyan-700 transition">
           Sign Up
         </button>
 
-        {/* Already have account */}
-        <p className="text-center text-gray-600 mt-4">
+        <p className="text-center text-sm sm:text-base text-gray-600 mt-4">
           Already have an account?{' '}
           <Link to="/login" className="text-cyan-600 hover:underline font-semibold">
             Login

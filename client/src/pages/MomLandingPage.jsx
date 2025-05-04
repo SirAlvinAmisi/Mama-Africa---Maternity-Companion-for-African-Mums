@@ -24,16 +24,12 @@ export default function MomLandingPage() {
   const [groups, setGroups] = useState([]);
   const token = localStorage.getItem('access_token');
 
-  // Fetch 
   useEffect(() => {
-    // Set a random weekly update while profile is not yet configured
     const random = getRandomWeeklyUpdate();
     setWeeklyUpdate(random);
 
-    // Temporary record just to simulate file list
     setRecords([{ name: 'Scan Report.pdf', date: '2025-03-15' }]);
 
-    // Fetch mum groups from the backend
     const fetchGroups = async () => {
       try {
         const res = await axios.get('http://localhost:5000/communities', {
@@ -43,7 +39,7 @@ export default function MomLandingPage() {
         });
 
         console.log("Fetched groups:", res.data);
-        setGroups(res.data.groups || res.data); // Adjust depending on actual backend structure
+        setGroups(res.data.groups || res.data);
       } catch (err) {
         console.error("Failed to fetch groups:", err);
       }
@@ -51,7 +47,6 @@ export default function MomLandingPage() {
 
     fetchGroups();
   }, []);
-
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -119,17 +114,21 @@ export default function MomLandingPage() {
     alert('Question submitted to community and health experts!');
   };
 
-  
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-cyan-700 text-center mb-6">Welcome, Mama!</h2>
+    <div className="max-w-4xl w-full px-4 sm:px-6 mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+      <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-700 text-center mb-6">
+        Welcome, Mama!
+      </h3>
 
-      <div className="flex gap-4 mb-6 border-b pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6">
         {['profile', 'weekly', 'records', 'questions', 'topics', 'appointments', 'groups', 'notifications'].map(tab => (
           <button
             key={tab}
-            className={`capitalize px-4 py-2 rounded-t ${activeTab === tab ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-600'}`}
             onClick={() => setActiveTab(tab)}
+            className={`capitalize px-4 py-2 rounded-full transition-colors duration-300 text-sm sm:text-base font-medium 
+              ${activeTab === tab 
+                ? 'bg-cyan-600 text-white shadow' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             {tab.replace('_', ' ')}
           </button>
@@ -138,60 +137,55 @@ export default function MomLandingPage() {
 
       {activeTab === 'profile' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">My Tracker</h3>
+          <h4 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium ">My Tracker</h4>
           <MomPage />
         </section>
       )}
 
-      {/* {activeTab === 'weekly' && (
-        <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Weekly Baby Update</h3>
-          <div className="p-4 bg-yellow-50 rounded text-gray-700 shadow-inner">{weeklyUpdate}</div>
-          
-        </section>
-      )} */}
       {activeTab === 'weekly' && weeklyUpdate && (
-      <section>
-        <h3 className="text-2xl font-bold text-gray-800 mb-4">Week {weeklyUpdate.week} Baby Update</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">👶 Baby Size</p>
-            <p>{weeklyUpdate.babySize}</p>
+        <section>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">
+            Week {weeklyUpdate.week} Baby Update
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">👶 Baby Size</p>
+              <p>{weeklyUpdate.babySize}</p>
+            </div>
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">🧠 Development</p>
+              <p>{weeklyUpdate.development}</p>
+            </div>
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">🤰 Mama Tip</p>
+              <p>{weeklyUpdate.mamaTip}</p>
+            </div>
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">🌿 Proverb</p>
+              <p>{weeklyUpdate.proverb}</p>
+            </div>
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">🥗 Nutrition Tip</p>
+              <p>{weeklyUpdate.nutritionTip}</p>
+            </div>
+            <div className="bg-yellow-50 rounded shadow p-4">
+              <p className="font-semibold text-purple-800">💬 Ask Your Midwife</p>
+              <p>{weeklyUpdate.askMidwife}</p>
+            </div>
           </div>
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">🧠 Development</p>
-            <p>{weeklyUpdate.development}</p>
-          </div>
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">🤰 Mama Tip</p>
-            <p>{weeklyUpdate.mamaTip}</p>
-          </div>
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">🌿 Proverb</p>
-            <p>{weeklyUpdate.proverb}</p>
-          </div>
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">🥗 Nutrition Tip</p>
-            <p>{weeklyUpdate.nutritionTip}</p>
-          </div>
-          <div className="bg-yellow-50 rounded shadow p-4">
-            <p className="font-semibold text-purple-800">💬 Ask Your Midwife</p>
-            <p>{weeklyUpdate.askMidwife}</p>
-          </div>
-        </div>
-      </section>
-    )}
+        </section>
+      )}
 
       {activeTab === 'records' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Medical Records</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Medical Records</h3>
           <MomUploadScan />
         </section>
       )}
 
       {activeTab === 'questions' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Ask the Community / Experts</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Ask the Community / Experts</h3>
           <textarea
             placeholder="Ask your question here..."
             value={question}
@@ -206,14 +200,14 @@ export default function MomLandingPage() {
 
       {activeTab === 'topics' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Follow Topics by Trimester</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Follow Topics by Trimester</h3>
           <p className="text-gray-600">Coming soon: personalized topic suggestions based on your trimester.</p>
         </section>
       )}
 
       {activeTab === 'appointments' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">My Appointments</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">My Appointments</h3>
           <MomCalendar />
           <MomReminders />
         </section>
@@ -221,18 +215,13 @@ export default function MomLandingPage() {
 
       {activeTab === 'groups' && (
         <section>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Mum Groups</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">Mum Groups</h3>
           <p className="text-gray-600">You can explore communities here.</p>
-          {/* {groups.length === 0 ? (
-            <p className="text-gray-400 italic">No groups available or still loading...</p>
-          ) : (
-            <PopularGroups groups={groups} />
-          )} */}
         </section>
       )}
 
       {activeTab === 'notifications' && (
-          <Notification />
+        <Notification />
       )}
     </div>
   );

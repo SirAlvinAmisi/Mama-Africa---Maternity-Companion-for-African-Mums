@@ -58,9 +58,13 @@ const MomCalendar = ({ userId }) => {
     }
 
     return (
-      <div className="mb-4 p-3 bg-purple-100 rounded-lg">
-        <p className="font-bold">Current stage: {currentTrimester}</p>
-        <p>Due date: {format(pregnancyInfo.thirdTrimester.end, 'MMMM d, yyyy')}</p>
+      <div className="mb-4 p-4 bg-indigo-50 rounded-lg shadow-sm">
+        <p className="text-base sm:text-lg font-medium text-indigo-700">
+          Current stage: <span className="font-semibold">{currentTrimester}</span>
+        </p>
+        <p className="text-sm sm:text-base text-gray-700">
+          Due date: {format(pregnancyInfo.thirdTrimester.end, 'MMMM d, yyyy')}
+        </p>
       </div>
     );
   };
@@ -100,8 +104,10 @@ const MomCalendar = ({ userId }) => {
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-purple-800 mb-6">My Pregnancy Calendar</h2>
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 text-center">
+        My Pregnancy Calendar
+      </h2>
 
       {renderPregnancyInfo()}
 
@@ -116,26 +122,29 @@ const MomCalendar = ({ userId }) => {
 
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 w-96 relative animate-fade-in-up">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4 sm:mx-0 animate-fade-in-up">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 transition"
+              aria-label="Close"
             >
               ✕
             </button>
-            <h3 className="text-2xl font-bold mb-4 text-purple-700">Add New Event</h3>
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
+              Add New Event
+            </h3>
             <div className="flex flex-col gap-4">
               <input
                 type="text"
                 placeholder="Event Title"
                 value={newEvent.title}
                 onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
               />
               <select
                 value={newEvent.type}
                 onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-                className="border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
               >
                 <option value="appointment">Appointment</option>
                 <option value="scan">Ultrasound Scan</option>
@@ -145,7 +154,7 @@ const MomCalendar = ({ userId }) => {
               </select>
               <button
                 onClick={handleSaveEvent}
-                className="bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm sm:text-base py-2.5 rounded-lg shadow-md transition transform active:scale-95"
               >
                 Save Event
               </button>

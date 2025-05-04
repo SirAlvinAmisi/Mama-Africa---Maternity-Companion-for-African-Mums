@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-
 const africanClinics = [
   {
     id: 1,
@@ -75,7 +74,6 @@ export default function ClinicRecommendations() {
     specialty: ''
   });
 
-  // Filter clinics by region
   useEffect(() => {
     if (filter === 'all') {
       setClinics(africanClinics);
@@ -85,7 +83,7 @@ export default function ClinicRecommendations() {
   }, [filter]);
 
   const handleRecommend = (id) => {
-    setClinics(clinics.map(clinic => 
+    setClinics(clinics.map(clinic =>
       clinic.id === id ? { ...clinic, recommended: !clinic.recommended } : clinic
     ));
   };
@@ -119,60 +117,64 @@ export default function ClinicRecommendations() {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow mt-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Clinic Recommendations</h2>
-      
-      {/* Region Filter */}
+    <div className="p-6 bg-white rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-6">Clinic Recommendations</h2>
+
+      {/* Region Tabs */}
       <div className="mb-6 flex flex-wrap gap-2">
-        <button 
-          className={`px-3 py-1 rounded ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'}`}
+        <button
           onClick={() => setFilter('all')}
+          className={`px-4 py-2 text-sm rounded-full transition ${
+            filter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
           All Africa
         </button>
         {regions.map(region => (
-          <button 
+          <button
             key={region.value}
-            className={`px-3 py-1 rounded ${filter === region.value ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}
             onClick={() => setFilter(region.value)}
+            className={`px-4 py-2 text-sm rounded-full transition ${
+              filter === region.value ? 'bg-green-600 text-white shadow-sm' : 'bg-green-100 text-green-800 hover:bg-green-200'
+            }`}
           >
             {region.label}
           </button>
         ))}
       </div>
 
-      {/* Add New Clinic Form */}
-      <form onSubmit={handleAddClinic} className="mb-6 space-y-3 p-4 bg-gray-50 rounded">
-        <h3 className="font-medium text-lg">Add New African Clinic</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Add Clinic Form */}
+      <form onSubmit={handleAddClinic} className="mb-8 bg-gray-50 p-6 rounded-xl shadow-sm">
+        <h3 className="text-lg font-medium mb-4">Add a New Clinic</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <input
             type="text"
-            placeholder="Clinic Name*"
+            placeholder="Clinic Name"
             value={newClinic.name}
-            onChange={(e) => setNewClinic({...newClinic, name: e.target.value})}
-            className="border rounded p-2"
+            onChange={(e) => setNewClinic({ ...newClinic, name: e.target.value })}
+            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             required
           />
           <input
             type="text"
-            placeholder="Location (City)*"
+            placeholder="Location"
             value={newClinic.location}
-            onChange={(e) => setNewClinic({...newClinic, location: e.target.value})}
-            className="border rounded p-2"
+            onChange={(e) => setNewClinic({ ...newClinic, location: e.target.value })}
+            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             required
           />
           <input
             type="text"
-            placeholder="Country*"
+            placeholder="Country"
             value={newClinic.country}
-            onChange={(e) => setNewClinic({...newClinic, country: e.target.value})}
-            className="border rounded p-2"
+            onChange={(e) => setNewClinic({ ...newClinic, country: e.target.value })}
+            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             required
           />
           <select
             value={newClinic.region}
-            onChange={(e) => setNewClinic({...newClinic, region: e.target.value})}
-            className="border rounded p-2"
+            onChange={(e) => setNewClinic({ ...newClinic, region: e.target.value })}
+            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
           >
             {regions.map(region => (
               <option key={region.value} value={region.value}>{region.label}</option>
@@ -180,16 +182,16 @@ export default function ClinicRecommendations() {
           </select>
           <input
             type="text"
-            placeholder="Specialty*"
+            placeholder="Specialty"
             value={newClinic.specialty}
-            onChange={(e) => setNewClinic({...newClinic, specialty: e.target.value})}
-            className="border rounded p-2"
+            onChange={(e) => setNewClinic({ ...newClinic, specialty: e.target.value })}
+            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
-        <button 
-          type="submit" 
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        <button
+          type="submit"
+          className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
         >
           Add Clinic
         </button>
@@ -197,50 +199,52 @@ export default function ClinicRecommendations() {
 
       {/* Clinics Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Clinic</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Specialty</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Services</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left">Clinic</th>
+              <th className="px-6 py-3 text-left">Location</th>
+              <th className="px-6 py-3 text-left">Specialty</th>
+              <th className="px-6 py-3 text-left">Services</th>
+              <th className="px-6 py-3 text-left">Status</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {clinics.map(clinic => (
-              <tr key={clinic.id} className="hover:bg-gray-50">
+              <tr key={clinic.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
-                  <div className="font-medium">{clinic.name}</div>
-                  <div className="text-sm text-gray-500">{clinic.contact}</div>
+                  <div className="font-medium text-gray-800">{clinic.name}</div>
+                  <div className="text-xs text-gray-500">{clinic.contact}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div>{clinic.location}</div>
-                  <div className="text-sm text-gray-500">{clinic.country}</div>
+                  <div className="text-gray-700">{clinic.location}</div>
+                  <div className="text-xs text-gray-500">{clinic.country}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{clinic.specialty}</td>
+                <td className="px-6 py-4">{clinic.specialty}</td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
                     {clinic.services.slice(0, 3).map(service => (
-                      <span key={service} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                      <span key={service} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                         {service}
                       </span>
                     ))}
                     {clinic.services.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+                      <span className="px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded-full">
                         +{clinic.services.length - 3}
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   <button
                     onClick={() => handleRecommend(clinic.id)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${clinic.recommended 
-                      ? 'bg-green-100 text-green-800 border border-green-200' 
-                      : 'bg-gray-100 text-gray-800 border border-gray-200'}`}
+                    className={`px-3 py-1 text-xs rounded-full font-medium border ${
+                      clinic.recommended
+                        ? 'bg-green-100 text-green-700 border-green-200'
+                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                    } hover:shadow-sm transition`}
                   >
-                    {clinic.recommended ? 'Recommended ✓' : 'Not Recommended'}
+                    {clinic.recommended ? '✓ Recommended' : 'Not Recommended'}
                   </button>
                 </td>
               </tr>
@@ -248,8 +252,8 @@ export default function ClinicRecommendations() {
           </tbody>
         </table>
         {clinics.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No clinics found in this region
+          <div className="text-center py-8 text-gray-500 text-sm">
+            No clinics found in this region.
           </div>
         )}
       </div>

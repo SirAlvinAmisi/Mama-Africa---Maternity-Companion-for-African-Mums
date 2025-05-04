@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import HealthProfCalendar from "../components/Calendar/HealthProfCalendar";
 import HealthProfessionalScheduler from "../components/Scheduler/HealthProfessionalScheduler";
-import Notification  from '../components/Notification';
+import Notification from '../components/Notification';
 import ArticleForm from "../components/health-pro/ArticleForm";
 import QAModeration from "../components/health-pro/QAModeration";
 import ScanUpload from "../components/health-pro/ScanUpload";
@@ -26,7 +26,7 @@ const HealthProDashboard = () => {
   const [articles, setArticles] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("Profile"); // Tab State
+  const [activeTab, setActiveTab] = useState("Profile");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,35 +62,39 @@ const HealthProDashboard = () => {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen text-2xl">Loading...</div>;
+    return <div className="flex justify-center items-center h-screen text-2xl text-gray-600">Loading...</div>;
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-cyan-700 mb-6">Health Professional Dashboard</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 mb-6 text-center">
+       Health Professional Dashboard
+      </h1>
+
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-4 mb-8">
+      <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
         {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`py-2 px-4 rounded ${
-              activeTab === tab
-                ? "bg-cyan-600 text-white"
-                : "bg-gray-200 text-gray-800 hover:bg-cyan-100"
-            }`}
+            className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
+              ${
+                activeTab === tab
+                  ? "bg-cyan-600 text-white shadow"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
           >
             {tab}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      <div className="bg-white p-6 rounded shadow">
+      {/* Content */}
+      <div className="bg-white rounded-xl shadow p-6">
         {activeTab === "Profile" && (
           <>
-            <h2 className="text-2xl font-semibold mb-4">Profile Details</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4">Profile Details</h2>
             <p><strong>Name:</strong> {profile.profile?.full_name || 'N/A'}</p>
             <p><strong>Region:</strong> {profile.profile?.region || 'N/A'}</p>
             {profile.profile?.is_verified ? (
@@ -100,7 +104,7 @@ const HealthProDashboard = () => {
                 <p><strong>Status:</strong> Not Verified</p>
                 <button
                   onClick={() => navigate('/healthpro/verify')}
-                  className="mt-2 bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700"
+                  className="mt-2 bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 text-sm"
                 >
                   Request Verification
                 </button>
@@ -109,20 +113,11 @@ const HealthProDashboard = () => {
           </>
         )}
 
-        {/* {activeTab === "Post Article" && (
-          <>
-            <h2 className="text-xl font-bold mb-2">Post New Article</h2>
-            <p>Share medical articles or videos with Mums.</p>
-            <button onClick={() => navigate('/healthpro/post-article')} className="mt-4 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">
-              Post Article
-            </button>
-          </>
-        )} */}
+        {/* {activeTab === "Post Article" && (...) } */}
         {activeTab === "Post Article" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Post New Article</h2>
+            <h2 className="text-xl font-semibold mb-2">Post New Article</h2>
             <p>Share medical articles or videos with Mums.</p>
-            
             <ArticleForm onSubmit={(articleData) => {
               const token = localStorage.getItem("access_token");
 
@@ -135,53 +130,35 @@ const HealthProDashboard = () => {
               })
               .then(() => {
                 alert("Article posted!");
-                navigate('/healthpro/my-articles'); // or wherever you want to redirect
+                navigate('/healthpro/my-articles');
               })
               .catch(err => {
                 console.error("Submission error:", err);
                 alert("Failed to post article");
               });
             }} />
-
           </>
         )}
 
-        {/* {activeTab === "Answer Questions" && (
-          <>
-            <h2 className="text-xl font-bold mb-2">Answer Questions</h2>
-            <p>Help guide Mums by answering their questions.</p>
-            <button onClick={() => navigate('/healthpro/answer-questions')} className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
-              View Questions
-            </button>
-          </>
-        )} */}
+        {/* {activeTab === "Answer Questions" && (...) } */}
         {activeTab === "Answer Questions" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Answer Questions</h2>
+            <h2 className="text-xl font-semibold mb-2">Answer Questions</h2>
             <p>Help guide Mums by answering their questions.</p>
             <QAModeration questions={questions} setQuestions={setQuestions} />
-            {/* <button 
-              onClick={() => navigate('/healthpro/answer-questions')}
-              className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-            >
-              View Questions
-            </button> */}
           </>
         )}
 
         {activeTab === "Upload Scans" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Upload example scans for educational awareness.</h2>
+            <h2 className="text-xl font-semibold mb-2">Upload example scans for educational awareness.</h2>
             <ScanUpload />
-            {/* <button onClick={() => navigate('/healthpro/upload-scan')} className="mt-4 bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700">
-              Upload Scan
-            </button> */}
           </>
         )}
 
         {activeTab === "Recommend Clinics" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Recommend Clinics</h2>
+            <h2 className="text-xl font-semibold mb-2">Recommend Clinics</h2>
             <p>Recommend local clinics for prenatal and postnatal care.</p>
             <ClinicRecommendations />
           </>
@@ -189,7 +166,7 @@ const HealthProDashboard = () => {
 
         {activeTab === "Flag Misinformation" && (
           <>
-            <h2 className="text-xl font-bold mb-2">Flag Misinformation</h2>
+            <h2 className="text-xl font-semibold mb-2">Flag Misinformation</h2>
             <p>Help maintain safety by flagging incorrect health information.</p>
             <button onClick={() => navigate('/healthpro/flag-misinformation')} className="mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
               Review & Flag Content
@@ -199,7 +176,7 @@ const HealthProDashboard = () => {
 
         {activeTab === "My Articles" && (
           <>
-            <h2 className="text-2xl font-bold mb-4">My Published Articles</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4">My Published Articles</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {articles.length > 0 ? (
                 articles.map(article => (
@@ -217,14 +194,13 @@ const HealthProDashboard = () => {
 
         {activeTab === "Calendar" && (
           <>
-            <h2 className="text-2xl font-bold mb-4">My Availability & Appointments</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4">My Availability & Appointments</h2>
             <HealthProfCalendar userId={profile.id} />
             <HealthProfessionalScheduler />
           </>
         )}
-        {activeTab === 'Notifications' && (
-            <Notification />
-        )}
+
+        {activeTab === "Notifications" && <Notification />}
       </div>
     </div>
   );

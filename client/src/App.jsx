@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-//  Public Pages
+// Public Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './components/Login';
@@ -32,11 +32,11 @@ import { ArticleDetail } from './components/articles/ArticleDetail';
 import ParentingDevelopmentPage from './components/ParentingDevelopmentPage';
 import BabyCornerPage from './components/BabyCornerPage';
 
-//  Communities
-
+// Communities
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
 import Nutrition from './components/Nutrition';
+
 // Mum Layout & Pages
 import MomLandingPage from './pages/MomLandingPage';
 import MomLayout from './components/Momlayout';
@@ -62,12 +62,11 @@ import Topics from './pages/Topics';
 
 const queryClient = new QueryClient();
 
-// 404 Not Found Page
 function NotFound() {
   return (
-    <div className="flex flex-col min-h-screen justify-center items-center bg-white">
+    <div className="flex flex-col min-h-screen justify-center items-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
       <h1 className="text-5xl font-bold text-red-500 mb-4">404</h1>
-      <p className="text-gray-600">Page Not Found</p>
+      <p className="text-gray-600 dark:text-gray-300">Page Not Found</p>
     </div>
   );
 }
@@ -76,7 +75,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300">
           <Navbar />
           {/* <Notification /> */}
           <main className="flex-grow">
@@ -98,6 +97,7 @@ function App() {
               <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />
               <Route path="/baby-corner" element={<BabyCornerPage />} />
               {/* <Route path="/view" element={<ViewPage />} /> */}
+
               {/* Communities */}
               <Route path="/communities" element={<Communities />} />
               <Route path="/communities/:id" element={<CommunityDetail />} />
@@ -105,6 +105,7 @@ function App() {
               {/* Topics */}
               <Route path="/topics" element={<Topics />} />
               <Route path="/nutrition" element={<Nutrition />} />
+
               {/* Admin & Profile */}
               <Route path="/admin" element={<Admin />} />
               <Route path="/profile" element={<Profile />} />
@@ -140,5 +141,7 @@ function App() {
         </div>
       </Router>
     </QueryClientProvider>
-)};
+  );
+}
+
 export default App;

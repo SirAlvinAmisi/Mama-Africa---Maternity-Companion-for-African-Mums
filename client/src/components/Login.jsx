@@ -28,20 +28,18 @@ const Login = () => {
       const user = userResponse.data;
       console.log("Fetched user from /me:", user);
 
-      const role = user.role.toLowerCase().replace(/\s+/g, '_'); // Normalize role to lowercase
+      const role = user.role.toLowerCase().replace(/\s+/g, '_');
 
-      // Save role in localStorage if needed later
       localStorage.setItem('role', role);
 
-      // Navigate based on role
       if (role === 'admin') {
         navigate('/admin');
-      } else if (role === 'mum' || role === 'mom' || role === 'Mom' || role === 'Mum') {
+      } else if (['mom', 'mum'].includes(role)) {
         navigate('/mom');
       } else if (role === 'health_pro') {
         navigate('/healthpro/dashboard');
       } else {
-        navigate('/home'); // fallback
+        navigate('/home');
       }
 
     } catch (error) {
@@ -51,24 +49,31 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-8 bg-white rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold text-center mb-2">Login</h2>
+    <div className="max-w-md mx-auto mt-20 px-6 sm:px-10 py-10 bg-white rounded-2xl shadow-lg">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Login</h2>
+      <p className="text-sm text-center text-gray-500 mb-6">Welcome back to Mama Afrika</p>
+
       <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <input 
           type="email" 
           placeholder="Email Address" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="p-3 border rounded-md text-base"
+          className="p-3 border rounded-md text-sm sm:text-base"
+          required
         />
         <input 
           type="password" 
           placeholder="Password" 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="p-3 border rounded-md text-base"
+          className="p-3 border rounded-md text-sm sm:text-base"
+          required
         />
-        <button type="submit" className="p-3 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition">
+        <button 
+          type="submit" 
+          className="p-3 bg-cyan-600 text-white rounded-md text-base hover:bg-cyan-700 transition"
+        >
           Login
         </button>
       </form>

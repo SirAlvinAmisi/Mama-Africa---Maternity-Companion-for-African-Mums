@@ -20,6 +20,7 @@ export default function Home() {
             user.bio.toLowerCase().includes("mother")
           )
         );
+
         if (mums.length > 0) {
           const randomMums = [];
           while (randomMums.length < 3 && mums.length > 0) {
@@ -35,12 +36,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen w-full overflow-x-hidden bg-white">
+    <div className="flex flex-col w-full overflow-x-hidden bg-white">
       {/* Intro Section */}
       <section className="flex flex-col items-center justify-center py-16 px-4 sm:px-8 md:px-12 lg:px-20 bg-cyan-100">
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 text-center">
-          Welcome to Mama Afrika
-        </h1>
+        <h4 className="text-3xl sm:text-5xl lg:text-5xl font-bold text-gray-800 mb-4 text-center">
+          <span className='text-green'>Welcome</span> <span className='text-red-600'>to Mama</span> Afrika
+        </h4>
         <p className="text-gray-600 max-w-2xl text-center text-base sm:text-lg lg:text-xl">
           Empowering African mothers and healthcare workers with trusted support, knowledge, and community.
         </p>
@@ -48,7 +49,7 @@ export default function Home() {
 
       {/* Meet Mama Afrika Section */}
       {featuredMums.length > 0 && (
-        <section className="py-12 px-4 sm:px-8 md:px-16 lg:px-32 bg-cyan-50">
+        <section className="py-12 px-4 sm:px-8 md:px-16 lg:px-32 bg-cyan-50 min-h-fit">
           <div className="max-w-screen-xl mx-auto">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-700 text-center mb-8">
               Meet Our Members and Their Stories
@@ -60,10 +61,10 @@ export default function Home() {
               breakpoints={{
                 640: { slidesPerView: 1 },
                 768: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 }
+                1024: { slidesPerView: 3 },
               }}
               autoplay={{ delay: 3000, disableOnInteraction: false }}
-              loop={true}
+              loop
               pagination={{ clickable: true }}
             >
               {featuredMums.map((mum, index) => (
@@ -73,16 +74,19 @@ export default function Home() {
                     <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
                       <img
                         src="https://source.unsplash.com/featured/?african,motherhood"
-                        // alt={Featured Mum ${index}}
+                        loading="lazy"
+                        alt={`Featured Mum ${index + 1}`}
                         className="object-cover w-full h-full"
                       />
                     </div>
 
                     {/* Mum's Details */}
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-cyan-700 mb-2">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-cyan-700 mb-2 text-center">
                       {mum.full_name}
                     </h3>
-                    <p className="text-gray-600 mb-1"><strong>Region:</strong> {mum.region}</p>
+                    <p className="text-gray-600 mb-1 text-center">
+                      <strong>Region:</strong> {mum.region}
+                    </p>
                     <p className="text-gray-600 text-center">
                       <strong>Story:</strong> {mum.bio}
                     </p>
