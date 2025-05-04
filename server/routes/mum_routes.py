@@ -32,6 +32,7 @@ def update_mum_profile():
     db.session.commit()
     return jsonify({"message": "Profile created"})
 
+
 @mum_bp.route('/mums/pregnancy', methods=['POST'])
 @role_required("mum")
 def add_pregnancy_details():
@@ -66,6 +67,7 @@ def add_pregnancy_details():
 
     return jsonify({"message": "Pregnancy info saved and reminders set."})
 
+# communities
 @mum_bp.route('/mums/communities/<int:id>/join', methods=['POST'])
 @role_required("mum")
 def join_community(id):
@@ -84,7 +86,7 @@ def join_community(id):
 
     return jsonify({"message": "Joined community successfully"})
 
-
+# get community posts
 @mum_bp.route('/mums/communities/<int:id>/leave', methods=['POST'])
 @role_required("mum")
 def leave_community(id):
@@ -102,6 +104,7 @@ def leave_community(id):
 
     return jsonify({"error": "User was not a member"}), 400
 
+# Get pregnancy info
 @mum_bp.route('/mums/pregnancy-info', methods=['GET'])
 @role_required("mum")
 def get_pregnancy_info():
@@ -122,30 +125,60 @@ def get_pregnancy_info():
             "type": r.type
         } for r in reminders
     ]
-
     return jsonify({
-        "due_date": pregnancy.due_date.strftime('%Y-%m-%d'),
+        "due_date": pregnancy.due_date.strftime('%Y-%m-%d') if pregnancy.due_date else None,
         "current_week": pregnancy.current_week,
+        "last_period_date": pregnancy.last_period_date.strftime('%Y-%m-%d') if pregnancy.last_period_date else None,
         "appointments": appointments
     })
 
-
-@mum_bp.route('/mums/weekly-updates', methods=['GET'])
+# upload scan   
+@mum_bp.route('/mums/upload_scan', methods=['POST'])
 @role_required("mum")
-def get_weekly_updates():
+def upload_scan():
     user_id = get_jwt_identity()
-    pregnancy = PregnancyDetail.query.filter_by(user_id=user_id).first()
+    data = request.get_json()
 
-    if not pregnancy or pregnancy.current_week is None:
-        return jsonify({"error": "No pregnancy data found"}), 404
+    if not data.get("file_url"):
+        return jsonify({"error": "File URL is required"}), 400
 
-    # Sample structure of weekly data (load from JSON file or DB ideally)
-    import json
-    with open('static/weekly_updates.json') as f:
-        all_weeks = json.load(f)
+    scan = MedicalUpload(
+        user_id=user_id,
+        file_url=data["file_url"],
+        notes=data.get("notes", ""),
+        uploaded_at=datetime.utcnow()
+    )
 
-    current_week = pregnancy.current_week
+    db.session.add(scan)
+    db.session.commit()
+
+    return jsonify({"message": "Scan uploaded successfully"}), 201
+
+# Get uploaded scans
+@mum_bp.route('/mums/scans', methods=['GET'])
+@role_required("mum")
+def get_uploaded_scans():
+    user_id = get_jwt_identity()
+    scans = MedicalUpload.query.filter_by(user_id=user_id).order_by(MedicalUpload.uploaded_at.desc()).all()
     return jsonify({
-        "current_week": current_week,
-        "updates": all_weeks[:current_week]  # Progressive display
+        "uploads": [{
+            "id": scan.id,
+            "file_url": scan.file_url,
+            "notes": scan.notes,
+            "uploaded_at": scan.uploaded_at.strftime('%Y-%m-%d')
+        } for scan in scans]
+    })
+
+# Mom specialist link route
+@mum_bp.route('/healthpros', methods=['GET'])
+@role_required("mum")
+def get_health_pros():
+    health_pros = User.query.filter_by(role="health_pro").all()
+    return jsonify({
+        "doctors": [
+            {
+                "id": hp.id,
+                "name": hp.profile.full_name if hp.profile else f"Doctor {hp.id}"
+            } for hp in health_pros
+        ]
     })

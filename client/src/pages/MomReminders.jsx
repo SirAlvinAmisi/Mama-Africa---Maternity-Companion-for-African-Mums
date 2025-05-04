@@ -1,78 +1,61 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Calendar from '../components/Calendar/Calendar'; 
+import Modal from 'react-modal';
 
 export default function MomReminders() {
   const [userName, setUserName] = useState('');
   const [list, setList] = useState([]);
   const [pregnancyInfo, setPregnancyInfo] = useState(null);
-  const [newReminder, setNewReminder] = useState('');
-  const [reminderDate, setReminderDate] = useState('');
+
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [newReminderText, setNewReminderText] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
+        const headers = { Authorization: `Bearer ${token}` };
+        const [profileRes, remindersRes, pregRes] = await Promise.all([
+          axios.get('http://localhost:5000/me', { headers }),
+          axios.get('http://localhost:5000/mums/reminders', { headers }),
+          axios.get('http://localhost:5000/mums/pregnancy-info', { headers }),
+        ]);
+        setUserName(profileRes.data.first_name);
+        setList(remindersRes.data.reminders);
+        setPregnancyInfo({
+          ...pregRes.data,
+          firstTrimester: {
+            start: new Date(pregRes.data.last_period_date),
+            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 13 * 7 * 24 * 60 * 60 * 1000)
+          },
+          secondTrimester: {
+            start: new Date(new Date(pregRes.data.last_period_date).getTime() + 13 * 7 * 24 * 60 * 60 * 1000),
+            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 27 * 7 * 24 * 60 * 60 * 1000)
+          },
+          thirdTrimester: {
+            start: new Date(new Date(pregRes.data.last_period_date).getTime() + 27 * 7 * 24 * 60 * 60 * 1000),
+            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 40 * 7 * 24 * 60 * 60 * 1000)
           }
         });
-        setUserName(res.data.first_name); // or res.data.name depending on backend
       } catch (err) {
-        console.error("Failed to fetch user profile:", err);
+        console.error("Error loading data:", err);
       }
     };
-  
-    
-    const fetchReminders = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/mums/reminders', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setList(res.data.reminders);
-      } catch (err) {
-        console.error("Failed to fetch reminders:", err);
-      }
-    };
-
-    const fetchPregnancyInfo = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/mums/pregnancy-info', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setPregnancyInfo(res.data);
-      } catch (err) {
-        console.error("Failed to fetch pregnancy info:", err);
-      }
-    };
-    fetchUserProfile();
-    fetchReminders();
-    fetchPregnancyInfo();
+    fetchAll();
   }, [token]);
 
-  const tips = {
-    first: '🌱 Take folic acid daily, drink water, and get rest. Avoid smoking and alcohol.',
-    second: '🌼 Stay active with walking or light prenatal yoga. Attend mid-pregnancy scans.',
-    third: '🎒 Prepare your hospital bag, birth plan, and make final doctor visits.'
-  };
-
-  const getCurrentTip = () => {
-    if (!pregnancyInfo?.lmp) return null;
-    const now = new Date();
-    const start = new Date(pregnancyInfo.lmp);
-    const diffWeeks = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
-
-    if (diffWeeks < 13) return tips.first;
-    if (diffWeeks < 27) return tips.second;
-    return tips.third;
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
   };
 
   const handleAddReminder = async () => {
-    if (!newReminder || !reminderDate) return;
-
-    const payload = { reminder_text: newReminder, reminder_date: reminderDate };
-
+    if (!newReminderText || !selectedDate) return;
+    const reminderDate = selectedDate.toISOString().split('T')[0];
+    const payload = { reminder_text: newReminderText, reminder_date: reminderDate };
     try {
       await axios.post('http://localhost:5000/mums/reminders', payload, {
         headers: {
@@ -80,10 +63,9 @@ export default function MomReminders() {
           'Content-Type': 'application/json'
         }
       });
-
-      setList([...list, { text: newReminder, date: reminderDate }]);
-      setNewReminder('');
-      setReminderDate('');
+      setList(prev => [...prev, { text: newReminderText, date: reminderDate }]);
+      setNewReminderText('');
+      setIsModalOpen(false);
     } catch (err) {
       console.error("Failed to add reminder:", err);
     }
@@ -91,41 +73,38 @@ export default function MomReminders() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-cyan-800 mb-4">
-        🗓️ Hello {userName}, here are your pregnancy reminders
-      </h2>
+      <Calendar
+        userType="mom"
+        events={list}
+        onDateSelect={handleDateClick}
+        pregnancyInfo={pregnancyInfo}
+      />
 
-      {getCurrentTip() && (
-        <div className="mb-5 p-4 border-l-4 border-green-500 bg-green-50 rounded shadow">
-          <p className="font-medium text-green-800">💡 Tip of the Week:</p>
-          <p>{getCurrentTip()}</p>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">➕ Add a New Reminder</h3>
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        ariaHideApp={false}
+        className="bg-cyan-600 text-black p-6 rounded shadow-xl w-full max-w-md mx-auto mt-10"
+      >
+        <h3 className="text-lg font-semibold mb-2">
+          Add Reminder for {selectedDate?.toDateString()}
+        </h3>
         <input
           type="text"
-          value={newReminder}
-          onChange={(e) => setNewReminder(e.target.value)}
-          placeholder="E.g., Visit Dr. Amina at 10AM"
-          className="border p-2 rounded w-full mb-2"
-        />
-        <input
-          type="date"
-          value={reminderDate}
-          onChange={(e) => setReminderDate(e.target.value)}
-          className="border p-2 rounded w-full mb-2"
+          value={newReminderText}
+          onChange={(e) => setNewReminderText(e.target.value)}
+          placeholder="E.g., Clinic visit at 9AM"
+          className="border p-2 w-full mb-4 rounded"
         />
         <button
           onClick={handleAddReminder}
           className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700"
         >
-          Add Reminder
+          Save Reminder
         </button>
-      </div>
+      </Modal>
 
-      <h3 className="text-lg font-semibold mb-2">📋 Upcoming Reminders</h3>
+      <h3 className="text-lg font-bold text-cyan mt-6 mb-2">📋 Upcoming Reminders</h3>
       {list.length ? (
         list.map((r, i) => (
           <div key={i} className="mb-3 p-4 border-l-4 border-blue-500 bg-blue-50 rounded shadow">
