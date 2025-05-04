@@ -87,12 +87,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 py-8 bg-white rounded-2xl shadow-lg">
-      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-2">Sign Up</h2>
-      <p className="text-sm sm:text-base text-center text-gray-500 mb-6">Join Mama Afrika Community</p>
+    <div className="container max-w-2xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 py-8 bg-cyan-400 rounded-2xl shadow-lg">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-900 text-center mb-2">Sign Up</h2>
+      <p className="text-sm sm:text-base text-center font-bold text-cyan-800 mb-6">Join Mama Afrika Community</p>
 
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <select name="title" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
+      <form className="flex flex-col gap-4 " onSubmit={handleSubmit}>
+        <select name="title" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base bg-cyan-400">
           <option value="">Select Title</option>
           <option value="Miss">Miss</option>
           <option value="Mrs">Mrs</option>
@@ -100,13 +100,13 @@ const Signup = () => {
           <option value="Dr">Dr</option>
         </select>
 
-        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
-        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
-        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
+        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-2 sm:p-3 border rounded-md text-black text-sm sm:text-base bg-cyan-100" />
+        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-2 sm:p-3 border rounded-md text-black text-sm sm:text-base bg-cyan-100" />
+        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-2 sm:p-3 border rounded-md text-black text-sm sm:text-base bg-cyan-100" />
 
-        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base h-24" />
+        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base h-24 bg-cyan-100" />
 
-        <select name="role" onChange={handleChange} value={formData.role} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
+        <select name="role" onChange={handleChange} value={formData.role} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base bg-cyan-400">
           <option value="">Select Role</option>
           <option value="Mom">Mom</option>
           <option value="Health Professional">Health Professional</option>
@@ -114,10 +114,10 @@ const Signup = () => {
         </select>
 
         {formData.role === "Health Professional" && (
-          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
+          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-2 sm:p-3 border rounded-md text-black text-sm sm:text-base" />
         )}
 
-        <select name="county" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base">
+        <select name="county" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-sm sm:text-base bg-cyan-400">
           <option value="">Select County</option>
           {[
             "Nairobi", "Mombasa", "Kisumu", "Nakuru", "Kiambu", "Machakos", "Kajiado",
@@ -131,9 +131,9 @@ const Signup = () => {
           ))}
         </select>
 
-        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" />
+        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-2 sm:p-3 border rounded-md text-black text-sm sm:text-base bg-cyan-400" />
 
-        <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" value={formData.password} onChange={handleChange} />
+        <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-400" value={formData.password} onChange={handleChange} />
 
         <div className="text-xs sm:text-sm mt-1">
           <p className={`${formData.password.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>• At least 6 characters</p>
@@ -142,7 +142,7 @@ const Signup = () => {
           <p className={`${/[0-9]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>• At least one number</p>
         </div>
 
-        <input name="confirmPassword" type="password" placeholder="Confirm Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base" value={formData.confirmPassword} onChange={handleChange} />
+        <input name="confirmPassword" type="password" placeholder="Confirm Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base bg-cyan-400" value={formData.confirmPassword} onChange={handleChange} />
 
         <div className="flex flex-col">
           <label className="text-gray-600 mb-1 text-sm sm:text-base">Upload Avatar</label>

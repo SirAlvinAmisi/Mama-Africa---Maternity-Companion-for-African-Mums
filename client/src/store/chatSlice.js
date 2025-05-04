@@ -2,10 +2,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import  api  from '../lib/api';
 
+// export const fetchChats = createAsyncThunk(
+//   'chat/fetchChats',
+//   async (userId) => {
+//     const response = await api.getChats(userId);
+//     return response.data;
+//   }
+// );
 export const fetchChats = createAsyncThunk(
   'chat/fetchChats',
-  async (userId) => {
-    const response = await api.getChats(userId);
+  async ({ userId, receiverId }) => {
+    const response = await api.getChats(userId, receiverId);
     return response.data;
   }
 );

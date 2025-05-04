@@ -25,7 +25,7 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="bg-cyan-200 dark:bg-gray-900 text-gray-600 dark:text-white shadow">
+    <nav className="bg-cyan-200 dark:bg-cyan-900 text-gray-600 dark:text-white shadow">
       <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-4">
         
         {/* Logo */}
@@ -47,12 +47,12 @@ const Navbar = () => {
         <div
           className={`${
             isOpen ? 'flex flex-col items-start gap-4 text-sm' : 'hidden'
-          } sm:flex sm:flex-row sm:items-center sm:gap-4 font-semibold text-lg absolute sm:static bg-cyan-200 dark:bg-gray-900 left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
+          } sm:flex sm:flex-row sm:items-center sm:gap-4 font-semibold text-lg absolute sm:static bg-cyan-200 dark:bg-cyan-900 left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
         >
           <Link to="/" className="hover:underline">Home</Link>
           <Link to="/specialists" className="hover:underline">Specialists</Link>
           <Link to="/communities" className="hover:underline">Communities</Link>
-
+          {/* <Link to="/view" className='hover:underline'>ViewPage</Link> */}
           {!isLoggedIn ? (
             <>
               <Link to="/login" className="hover:underline">Login</Link>

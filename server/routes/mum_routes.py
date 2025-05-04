@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, get_jwt
 from middleware.auth import role_required
 from datetime import datetime, timedelta
 
@@ -101,3 +101,51 @@ def leave_community(id):
         return jsonify({"message": "Left community successfully"})
 
     return jsonify({"error": "User was not a member"}), 400
+
+@mum_bp.route('/mums/pregnancy-info', methods=['GET'])
+@role_required("mum")
+def get_pregnancy_info():
+    print("🔐 JWT Claims:", get_jwt())          # <--- debug log
+    print("👤 Identity:", get_jwt_identity())
+    user_id = get_jwt_identity()
+
+    pregnancy = PregnancyDetail.query.filter_by(user_id=user_id).first()
+    reminders = Reminder.query.filter_by(user_id=user_id).order_by(Reminder.reminder_date).all()
+
+    if not pregnancy:
+        return jsonify({"error": "No pregnancy record found"}), 404
+
+    appointments = [
+        {
+            "title": r.reminder_text,
+            "date": r.reminder_date.strftime('%Y-%m-%d'),
+            "type": r.type
+        } for r in reminders
+    ]
+
+    return jsonify({
+        "due_date": pregnancy.due_date.strftime('%Y-%m-%d'),
+        "current_week": pregnancy.current_week,
+        "appointments": appointments
+    })
+
+
+@mum_bp.route('/mums/weekly-updates', methods=['GET'])
+@role_required("mum")
+def get_weekly_updates():
+    user_id = get_jwt_identity()
+    pregnancy = PregnancyDetail.query.filter_by(user_id=user_id).first()
+
+    if not pregnancy or pregnancy.current_week is None:
+        return jsonify({"error": "No pregnancy data found"}), 404
+
+    # Sample structure of weekly data (load from JSON file or DB ideally)
+    import json
+    with open('static/weekly_updates.json') as f:
+        all_weeks = json.load(f)
+
+    current_week = pregnancy.current_week
+    return jsonify({
+        "current_week": current_week,
+        "updates": all_weeks[:current_week]  # Progressive display
+    })

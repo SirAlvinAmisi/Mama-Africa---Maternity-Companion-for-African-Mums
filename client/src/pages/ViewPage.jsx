@@ -9,15 +9,9 @@ function ViewPage() {
     return (
         <div>
         <h1>This is the view page for new files before configuration.</h1>
-        {/* <Notification />
-        <Chat /> */}
-        
-        
-        
-        
-        
-
-        </div>
+        <Notification />
+        <Chat />
+                </div>
     );
 }
 export default ViewPage;

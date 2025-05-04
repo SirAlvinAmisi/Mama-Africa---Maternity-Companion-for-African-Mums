@@ -28,8 +28,9 @@ const Login = () => {
       const user = userResponse.data;
       console.log("Fetched user from /me:", user);
 
-      const role = user.role.toLowerCase().replace(/\s+/g, '_');
+      localStorage.setItem('user', JSON.stringify(user));
 
+      const role = user.role.toLowerCase().replace(/\s+/g, '_');
       localStorage.setItem('role', role);
 
       if (role === 'admin') {
@@ -49,9 +50,9 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 px-6 sm:px-10 py-10 bg-white rounded-2xl shadow-lg">
-      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">Login</h2>
-      <p className="text-sm text-center text-gray-500 mb-6">Welcome back to Mama Afrika</p>
+    <div className="max-w-md mx-auto mt-20 px-6 sm:px-10 py-10 bg-cyan-400 rounded-2xl shadow-lg">
+      <h2 className="text-cyan-900 text-2xl sm:text-3xl font-bold text-center mb-4">Login</h2>
+      <p className="text-sm text-center text-cyan-900 font-semibold mb-6">Welcome back to Mama Afrika</p>
 
       <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <input 

@@ -1,7 +1,7 @@
 from . import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
 #Join table for many-to-many relationship
 community_members = db.Table('community_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
@@ -150,3 +150,14 @@ class NutritionBlog(db.Model):
     category = db.Column(db.String(50))  # e.g., expert, seasonal, concern
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     author = db.Column(db.String(100))
+
+class Message(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    sender_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
+    receiver_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
+    message = db.Column(Text, nullable=False)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='messages_sent')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='messages_received')

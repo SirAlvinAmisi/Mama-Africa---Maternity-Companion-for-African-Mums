@@ -2,6 +2,7 @@ from app import db, app
 from models import *
 from datetime import datetime, timedelta
 import random
+from sqlalchemy import text
 
 with app.app_context():
     db.drop_all()
@@ -469,5 +470,31 @@ with app.app_context():
 
     db.session.bulk_save_objects(sample_blogs)
     db.session.commit()
+
+    # 13. MESSAGES
+    messages = []
+
+    # Create a few messages between mums and health professionals
+    for i in range(10):
+        sender = random.choice(mum_users)
+        receiver = random.choice(specialist_users)
+        messages.append(
+            Message(
+                sender_id=sender.id,
+                receiver_id=receiver.id,
+                message=f"Hello doctor, I have a concern about week {random.randint(6, 36)} of pregnancy.",
+            )
+        )
+        # Optional: doctor replies
+        messages.append(
+            Message(
+                sender_id=receiver.id,
+                receiver_id=sender.id,
+                message=f"Hi {sender.profile.full_name}, I recommend coming in for a scan. Stay hydrated.",
+            )
+        )
+
+    db.session.add_all(messages)
+    db.session.commit() 
 
     print("✅ Database seeded successfully.")

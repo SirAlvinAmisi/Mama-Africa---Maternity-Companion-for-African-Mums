@@ -131,8 +131,8 @@ function App() {
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/help-center" element={<HelpCenter />} />
               <Route path="/questions" element={<Questions />} />
-              <Route path="/chat/:specialistId" element={<ChatList />} />
-
+              {/* <Route path="/chat/:specialistId" element={<ChatList />} /> */}
+              <Route path="/chat/:id" element={<ChatList />} />
               {/* Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>

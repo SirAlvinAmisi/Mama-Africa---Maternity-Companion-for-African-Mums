@@ -68,7 +68,8 @@ export const HealthProfessional = () => {
                   className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/chat/${specialist.id}`);
+                    navigate(`/chat/${profile.id}`);
+                    // navigate(`/chat/${specialist.id}`);
                   }}
                 >
                   Chat

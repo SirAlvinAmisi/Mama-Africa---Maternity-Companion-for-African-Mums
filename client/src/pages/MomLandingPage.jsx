@@ -24,30 +24,38 @@ export default function MomLandingPage() {
   const [groups, setGroups] = useState([]);
   const token = localStorage.getItem('access_token');
 
+  // useEffect(() => {
+  //   const random = getRandomWeeklyUpdate();
+  //   setWeeklyUpdate(random);
+
+  //   setRecords([{ name: 'Scan Report.pdf', date: '2025-03-15' }]);
+
+  //   const fetchGroups = async () => {
+  //     try {
+  //       const res = await axios.get('http://localhost:5000/communities', {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`
+  //         }
+  //       });
+
+  //       console.log("Fetched groups:", res.data);
+  //       setGroups(res.data.groups || res.data);
+  //     } catch (err) {
+  //       console.error("Failed to fetch groups:", err);
+  //     }
+  //   };
+
+  //   fetchGroups();
+  // }, []);
+
   useEffect(() => {
-    const random = getRandomWeeklyUpdate();
-    setWeeklyUpdate(random);
-
-    setRecords([{ name: 'Scan Report.pdf', date: '2025-03-15' }]);
-
-    const fetchGroups = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/communities', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        console.log("Fetched groups:", res.data);
-        setGroups(res.data.groups || res.data);
-      } catch (err) {
-        console.error("Failed to fetch groups:", err);
-      }
-    };
-
-    fetchGroups();
-  }, []);
-
+    if (activeTab === 'weekly' && formData.last_period_date) {
+      const currentWeek = calculateWeeksSince(formData.last_period_date);
+      const update = getWeeklyUpdateByWeek(currentWeek);
+      setWeeklyUpdate(update);
+    }
+  }, [activeTab, formData.last_period_date]);
+  
   const handleChange = e => {
     const { name, value } = e.target;
     let updatedForm = { ...formData, [name]: value };
@@ -135,10 +143,19 @@ export default function MomLandingPage() {
         ))}
       </div>
 
-      {activeTab === 'profile' && (
+      {/* {activeTab === 'profile' && (
         <section>
           <h4 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium ">My Tracker</h4>
           <MomPage />
+        </section>
+      )} */}
+      {activeTab === 'profile' && (
+        <section className="w-full px-4 py-6 overflow-y-auto max-h-screen">
+          <h4 className="text-lg sm:text-xl md:text-2xl text-gray-800 mb-4 font-medium">My Tracker</h4>
+          
+          <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-4xl mx-auto">
+            <MomPage /> {/* This includes CalculatorForm which has the chart */}
+          </div>
         </section>
       )}
 
