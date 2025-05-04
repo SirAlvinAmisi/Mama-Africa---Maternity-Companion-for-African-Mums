@@ -39,7 +39,8 @@ const About = () => {
       </section>
 
       {/* Our Team */}
-{/* Our Team */}
+
+
 <section className="mb-12">
   <h2 className="text-cyan-700 text-2xl font-semibold mb-4">Our Team</h2>
   <p>
@@ -49,47 +50,72 @@ const About = () => {
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
     {/* Alvin Amisi */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/Alvin.jpeg"
+        alt="Alvin Amisi"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Alvin Amisi</h3>
       <p className="text-sm text-gray-600">Chief Executive Officer (CEO)</p>
     </div>
 
     {/* Sayfudin Sheikh */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/Seif.jpeg"
+        alt="Sayfudin Sheikh"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Sayfudin Sheikh</h3>
       <p className="text-sm text-gray-600">Chief Financial Officer (CFO)</p>
     </div>
 
-    {/* Mwangi Martha */}
+    {/* Martha */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/Martha.jpg"
+        alt="Mwangi Martha"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Mwangi Martha</h3>
       <p className="text-sm text-gray-600">Chief Operations Officer (COO)</p>
     </div>
 
-    {/* Margaret Gathoni */}
+    {/* Margret */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/magret.png"
+        alt="Margaret Gathoni"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Margaret Gathoni</h3>
       <p className="text-sm text-gray-600">Head of Innovation & Creativity</p>
     </div>
 
-    {/* Damaris Ngari */}
+    {/* Damaris */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/damah.jpeg"
+        alt="Damaris Ngari"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Damaris Ngari</h3>
       <p className="text-sm text-gray-600">Director of Community Engagement (DCE)</p>
     </div>
 
     {/* Dennis Kipsang */}
     <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-50 transition">
-      <div className="w-36 h-36 rounded-full bg-gray-300 mx-auto mb-4"></div>
+      <img
+        src="/images/kipsang.jpeg"
+        alt="Dennis Kipsang"
+        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+      />
       <h3 className="font-semibold text-lg">Dennis Kipsang</h3>
       <p className="text-sm text-gray-600">Chief Technology Officer (CTO)</p>
     </div>
   </div>
 </section>
+
 
       {/* Join Community */}
       <section className="mb-12">
