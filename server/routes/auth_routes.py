@@ -98,29 +98,7 @@ def login():
     except Exception as e:
         return jsonify({"error": "Login failed", "details": str(e)}), 500
 
-# # me Route
-# @auth_bp.route('/me', methods=['GET'])
-# @jwt_required()
-# def get_me():
-#     user_id = get_jwt_identity()
-#     user = User.query.get(int(user_id))
-#     if not user:
-#         return jsonify({"error": "User not found"}), 404
-
-#     profile = user.profile
-#     return jsonify({
-#         "email": user.email,
-#         "role": user.role,
-#         "created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-#         "profile": {
-#             "full_name": profile.full_name if profile else None,
-#             "bio": profile.bio if profile else None,
-#             "region": profile.region if profile else None,
-#             "license_number": profile.license_number if profile else None,
-#             "profile_picture": profile.profile_picture if profile else None
-#         }
-#     })
-
+# me Route
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_me():

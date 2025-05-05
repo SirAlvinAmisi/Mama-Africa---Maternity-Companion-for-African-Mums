@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post
+from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post, Notification
 from flask_jwt_extended import get_jwt_identity, get_jwt
+from utils.email_utils import send_email
 from middleware.auth import role_required
 from datetime import datetime, timedelta
 
@@ -48,6 +49,9 @@ def add_pregnancy_details():
     if not existing:
         existing = PregnancyDetail(user_id=user_id)
         db.session.add(existing)
+    # existing = PregnancyDetail.query.filter_by(user_id=user_id).first()
+    # if existing:
+    #     return jsonify({"error": "Pregnancy info already exists. Please update from the profile section."}), 400
 
     existing.last_period_date = lmp
     existing.due_date = edd
@@ -68,6 +72,19 @@ def add_pregnancy_details():
     return jsonify({"message": "Pregnancy info saved and reminders set."})
 
 # communities
+@mum_bp.route('/mums/communities', methods=['GET'])
+@role_required("mum")
+def list_communities():
+    communities = Community.query.filter_by(status="approved").all()
+    return jsonify([{
+        "id": c.id,
+        "name": c.name,
+        "description": c.description,
+        "image": c.image,
+        "member_count": c.member_count
+    } for c in communities])
+
+
 @mum_bp.route('/mums/communities/<int:id>/join', methods=['POST'])
 @role_required("mum")
 def join_community(id):
@@ -182,3 +199,92 @@ def get_health_pros():
             } for hp in health_pros
         ]
     })
+
+
+@mum_bp.route('/mums/questions', methods=['GET'])
+@role_required("mum")
+def get_mum_questions():
+    user_id = get_jwt_identity()
+    questions = Question.query.filter_by(user_id=user_id).all()
+    return jsonify([{
+        "id": q.id,
+        "question_text": q.question_text,
+        "answer_text": q.answer_text,
+        "answered_by": q.answered_by
+    } for q in questions])
+
+@mum_bp.route('/mums/questions', methods=['POST'])
+@role_required("mum")
+def ask_question():
+    data = request.get_json()
+    user_id = get_jwt_identity()
+
+    if not data.get("question_text"):
+        return jsonify({"error": "Question text is required"}), 400
+
+    question = Question(
+        user_id=user_id,
+        question_text=data['question_text'],
+        is_anonymous=data.get("is_anonymous", False)
+    )
+
+    db.session.add(question)
+
+    # 🔔 Notify all health professionals
+    health_pros = User.query.filter_by(role='health_pro').all()
+    for hp in health_pros:
+        db.session.add(Notification(
+            user_id=hp.id,
+            message="New question submitted by a mum.",
+            link="/healthpro/questions"
+        ))
+        send_email(
+            hp.email,
+            "New Question Submitted",
+            "A new question has been posted by a mum. Please log in to respond."
+        )
+
+    db.session.commit()  # Commit both the question and notifications
+
+    return jsonify({"message": "Question submitted successfully."}), 201
+
+
+
+@mum_bp.route('/mums/followed-topics', methods=['GET'])
+@role_required("mum")
+def get_followed_topics():
+    user = User.query.get(get_jwt_identity())
+    return jsonify({
+        "topics": [{
+            "id": t.id,
+            "name": t.name,
+            "description": t.description
+        } for t in user.followed_topics]
+    })
+
+
+@mum_bp.route('/mums/reminders/<int:reminder_id>', methods=['PATCH'])
+@role_required("mum")
+def update_reminder(reminder_id):
+    data = request.get_json()
+    reminder = Reminder.query.get_or_404(reminder_id)
+
+    if reminder.user_id != get_jwt_identity():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if 'reminder_text' in data:
+        reminder.reminder_text = data['reminder_text']
+    if 'reminder_date' in data:
+        reminder.reminder_date = datetime.strptime(data['reminder_date'], '%Y-%m-%d')
+    db.session.commit()
+    return jsonify({"message": "Reminder updated successfully."})
+
+@mum_bp.route('/mums/reminders/<int:reminder_id>', methods=['DELETE'])
+@role_required("mum")
+def delete_reminder(reminder_id):
+    reminder = Reminder.query.get_or_404(reminder_id)
+    if reminder.user_id != get_jwt_identity():
+        return jsonify({"error": "Unauthorized"}), 403
+    db.session.delete(reminder)
+    db.session.commit()
+    return jsonify({"message": "Reminder deleted successfully."})

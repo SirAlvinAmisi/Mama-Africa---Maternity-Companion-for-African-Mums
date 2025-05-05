@@ -5,7 +5,7 @@ from middleware.auth import role_required
 
 media_bp = Blueprint('media', __name__)
 
-@media_bp.route('/uploads')
+@media_bp.route('/uploads', methods=['GET'])
 def get_uploads():
     uploads = MedicalUpload.query.all()
     return jsonify({"uploads": [

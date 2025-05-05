@@ -68,12 +68,12 @@ def get_article_by_id(id):
         "author_id": article.author_id
     }})
 
-@article_bp.route('/parenting-articles')
+@article_bp.route('/parenting-articles', methods=['GET'])
 def get_parenting_articles():
     articles = Article.query.filter_by(category='Parenting Development', is_approved=True).all()
     return jsonify({"articles": [a.serialize() for a in articles]})
 
-@article_bp.route('/baby-articles')
+@article_bp.route('/baby-articles', methods=['GET'])
 def get_baby_articles():
     articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
     return jsonify({"articles": [a.serialize() for a in articles]})

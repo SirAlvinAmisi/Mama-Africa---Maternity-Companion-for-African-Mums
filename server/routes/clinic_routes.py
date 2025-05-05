@@ -3,7 +3,7 @@ from models import Clinic
 
 clinic_bp = Blueprint('clinic', __name__)
 
-@clinic_bp.route('/clinics')
+@clinic_bp.route('/clinics', methods=['GET'])
 def get_clinics():
     clinics = Clinic.query.all()
     return jsonify({"clinics": [

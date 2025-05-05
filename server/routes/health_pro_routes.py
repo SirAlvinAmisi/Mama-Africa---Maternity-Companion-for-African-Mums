@@ -1,12 +1,15 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
-from models import db, User, Article, Clinic, Question, Profile, VerificationRequest
+from models import db, User, Article, Clinic, Question, Profile, VerificationRequest, Reminder, Notification
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from middleware.auth import role_required
-# from extensions import socketio 
-# from app import socketio
+from utils.email_utils import send_email
+from extensions import socketio
+
 
 health_bp = Blueprint('health_pro', __name__)
 
+# 1. GET all health professionals
 @health_bp.route('/healthpros', methods=['GET'])
 def get_healthpros():
     specialists = User.query.filter_by(role='health_pro').all()
@@ -28,43 +31,57 @@ def get_healthpros():
         })
     return jsonify({"specialists": results})
 
+# 2. GET single health pro
 @health_bp.route('/healthpros/<int:id>', methods=['GET'])
 def get_healthpro_by_id(id):
     specialist = User.query.filter_by(id=id, role='health_pro').first()
     if not specialist:
         return jsonify({"error": "Health professional not found"}), 404
-
     profile = specialist.profile
-    result = {
-        "id": specialist.id,
-        "full_name": profile.full_name,
-        "speciality": profile.bio,
-        "region": profile.region,
-        "profile_picture": profile.profile_picture,
-        "articles": [
-            {
-                "title": article.title,
-                "category": article.category
-            } for article in specialist.posts if article.is_medical and article.is_approved
-        ]
-    }
-    return jsonify({"health_professional": result})
+    return jsonify({
+        "health_professional": {
+            "id": specialist.id,
+            "full_name": profile.full_name,
+            "speciality": profile.bio,
+            "region": profile.region,
+            "profile_picture": profile.profile_picture,
+            "articles": [
+                {
+                    "title": article.title,
+                    "category": article.category
+                } for article in specialist.posts if article.is_medical and article.is_approved
+            ]
+        }
+    })
 
-
+# 3. GET current health pro info
 @health_bp.route('/healthpros/me', methods=['GET'])
 @role_required("health_pro")
 def health_pro_me():
-    identity = get_jwt_identity()
-    user = User.query.get(int(identity))
+    user = User.query.get(int(get_jwt_identity()))
     return {"email": user.email, "created_at": user.created_at}
 
+# 4. POST update profile
+@health_bp.route('/healthpros/profile', methods=['POST'])
+@role_required("health_pro")
+def update_healthpro_profile():
+    data = request.get_json()
+    user = User.query.get(get_jwt_identity())
+    if not user.profile:
+        user.profile = Profile(user_id=user.id)
+    user.profile.bio = data.get('bio')
+    user.profile.region = data.get('region')
+    user.profile.profile_picture = data.get('profile_picture')
+    db.session.commit()
+    return jsonify({"message": "Profile updated"})
+
+# 5. GET/POST articles
 @health_bp.route('/healthpros/articles', methods=['GET', 'POST'])
 @role_required("health_pro")
 def health_pro_articles():
     identity = get_jwt_identity()
-
     if request.method == 'GET':
-        articles = Article.query.filter_by(author_id=int(identity)).all()
+        articles = Article.query.filter_by(author_id=identity).all()
         return jsonify({
             "articles": [
                 {
@@ -77,10 +94,9 @@ def health_pro_articles():
                 } for a in articles
             ]
         })
-
     data = request.get_json()
     article = Article(
-        author_id=int(identity),
+        author_id=identity,
         title=data['title'],
         content=data['content'],
         category=data['category'],
@@ -90,6 +106,25 @@ def health_pro_articles():
     db.session.commit()
     return jsonify({"message": "Article submitted for approval"}), 201
 
+# 6. PATCH/DELETE articles
+@health_bp.route('/healthpros/articles/<int:article_id>', methods=['PATCH', 'DELETE'])
+@role_required("health_pro")
+def update_or_delete_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    if article.author_id != get_jwt_identity():
+        return jsonify({"error": "Unauthorized"}), 403
+    if request.method == 'PATCH':
+        data = request.get_json()
+        article.title = data.get('title', article.title)
+        article.content = data.get('content', article.content)
+        article.category = data.get('category', article.category)
+        db.session.commit()
+        return jsonify({"message": "Article updated"})
+    db.session.delete(article)
+    db.session.commit()
+    return jsonify({"message": "Article deleted"})
+
+# 7. GET unanswered questions
 @health_bp.route('/healthpros/questions', methods=['GET'])
 @role_required("health_pro")
 def get_healthpro_questions():
@@ -105,6 +140,7 @@ def get_healthpro_questions():
         ]
     })
 
+# 8. POST answer question
 @health_bp.route('/healthpros/answers', methods=['POST'])
 @role_required("health_pro")
 def health_pro_answer():
@@ -115,6 +151,20 @@ def health_pro_answer():
     db.session.commit()
     return jsonify({"message": "Answer submitted"})
 
+# 9. GET answered questions by me
+@health_bp.route('/healthpros/my-answers', methods=['GET'])
+@role_required("health_pro")
+def get_my_answers():
+    my_id = get_jwt_identity()
+    answered = Question.query.filter_by(answered_by=my_id).all()
+    return jsonify([{
+        "id": q.id,
+        "question_text": q.question_text,
+        "answer_text": q.answer_text,
+        "answered_at": q.updated_at.strftime('%Y-%m-%d') if q.updated_at else "N/A"
+    } for q in answered])
+
+# 10. POST clinic recommendation
 @health_bp.route('/healthpros/recommendations', methods=['POST'])
 @role_required("health_pro")
 def recommend_clinic():
@@ -130,41 +180,125 @@ def recommend_clinic():
     db.session.commit()
     return jsonify({"message": "Clinic recommendation added"})
 
+# 11. POST flag article
 @health_bp.route('/healthpros/flag_article/<int:article_id>', methods=['POST'])
 @role_required("health_pro")
 def flag_article(article_id):
     article = Article.query.get_or_404(article_id)
     article.flagged = True
     db.session.commit()
-    # Optionally send notification to admin (e.g., via Notification model)
     return jsonify({"message": "Article flagged for review"})
 
+# 12. POST verification request
 @health_bp.route('/healthpro/request-verification', methods=['POST'])
 @jwt_required()
 @role_required("health_pro")
 def request_verification():
-    from app import socketio
     current_user_id = get_jwt_identity()
     current_user = User.query.get(current_user_id)
-
     if not current_user or not current_user.profile:
         return jsonify({"error": "User not found"}), 404
-
-    existing_request = VerificationRequest.query.filter_by(
-        user_id=current_user_id, is_resolved=False).first()
-
+    existing_request = VerificationRequest.query.filter_by(user_id=current_user_id, is_resolved=False).first()
     if existing_request:
         return jsonify({"message": "Verification already requested."}), 400
-
-    new_request = VerificationRequest(user_id=current_user_id)
-    db.session.add(new_request)
+    db.session.add(VerificationRequest(user_id=current_user_id))
+    for admin in User.query.filter_by(role="admin").all():
+        db.session.add(Notification(
+            user_id=admin.id,
+            message=f"{current_user.profile.full_name} requested verification.",
+            link="/admin/verification-requests"
+        ))
+        send_email(admin.email, "New Verification Request", f"{current_user.profile.full_name} has requested verification.")
     db.session.commit()
-
     socketio.emit('verification_request', {
         "user_id": current_user_id,
         "full_name": current_user.profile.full_name,
         "region": current_user.profile.region,
         "license_number": current_user.profile.license_number
     })
+    return jsonify({"message": "Verification requested successfully."}), 201
 
-    return jsonify({"message": "Verification requested successfully."})
+# 13. GET verification status
+@health_bp.route('/healthpros/verification-status', methods=['GET'])
+@role_required("health_pro")
+def get_verification_status():
+    user = User.query.get(get_jwt_identity())
+    if not user or not user.profile:
+        return jsonify({"error": "Profile not found"}), 404
+    return jsonify({"is_verified": user.profile.is_verified})
+
+# 14. GET/POST reminders
+@health_bp.route('/healthpros/reminders', methods=['POST'])
+@role_required("health_pro")
+def add_healthpro_reminder():
+    data = request.get_json()
+    reminder_date = datetime.strptime(data.get("reminder_date"), '%Y-%m-%d')
+    if reminder_date < datetime.utcnow():
+        return jsonify({"error": "Cannot set reminder in the past"}), 400
+    db.session.add(Reminder(
+        user_id=get_jwt_identity(),
+        reminder_text=data.get("reminder_text"),
+        reminder_date=reminder_date,
+        type="event"
+    ))
+    db.session.commit()
+    return jsonify({"message": "Reminder added successfully"})
+
+@health_bp.route('/healthpros/reminders', methods=['GET'])
+@role_required("health_pro")
+def get_healthpro_reminders():
+    reminders = Reminder.query.filter_by(user_id=get_jwt_identity()).all()
+    return jsonify([{
+        "text": r.reminder_text,
+        "date": r.reminder_date.strftime('%Y-%m-%d'),
+        "type": r.type
+    } for r in reminders])
+
+# 15. GET flagged articles
+@health_bp.route('/healthpros/flagged-articles', methods=['GET'])
+@role_required("health_pro")
+def get_flagged_articles():
+    articles = Article.query.filter_by(flagged=True, author_id=get_jwt_identity()).all()
+    return jsonify([{
+        "id": a.id,
+        "title": a.title,
+        "status": "flagged"
+    } for a in articles])
+
+# 16. GET/patch notifications
+@health_bp.route('/healthpros/notifications', methods=['GET'])
+@role_required("health_pro")
+def get_notifications():
+    user_id = get_jwt_identity()
+    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    return jsonify([{
+        "id": n.id,
+        "message": n.message,
+        "link": n.link,
+        "is_read": n.is_read,
+        "created_at": n.created_at.strftime("%Y-%m-%d %H:%M")
+    } for n in notifications])
+
+@health_bp.route('/healthpros/notifications/<int:id>/read', methods=['PATCH'])
+@role_required("health_pro")
+def mark_notification_read(id):
+    notif = Notification.query.filter_by(id=id, user_id=get_jwt_identity()).first_or_404()
+    notif.is_read = True
+    db.session.commit()
+    return jsonify({"message": "Notification marked as read"})
+
+# 17. GET stats
+@health_bp.route('/healthpros/stats', methods=['GET'])
+@role_required("health_pro")
+def get_stats():
+    id = get_jwt_identity()
+    answered = Question.query.filter_by(answered_by=id).count()
+    submitted = Article.query.filter_by(author_id=id).count()
+    approved = Article.query.filter_by(author_id=id, is_approved=True).count()
+    clinics = Clinic.query.filter_by(recommended_by=id).count()
+    return jsonify({
+        "answered_questions": answered,
+        "articles_submitted": submitted,
+        "articles_approved": approved,
+        "clinics_recommended": clinics
+    })
