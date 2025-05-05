@@ -9,6 +9,11 @@ from .clinic_routes import clinic_bp
 from .media_routes import media_bp
 from .nutrition_routes import nutrition_bp
 from .chat_routes import chat_bp
+from .topic_routes import topic_bp
+from .baby_routes import baby_bp
+from .flag_routes import flag_bp
+from .share_routes import share_bp
+
 def register_routes(app):
     app.register_blueprint(base_bp)
     app.register_blueprint(auth_bp)
@@ -22,3 +27,7 @@ def register_routes(app):
     app.register_blueprint(media_bp)
     app.register_blueprint(nutrition_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(topic_bp)
+    app.register_blueprint(baby_bp)
+    app.register_blueprint(flag_bp)
+    app.register_blueprint(share_bp)

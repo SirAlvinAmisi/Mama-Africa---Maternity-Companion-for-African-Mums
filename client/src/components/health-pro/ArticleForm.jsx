@@ -18,22 +18,23 @@ export default function ArticleForm({ onSubmit }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label className="block text-sm font-bold text-black mb-1">Title</label>
         <input
           type="text"
           value={article.title}
           onChange={(e) => setArticle({...article, title: e.target.value})}
-          className="w-full border rounded p-2"
+          className="w-full border rounded p-2 bg-gray-300 text-black"
+          placeholder="Enter article title"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <label className="block text-sm font-bold text-black mb-1">Category</label>
         <select
           value={article.category}
           onChange={(e) => setArticle({...article, category: e.target.value})}
-          className="w-full border rounded p-2"
+          className="w-full border rounded p-2 text-black font-bold bg-gray-300"
         >
           {categories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
@@ -42,17 +43,17 @@ export default function ArticleForm({ onSubmit }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+        <label className="block text-sm font-bold text-black mb-1">Content</label>
         <textarea
           value={article.content}
           onChange={(e) => setArticle({...article, content: e.target.value})}
           rows="5"
-          className="w-full border rounded p-2"
+          className="w-full border text-black rounded p-2 bg-gray-300"
           required
         />
       </div>
 
-      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+      <button type="submit" className="px-4 py-2 bg-cyan-600 text-black font-bold rounded hover:bg-cyan-300">
         Publish Article
       </button>
     </form>

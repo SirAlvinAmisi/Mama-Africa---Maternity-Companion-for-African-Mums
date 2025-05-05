@@ -497,4 +497,94 @@ with app.app_context():
     db.session.add_all(messages)
     db.session.commit() 
 
+    # 13. BABY WEEK UPDATES
+    baby_updates = [
+        BabyWeekUpdate(
+            week_number=1,
+            baby_size_analogy="tiny sesame seed",
+            development_note="Cell division starts and hormonal signals are sent.",
+            mama_tip="Start taking folic acid if you haven't.",
+            proverb="A good beginning makes a good ending.",
+            nutrition_tip="Eat leafy greens, eggs, and fortified cereals.",
+            midwife_question="Do you know your last period date?"
+        ),
+        BabyWeekUpdate(
+            week_number=2,
+            baby_size_analogy="grain of rice",
+            development_note="The fertilized egg is moving to the uterus.",
+            mama_tip="Avoid stress and heavy lifting.",
+            proverb="Patience can cook a stone.",
+            nutrition_tip="Hydrate well and eat small frequent meals.",
+            midwife_question="Have you scheduled your first prenatal visit?"
+        ),
+        BabyWeekUpdate(
+            week_number=3,
+            baby_size_analogy="poppy seed",
+            development_note="The embryo implants into the uterus lining.",
+            mama_tip="Avoid caffeine and alcohol.",
+            proverb="Rain does not fall on one roof alone.",
+            nutrition_tip="Continue taking prenatal vitamins daily.",
+            midwife_question="Any cramping or spotting noticed?"
+        ),
+        BabyWeekUpdate(
+            week_number=4,
+            baby_size_analogy="mustard seed",
+            development_note="Neural tube starts forming.",
+            mama_tip="Get enough rest and avoid medications without consulting.",
+            proverb="Wisdom is like a baobab tree; no one individual can embrace it.",
+            nutrition_tip="Add sources of folate and omega-3s.",
+            midwife_question="Do you need help selecting a clinic?"
+        ),
+        BabyWeekUpdate(
+            week_number=5,
+            baby_size_analogy="apple seed",
+            development_note="Heart starts beating and circulatory system forms.",
+            mama_tip="Note any symptoms and discuss them early.",
+            proverb="Even the best cooking pot will not produce food.",
+            nutrition_tip="Increase intake of B vitamins.",
+            midwife_question="Have you chosen a birth plan yet?"
+        )
+    ]
+    db.session.add_all(baby_updates)
+
+    # 14. TOPICS + FOLLOWED TOPICS
+    topics = [
+        Topic(name="Nutrition during 2nd trimester", description="Focus on iron and protein-rich foods."),
+        Topic(name="What to expect during labor", description="Signs and stages of labor."),
+        Topic(name="Postpartum mental health", description="Managing emotions after birth."),
+    ]
+    db.session.add_all(topics)
+    db.session.commit()
+
+    # Link mums to topics if they exist
+    if len(mum_users) >= 3:
+        mum_users[0].followed_topics.append(topics[0])
+        mum_users[1].followed_topics.append(topics[1])
+        mum_users[2].followed_topics.append(topics[2])
+        db.session.commit()
+
+    # 15. FLAG REPORT
+    if len(posts) > 0:
+        flagged = FlagReport(
+            reporter_id=mum_users[0].id,
+            content_type="post",
+            content_id=posts[0].id,
+            reason="Possibly misleading about herbal remedies.",
+            reviewed=False
+        )
+        db.session.add(flagged)
+        db.session.commit()
+
+    # 16. SHARED CONTENT
+    if len(articles) > 0:
+        share = SharedContent(
+            user_id=mum_users[1].id,
+            content_type="article",
+            content_id=articles[0].id,
+            shared_with="family",
+            shared_at=datetime.utcnow()
+        )
+        db.session.add(share)
+    db.session.commit()
+
     print("✅ Database seeded successfully.")

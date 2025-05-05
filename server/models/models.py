@@ -1,21 +1,27 @@
 from . import db
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, Boolean, Table
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
-#Join table for many-to-many relationship
+
+# --- Association Tables ---
 community_members = db.Table('community_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('community_id', db.Integer, db.ForeignKey('community.id'))
-)   
+)
 
-# User Management
+mum_topic_follow = db.Table('mum_topic_follow',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('topic_id', db.Integer, db.ForeignKey('topic.id'))
+)
+
+# --- User & Profile ---
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.Text, nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(Integer, primary_key=True)
+    email = db.Column(String(120), unique=True, nullable=False)
+    password_hash = db.Column(Text, nullable=False)
+    role = db.Column(String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
+    is_active = db.Column(Boolean, default=True)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -23,141 +29,182 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    # Relationships with cascade and passive_deletes
-    profile = db.relationship("Profile", backref="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
-    pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
-    uploads = db.relationship("MedicalUpload", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    posts = db.relationship("Post", backref="author", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    articles = db.relationship("Article", backref="author", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    comments = db.relationship("Comment", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    reminders = db.relationship("Reminder", backref="user", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', lazy=True, cascade="all, delete-orphan", passive_deletes=True)
-    clinics = db.relationship("Clinic", backref="recommender", lazy=True, cascade="all, delete-orphan", passive_deletes=True)
+    profile = db.relationship("Profile", backref="user", uselist=False, cascade="all, delete-orphan")
+    pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False, cascade="all, delete-orphan")
+    uploads = db.relationship("MedicalUpload", backref="user", cascade="all, delete-orphan")
+    certifications = db.relationship("Certification", backref="user", cascade="all, delete-orphan")
+    posts = db.relationship("Post", backref="author", cascade="all, delete-orphan")
+    articles = db.relationship("Article", backref="author", cascade="all, delete-orphan")
+    comments = db.relationship("Comment", backref="user", cascade="all, delete-orphan")
+    reminders = db.relationship("Reminder", backref="user", cascade="all, delete-orphan")
+    questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', cascade="all, delete-orphan")
+    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', cascade="all, delete-orphan")
+    clinics = db.relationship("Clinic", backref="recommender", cascade="all, delete-orphan")
+    messages_sent = db.relationship("Message", foreign_keys='Message.sender_id', backref="sender", cascade="all, delete-orphan")
+    messages_received = db.relationship("Message", foreign_keys='Message.receiver_id', backref="receiver", cascade="all, delete-orphan")
+    flags = db.relationship("FlagReport", backref="reporter", cascade="all, delete-orphan")
+    shared_content = db.relationship("SharedContent", backref="user", cascade="all, delete-orphan")
 
-# Profile Management
+    joined_communities = db.relationship("Community", secondary=community_members, back_populates="members")
+    followed_topics = db.relationship("Topic", secondary=mum_topic_follow, back_populates="followers")
+
 class Profile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(150))
-    bio = db.Column(db.Text)
-    region = db.Column(db.String(100))  # This is your county field
-    role = db.Column(db.String(50))  # 'health_pro', 'mum'
-    profile_picture = db.Column(db.String(200))  # Avatar URL
-    license_number = db.Column(db.String(100), nullable=True)  # Only for doctors
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    is_verified = db.Column(db.Boolean, default=False)
+    id = db.Column(Integer, primary_key=True)
+    full_name = db.Column(String(150))
+    bio = db.Column(Text)
+    region = db.Column(String(100))  # County
+    role = db.Column(String(50))     # 'health_pro', 'mum'
+    profile_picture = db.Column(String(200))
+    license_number = db.Column(String(100))  # For health professionals
+    is_verified = db.Column(Boolean, default=False)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
 
-
+# --- Pregnancy Tracking ---
 class PregnancyDetail(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    last_period_date = db.Column(db.Date)
-    due_date = db.Column(db.Date)
-    current_week = db.Column(db.Integer)
-    pregnancy_status = db.Column(db.String(50))  # 'active', 'completed'
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
+    last_period_date = db.Column(Date)
+    due_date = db.Column(Date)
+    current_week = db.Column(Integer)
+    pregnancy_status = db.Column(String(50))  # 'active', 'completed'
 
+class Reminder(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    reminder_text = db.Column(String(255))
+    reminder_date = db.Column(DateTime)
+    type = db.Column(String(50))  # 'checkup', 'scan', etc.
 
-# Uploads
-class MedicalUpload(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    file_url = db.Column(db.String(200))
-    file_type = db.Column(db.String(50))  # scan, test result, etc.
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    notes = db.Column(db.Text)
-
-
-# Content Models
+# --- Content ---
 class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    community_id = db.Column(db.Integer, db.ForeignKey('community.id'), nullable=True)  # optional
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    media_url = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_approved = db.Column(db.Boolean, default=False)
-    comments = db.relationship("Comment", backref="post", lazy=True)
+    id = db.Column(Integer, primary_key=True)
+    author_id = db.Column(Integer, ForeignKey('user.id'))
+    community_id = db.Column(Integer, ForeignKey('community.id'))
+    title = db.Column(String(255))
+    content = db.Column(Text)
+    media_url = db.Column(String(200))
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    is_approved = db.Column(Boolean, default=False)
+
+    comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
 
 class Article(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Health professional
-    title = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    media_url = db.Column(db.String(200))  # Optional: video, images
-    category = db.Column(db.String(100))   # e.g., Nutrition, Mental Health, Exercise
-    is_approved = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    flagged = db.Column(db.Boolean, default=False)
+    id = db.Column(Integer, primary_key=True)
+    author_id = db.Column(Integer, ForeignKey('user.id'))
+    title = db.Column(String(255))
+    content = db.Column(Text)
+    media_url = db.Column(String(200))
+    category = db.Column(String(100))  # Nutrition, Mental Health...
+    is_approved = db.Column(Boolean, default=False)
+    flagged = db.Column(Boolean, default=False)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
-    comments = db.relationship("Comment", backref="article", lazy=True)
+    comments = db.relationship("Comment", backref="article", cascade="all, delete-orphan")
 
-
-# Comment Model (supports both Posts and Articles)
 class Comment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=True)
-    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=True)
-    content = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    post_id = db.Column(Integer, ForeignKey('post.id'))
+    article_id = db.Column(Integer, ForeignKey('article.id'))
+    content = db.Column(Text)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
-
-# Reminders
-class Reminder(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    reminder_text = db.Column(db.String(255))
-    reminder_date = db.Column(db.DateTime)
-    type = db.Column(db.String(50))  # 'checkup', 'scan', etc.
-
-# Questions
 class Question(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    question_text = db.Column(db.Text)
-    is_anonymous = db.Column(db.Boolean, default=False)
-    answered_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    answer_text = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    question_text = db.Column(Text)
+    is_anonymous = db.Column(Boolean, default=False)
+    answered_by = db.Column(Integer, ForeignKey('user.id'))
+    answer_text = db.Column(Text)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
 
+# --- Supplementary ---
+class MedicalUpload(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    file_url = db.Column(String(200))
+    file_type = db.Column(String(50))
+    uploaded_at = db.Column(DateTime, default=datetime.utcnow)
+    notes = db.Column(Text)
 
-# Clinics
+class Certification(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    file_url = db.Column(String(200))
+    file_type = db.Column(String(100))
+    uploaded_at = db.Column(DateTime, default=datetime.utcnow)
+    is_verified = db.Column(Boolean, default=False)
+
 class Clinic(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150))
-    location = db.Column(db.String(150))
-    contact_info = db.Column(db.String(150))
-    recommended_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(150))
+    location = db.Column(String(150))
+    contact_info = db.Column(String(150))
+    recommended_by = db.Column(Integer, ForeignKey('user.id'))
 
-
-# Communities
+# --- Community, Topics, Flags ---
 class Community(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(255))
-    image = db.Column(db.String(255))
-    member_count = db.Column(db.Integer, default=0) 
-    posts = db.relationship('Post', backref='community', lazy=True)
-    members = db.relationship('User', secondary='community_members', backref='joined_communities')
- 
-# Nutrition Blogs
-class NutritionBlog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(255))
-    category = db.Column(db.String(50))  # e.g., expert, seasonal, concern
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    author = db.Column(db.String(100))
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False)
+    description = db.Column(String(255))
+    image = db.Column(String(255))
+    trimester = db.Column(Integer, nullable=True)
+    member_count = db.Column(Integer, default=0)
+    status = db.Column(db.String(50), default="pending")
 
+    posts = db.relationship('Post', backref='community', cascade="all, delete-orphan")
+    members = db.relationship('User', secondary=community_members, back_populates="joined_communities")
+
+class Topic(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False)
+    description = db.Column(String(255))
+
+    followers = db.relationship('User', secondary=mum_topic_follow, back_populates="followed_topics")
+
+class FlagReport(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    reporter_id = db.Column(Integer, ForeignKey('user.id'))
+    content_type = db.Column(String(50))  # 'post', 'article', etc.
+    content_id = db.Column(Integer)
+    reason = db.Column(Text)
+    reviewed = db.Column(Boolean, default=False)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+
+# --- Weekly Baby Updates ---
+class BabyWeekUpdate(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    week_number = db.Column(Integer, nullable=False)
+    baby_size_analogy = db.Column(String(100))
+    development_note = db.Column(Text)
+    mama_tip = db.Column(Text)
+    proverb = db.Column(String(255))
+    nutrition_tip = db.Column(Text)
+    midwife_question = db.Column(Text)
+
+# --- Nutrition Blog ---
+class NutritionBlog(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    title = db.Column(String(150), nullable=False)
+    content = db.Column(Text, nullable=False)
+    image_url = db.Column(String(255))
+    category = db.Column(String(50))
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+    author = db.Column(String(100))
+
+# --- Messaging ---
 class Message(db.Model):
     id = db.Column(Integer, primary_key=True)
-    sender_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
-    receiver_id = db.Column(Integer, ForeignKey('user.id'), nullable=False)
-    message = db.Column(Text, nullable=False)
+    sender_id = db.Column(Integer, ForeignKey('user.id'))
+    receiver_id = db.Column(Integer, ForeignKey('user.id'))
+    message = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    sender = db.relationship('User', foreign_keys=[sender_id], backref='messages_sent')
-    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='messages_received')
+
+# --- Content Sharing ---
+class SharedContent(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'))
+    content_type = db.Column(String(50))  # 'post', 'article'
+    content_id = db.Column(Integer)
+    shared_with = db.Column(String(255))
+    shared_at = db.Column(DateTime, default=datetime.utcnow)

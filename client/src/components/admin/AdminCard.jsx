@@ -99,7 +99,7 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
 
         {/* Health Pro Verification */}
         {user.role === 'health_pro' && !user.profile?.is_verified && (
-          <div className="mt-3 pt-3 border-t">
+          <div className="mt-3 pt-3 border-t bg-cyan-400 p-3 rounded text-black font-bold">
             <button 
               onClick={onApproveHealthPro}
               className="w-full text-xs text-green-600 hover:text-green-800"

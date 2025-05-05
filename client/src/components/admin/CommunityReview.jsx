@@ -22,7 +22,7 @@ export default function CommunityReview() {
   const handleAction = async (id, action) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.patch(`http://localhost:5000/admin/communities/${id}`, 
+      await axios.patch(`http://localhost:5000/communities/${id}`, 
         { status: action }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -40,21 +40,21 @@ export default function CommunityReview() {
   if (communities.length === 0) return <p>No communities awaiting approval.</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-cyan-100 p-4 rounded-lg shadow-md">
       {communities.map(community => (
         <div key={community.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
-          <h2 className="text-lg font-semibold text-gray-800">{community.name}</h2>
+          <h2 className="text-lg font-bold text-gray-800">{community.name}</h2>
           <p className="text-gray-600">{community.description}</p>
           <div className="flex justify-end gap-2 mt-3">
             <button
               onClick={() => handleAction(community.id, 'approved')}
-              className="px-4 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+              className="px-4 py-1 bg-cyan-400 font-bold text-green-700 rounded hover:bg-green-200"
             >
               Approve
             </button>
             <button
               onClick={() => handleAction(community.id, 'rejected')}
-              className="px-4 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+              className="px-4 py-1 bg-red-100 font-bold text-red-700 rounded hover:bg-red-200"
             >
               Reject
             </button>

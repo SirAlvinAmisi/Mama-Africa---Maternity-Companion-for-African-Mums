@@ -46,7 +46,7 @@ const Admin = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-cyan-100 rounded-lg shadow-md">
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 text-center sm:text-left mb-6">
         Admin Dashboard
       </h1>
@@ -61,7 +61,7 @@ const Admin = () => {
               ${
                 activeTab === tab.key
                   ? 'bg-cyan-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-cyan-600 text-gray-700 hover:bg-gray-200'
               }`}
           >
             {tab.label}
