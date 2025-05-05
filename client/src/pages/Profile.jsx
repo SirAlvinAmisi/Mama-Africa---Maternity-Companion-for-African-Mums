@@ -22,6 +22,7 @@ const normalizeRole = (role) => {
 const Profile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {

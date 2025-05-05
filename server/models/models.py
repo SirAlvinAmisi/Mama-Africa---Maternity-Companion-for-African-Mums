@@ -208,3 +208,12 @@ class SharedContent(db.Model):
     content_id = db.Column(Integer)
     shared_with = db.Column(String(255))
     shared_at = db.Column(DateTime, default=datetime.utcnow)
+    
+# --- Verifications ---
+class VerificationRequest(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, db.ForeignKey('user.id'), nullable=False)  # the health pro
+    is_resolved = db.Column(Boolean, default=False)
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User')

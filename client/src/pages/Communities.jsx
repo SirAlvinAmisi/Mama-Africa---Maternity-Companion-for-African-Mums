@@ -113,10 +113,10 @@ const Communities = () => {
             {currentGroups.map(group => (
               <div
                 key={group.id}
-                className="bg-gray-50 p-4 rounded-lg shadow-md hover:shadow-lg transition flex flex-col justify-between"
+                className="bg-cyan-200 p-4 rounded-lg shadow-md hover:shadow-lg transition flex flex-col justify-between"
               >
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">{group.name}</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-black">{group.name}</h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {group.description?.slice(0, 120)}...
                   </p>
@@ -132,7 +132,7 @@ const Communities = () => {
                     onClick={() =>
                       joinMutation.mutate(group.id)
                     }
-                    className="text-xs text-cyan-600 border border-cyan-600 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
+                    className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
                   >
                     Join
                   </button>

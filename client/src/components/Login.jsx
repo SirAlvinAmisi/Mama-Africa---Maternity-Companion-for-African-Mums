@@ -60,7 +60,7 @@ const Login = () => {
           placeholder="Email Address" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="p-3 border rounded-md text-sm sm:text-base"
+          className="p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-300"
           required
         />
         <input 
@@ -68,7 +68,7 @@ const Login = () => {
           placeholder="Password" 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="p-3 border rounded-md text-sm sm:text-base"
+          className="p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-300"
           required
         />
         <button 

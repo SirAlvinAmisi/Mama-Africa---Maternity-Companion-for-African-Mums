@@ -23,6 +23,13 @@ const Notification = () => {
       setNotifications((prev) => [...prev, `New comment on: ${data.content}`]);
     });
 
+    socket.on('verification_request', (data) => {
+      setNotifications(prev => [
+        ...prev,
+        `Verification request from ${data.full_name} (${data.license_number}) in ${data.region}`
+      ]);
+    });
+    
     return () => {
       socket.off('new_message');
       socket.off('new_answer');
@@ -42,10 +49,10 @@ const Notification = () => {
   }, []);
 
   return (
-    <div className="fixed right-4 top-20 z-50" ref={panelRef}>
+    <div className="fixed right-20 top-40 z-50 " ref={panelRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative bg-white rounded-full shadow p-2 hover:bg-gray-100"
+        className="relative bg-cyan-500 rounded-full shadow p-2 hover:bg-cyan-200"
       >
         <Bell className="w-6 h-6 text-cyan-700" />
         {notifications.length > 0 && (
@@ -57,7 +64,7 @@ const Notification = () => {
 
       {isOpen && (
         <div className="mt-2 w-80 bg-white rounded-lg shadow-xl p-4">
-          <h3 className="text-lg font-semibold mb-2">Notifications</h3>
+          <h3 className="text-lg font-bold text-black mb-2">Notifications</h3>
           {notifications.length === 0 ? (
             <p className="text-gray-600">No new notifications</p>
           ) : (

@@ -144,15 +144,15 @@ export default function ClinicRecommendations() {
       </div>
 
       {/* Add Clinic Form */}
-      <form onSubmit={handleAddClinic} className="mb-8 bg-gray-50 p-6 rounded-xl shadow-sm">
-        <h3 className="text-lg font-medium mb-4">Add a New Clinic</h3>
+      <form onSubmit={handleAddClinic} className="mb-8 bg-cyan-200 p-6 rounded-xl shadow-sm">
+        <h3 className="text-lg font-bold text-black mb-4">Add a New Clinic</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <input
             type="text"
             placeholder="Clinic Name"
             value={newClinic.name}
             onChange={(e) => setNewClinic({ ...newClinic, name: e.target.value })}
-            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
             required
           />
           <input
@@ -160,7 +160,7 @@ export default function ClinicRecommendations() {
             placeholder="Location"
             value={newClinic.location}
             onChange={(e) => setNewClinic({ ...newClinic, location: e.target.value })}
-            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
             required
           />
           <input
@@ -168,13 +168,13 @@ export default function ClinicRecommendations() {
             placeholder="Country"
             value={newClinic.country}
             onChange={(e) => setNewClinic({ ...newClinic, country: e.target.value })}
-            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
             required
           />
           <select
             value={newClinic.region}
             onChange={(e) => setNewClinic({ ...newClinic, region: e.target.value })}
-            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
           >
             {regions.map(region => (
               <option key={region.value} value={region.value}>{region.label}</option>
@@ -185,31 +185,31 @@ export default function ClinicRecommendations() {
             placeholder="Specialty"
             value={newClinic.specialty}
             onChange={(e) => setNewClinic({ ...newClinic, specialty: e.target.value })}
-            className="p-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
         <button
           type="submit"
-          className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+          className="px-5 py-2 bg-cyan-600 text-black font-bold text-sm rounded-lg hover:bg-blue-700 transition"
         >
           Add Clinic
         </button>
       </form>
 
       {/* Clinics Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-cyan-100">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              <th className="px-6 py-3 text-left">Clinic</th>
-              <th className="px-6 py-3 text-left">Location</th>
-              <th className="px-6 py-3 text-left">Specialty</th>
-              <th className="px-6 py-3 text-left">Services</th>
-              <th className="px-6 py-3 text-left">Status</th>
+              <th className="px-6 py-3 text-left text-xl text-black font-bold">Clinic</th>
+              <th className="px-6 py-3 text-left text-xl text-black font-bold">Location</th>
+              <th className="px-6 py-3 text-left text-xl text-black font-bold">Specialty</th>
+              <th className="px-6 py-3 text-left text-xl text-black font-bold">Services</th>
+              <th className="px-6 py-3 text-left text-xl text-black font-bold">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+          <tbody className="divide-y divide-gray-600 bg-white">
             {clinics.map(clinic => (
               <tr key={clinic.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
@@ -238,10 +238,10 @@ export default function ClinicRecommendations() {
                 <td className="px-6 py-4">
                   <button
                     onClick={() => handleRecommend(clinic.id)}
-                    className={`px-3 py-1 text-xs rounded-full font-medium border ${
+                    className={`px-3 py-1 text-xs rounded-full font-bold text-black border ${
                       clinic.recommended
-                        ? 'bg-green-100 text-green-700 border-green-200'
-                        : 'bg-gray-100 text-gray-700 border-gray-200'
+                        ? 'bg-green-400 text-green-700 border-green-200'
+                        : 'bg-cyan-400 text-gray-700 border-gray-200'
                     } hover:shadow-sm transition`}
                   >
                     {clinic.recommended ? '✓ Recommended' : 'Not Recommended'}
