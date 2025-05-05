@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Post, Article, Community
+from models import db, User, Post, Article, Community, VerificationRequest
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, jwt_required
 from flask_cors import cross_origin
 # from flask_jwt_extended import JWTDecodeError
@@ -8,6 +8,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from werkzeug.exceptions import Unauthorized
 import traceback
 from middleware.auth import role_required
+# from app import socketio
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -307,3 +308,36 @@ def get_pending_communities():
             } for c in pending
         ]
     })
+
+@admin_bp.route('/admin/verification-requests', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_verification_requests():
+    requests = VerificationRequest.query.filter_by(is_resolved=False).all()
+    return jsonify([
+        {
+            "id": req.id,
+            "user_id": req.user.id,
+            "full_name": req.user.profile.full_name,
+            "license_number": req.user.profile.license_number,
+            "region": req.user.profile.region
+        } for req in requests
+    ])
+
+@admin_bp.route('/admin/verify-user/<int:user_id>', methods=['POST'])
+@jwt_required()
+@role_required("admin")
+def verify_user(user_id):
+    user = User.query.get(user_id)
+    if not user or not user.profile:
+        return jsonify({"error": "User not found"}), 404
+
+    user.profile.is_verified = True
+
+    # mark the verification request as resolved
+    vr = VerificationRequest.query.filter_by(user_id=user_id, is_resolved=False).first()
+    if vr:
+        vr.is_resolved = True
+
+    db.session.commit()
+    return jsonify({"message": "User verified successfully."})

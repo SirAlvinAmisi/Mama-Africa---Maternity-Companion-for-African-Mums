@@ -25,15 +25,15 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="bg-cyan-200 dark:bg-cyan-900 text-gray-600 dark:text-white shadow">
+    <nav className="bg-cyan-200 dark:bg-cyan-500 text-gray-600 dark:text-white shadow">
       <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-4">
         
         {/* Logo */}
-        <div className="text-2xl font-bold">
+        <div className="text-3xl font-bold">
           <Link to="/" className="flex items-center space-x-1">
-            <span className="text-green">Mama</span>
+            <span className="text-green font-bold">Mama</span>
             <img src={africaIcon} alt="Africa icon" className="w-6 h-6" />
-            <span className="text-red-500">frika</span>
+            <span className="text-red-500 font-bold">frika</span>
           </Link>
         </div>
         <button
@@ -47,7 +47,7 @@ const Navbar = () => {
         <div
           className={`${
             isOpen ? 'flex flex-col items-start gap-4 text-sm' : 'hidden'
-          } sm:flex sm:flex-row sm:items-center sm:gap-4 font-semibold text-lg absolute sm:static bg-cyan-200 dark:bg-cyan-900 left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
+          } sm:flex sm:flex-row sm:items-center sm:gap-4 font-bold text-cyan-900 text-lg absolute sm:static  left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
         >
           <Link to="/" className="hover:underline">Home</Link>
           <Link to="/specialists" className="hover:underline">Specialists</Link>

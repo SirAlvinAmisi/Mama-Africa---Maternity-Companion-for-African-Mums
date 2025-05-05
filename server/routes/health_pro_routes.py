@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Article, Clinic, Question, Profile
-from flask_jwt_extended import get_jwt_identity
+from models import db, User, Article, Clinic, Question, Profile, VerificationRequest
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from middleware.auth import role_required
+# from extensions import socketio 
+# from app import socketio
 
 health_bp = Blueprint('health_pro', __name__)
 
@@ -137,10 +139,32 @@ def flag_article(article_id):
     # Optionally send notification to admin (e.g., via Notification model)
     return jsonify({"message": "Article flagged for review"})
 
-@health_bp.route('/healthpros/request_verification', methods=['POST'])
+@health_bp.route('/healthpro/request-verification', methods=['POST'])
+@jwt_required()
 @role_required("health_pro")
 def request_verification():
-    identity = get_jwt_identity()
-    user = User.query.get(identity)
-    # e.g., log it or send notification
-    return jsonify({"message": "Verification request submitted to admin"})
+    from app import socketio
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
+
+    if not current_user or not current_user.profile:
+        return jsonify({"error": "User not found"}), 404
+
+    existing_request = VerificationRequest.query.filter_by(
+        user_id=current_user_id, is_resolved=False).first()
+
+    if existing_request:
+        return jsonify({"message": "Verification already requested."}), 400
+
+    new_request = VerificationRequest(user_id=current_user_id)
+    db.session.add(new_request)
+    db.session.commit()
+
+    socketio.emit('verification_request', {
+        "user_id": current_user_id,
+        "full_name": current_user.profile.full_name,
+        "region": current_user.profile.region,
+        "license_number": current_user.profile.license_number
+    })
+
+    return jsonify({"message": "Verification requested successfully."})

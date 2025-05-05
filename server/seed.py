@@ -586,5 +586,21 @@ with app.app_context():
         )
         db.session.add(share)
     db.session.commit()
+    
+    # 17. VERIFICATION REQUESTS
+    verification_requests = []
+
+    # Let's assume a few health pros have requested verification
+    for i in range(3):  # First 3 specialists
+        verification_requests.append(
+            VerificationRequest(
+                user_id=specialist_users[i].id,
+                is_resolved=False  # Mark as pending so admins can see them
+            )
+        )
+
+    db.session.add_all(verification_requests)
+    db.session.commit()
+
 
     print("✅ Database seeded successfully.")
