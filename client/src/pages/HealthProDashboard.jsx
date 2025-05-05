@@ -66,7 +66,7 @@ const HealthProDashboard = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white rounded-1g shadow">
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 mb-6 text-center">
        Health Professional Dashboard
       </h1>
@@ -81,8 +81,8 @@ const HealthProDashboard = () => {
             className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
               ${
                 activeTab === tab
-                  ? "bg-cyan-600 text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-cyan-400 text-black shadow"
+                  : "bg-cyan-600 text-gray-700 hover:bg-gray-200"
               }`}
           >
             {tab}
@@ -91,10 +91,10 @@ const HealthProDashboard = () => {
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-xl shadow p-6">
+      <div className="bg-cyan-500 rounded-xl shadow p-6">
         {activeTab === "Profile" && (
           <>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4">Profile Details</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-black mb-4">Profile Details</h2>
             <p><strong>Name:</strong> {profile.profile?.full_name || 'N/A'}</p>
             <p><strong>Region:</strong> {profile.profile?.region || 'N/A'}</p>
             {profile.profile?.is_verified ? (
@@ -116,8 +116,8 @@ const HealthProDashboard = () => {
         {/* {activeTab === "Post Article" && (...) } */}
         {activeTab === "Post Article" && (
           <>
-            <h2 className="text-xl font-semibold mb-2">Post New Article</h2>
-            <p>Share medical articles or videos with Mums.</p>
+            <h2 className="text-xl font-bold text-black mb-2">Post New Article</h2>
+            <p className="text-xl text-black mb-2">Share medical articles or videos with Mums.</p>
             <ArticleForm onSubmit={(articleData) => {
               const token = localStorage.getItem("access_token");
 
@@ -158,8 +158,8 @@ const HealthProDashboard = () => {
 
         {activeTab === "Recommend Clinics" && (
           <>
-            <h2 className="text-xl font-semibold mb-2">Recommend Clinics</h2>
-            <p>Recommend local clinics for prenatal and postnatal care.</p>
+            {/* <h2 className="text-xl font-semibold mb-2">Recommend Clinics</h2>
+            <p>Recommend local clinics for prenatal and postnatal care.</p> */}
             <ClinicRecommendations />
           </>
         )}

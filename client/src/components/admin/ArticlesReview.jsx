@@ -119,13 +119,13 @@ export default function ArticleReview() {
   if (articles.length === 0) return <p>No articles found!</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-cyan-200 p-4 rounded-lg shadow-md">
       {articles.map((article) => (
         <div key={article.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
-          <h3 className="text-lg font-semibold text-gray-800">{article.title}</h3>
-          <p className="text-gray-600">{article.content}</p>
+          <h3 className="text-lg font-bold text-black">{article.title}</h3>
+          <p className="text-black">{article.content}</p>
           <div className="flex justify-between items-center mt-3">
-            <p className="text-sm">
+            <p className="text-sm text-gray-700">
               Status:{" "}
               <span className={`font-semibold ${article.is_approved ? "text-green-600" : "text-yellow-600"}`}>
                 {article.is_approved ? "Approved" : "Pending"}
@@ -133,8 +133,8 @@ export default function ArticleReview() {
             </p>
             {!article.is_approved && (
               <div className="flex gap-2">
-                <button onClick={() => handleAction(article.id, "approved")} className="px-4 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200">Approve</button>
-                <button onClick={() => handleAction(article.id, "rejected")} className="px-4 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Reject</button>
+                <button onClick={() => handleAction(article.id, "approved")} className="px-4 py-1 bg-green-100 text-black font-bold rounded hover:bg-green-200">Approve</button>
+                <button onClick={() => handleAction(article.id, "rejected")} className="px-4 py-1 bg-red-100 text-black font-bold rounded hover:bg-red-200">Reject</button>
               </div>
             )}
           </div>

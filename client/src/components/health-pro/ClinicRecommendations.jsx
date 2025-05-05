@@ -117,7 +117,7 @@ export default function ClinicRecommendations() {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
+    <div className="p-6 bg-cyan rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
       <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-6">Clinic Recommendations</h2>
 
       {/* Region Tabs */}
@@ -125,7 +125,7 @@ export default function ClinicRecommendations() {
         <button
           onClick={() => setFilter('all')}
           className={`px-4 py-2 text-sm rounded-full transition ${
-            filter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            filter === 'all' ? 'bg-cyan-600 text-black font-bold shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
           All Africa

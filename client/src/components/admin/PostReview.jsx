@@ -5,44 +5,6 @@ export default function PostReview() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const fetchPosts = async () => {
-  //     try {
-  //       const token = localStorage.getItem("access_token");
-  //       const response = await axios.get("https://jsonplaceholder.typicode.com/posts", {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setPosts(response.data || []);
-  //     } catch (error) {
-  //       console.error("Failed to fetch posts!:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchPosts();
-  // }, []);
-
-  // const handleAction = async (id, action) => {
-  //   try {
-  //     const token = localStorage.getItem("access_token");
-  //     const response = await axios.patch(
-  //       `https://jsonplaceholder.typicode.com/posts/${id}`,
-  //       { status: action },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-  //     setPosts((prev) =>
-  //       prev.map((post) =>
-  //         post.id === id ? { ...post, status: action } : post
-  //       )
-  //     );
-  //   } catch (error) {
-  //     console.log(`Error trying to ${action} the post!:`, error);
-  //   }
-  // };
-
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -57,10 +19,10 @@ export default function PostReview() {
         setLoading(false);
       }
     };
-  
+
     fetchPosts();
   }, []);
-  
+
   const handleAction = async (id, action) => {
     try {
       const token = localStorage.getItem("access_token");
@@ -72,7 +34,7 @@ export default function PostReview() {
       console.error(`Error trying to ${action} the post:`, error);
     }
   };
-  
+
   if (loading) {
     return <p>Loading pending posts...</p>;
   }
@@ -86,42 +48,49 @@ export default function PostReview() {
       {posts.map((post) => (
         <div
           key={post.id}
-          className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white"
+          className="p-4 border border-gray-200 rounded-lg shadow-sm bg-cyan-400"
         >
           <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
           <p className="text-gray-800">{post.content}</p>
 
+          {post.user?.full_name || post.community?.name ? (
+            <p className="text-sm text-white mt-2">
+              {post.user?.full_name && (
+                <>By: <span className="font-semibold">{post.user.full_name}</span></>
+              )}
+              {post.community?.name && (
+                <> | Community: <span className="italic">{post.community.name}</span></>
+              )}
+            </p>
+          ) : null}
+
           <div className="flex justify-between items-center mt-3">
             <p className="flex items-center gap-2">
               Status:
-              {post.status === "approved" && (
+              {post.is_approved ? (
                 <span className="text-green-600">✅ Approved</span>
-              )}
-              {post.status === "rejected" && (
-                <span className="text-red-600">❌ Rejected</span>
-              )}
-              {!post.status && (
+              ) : (
                 <span className="text-gray-600">⏳ Pending</span>
               )}
             </p>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 text-black">
               <button
                 onClick={() => handleAction(post.id, "approved")}
-                disabled={post.status}
+                disabled={post.is_approved}
                 className={`px-4 py-1 rounded ${
-                  post.status
+                  post.is_approved
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-cyan-500 text-green-700 hover:bg-green-200"
                 }`}
               >
                 Approve
               </button>
               <button
                 onClick={() => handleAction(post.id, "rejected")}
-                disabled={post.status}
+                disabled={post.is_approved}
                 className={`px-4 py-1 rounded ${
-                  post.status
+                  post.is_approved
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-red-100 text-red-700 hover:bg-red-200"
                 }`}
