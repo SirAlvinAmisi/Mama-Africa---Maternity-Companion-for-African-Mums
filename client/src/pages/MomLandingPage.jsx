@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import MomPage from "./MomPage";
 import MomPregnancy from "./MomPregnancy";
+import QuestionCard from '../components/posts/QuestionCard';
 import MomUploadScan from "./MomUploadScan";
 import MomReminders from "./MomReminders";
 import MomCalendar from "../components/Calendar/MomCalendar";
@@ -24,37 +25,33 @@ export default function MomLandingPage() {
   const [groups, setGroups] = useState([]);
   const token = localStorage.getItem('access_token');
 
-  // useEffect(() => {
-  //   const random = getRandomWeeklyUpdate();
-  //   setWeeklyUpdate(random);
-
-  //   setRecords([{ name: 'Scan Report.pdf', date: '2025-03-15' }]);
-
-  //   const fetchGroups = async () => {
-  //     try {
-  //       const res = await axios.get('http://localhost:5000/communities', {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`
-  //         }
-  //       });
-
-  //       console.log("Fetched groups:", res.data);
-  //       setGroups(res.data.groups || res.data);
-  //     } catch (err) {
-  //       console.error("Failed to fetch groups:", err);
-  //     }
-  //   };
-
-  //   fetchGroups();
-  // }, []);
-
+  
   useEffect(() => {
-    if (activeTab === 'weekly' && formData.last_period_date) {
-      const currentWeek = calculateWeeksSince(formData.last_period_date);
-      const update = getWeeklyUpdateByWeek(currentWeek);
-      setWeeklyUpdate(update);
+    if (activeTab === 'weekly') {
+      const fetchAccurateWeeklyUpdate = async () => {
+        try {
+          const res = await axios.get("http://localhost:5000/mums/pregnancy-info", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+  
+          const { last_period_date } = res.data;
+  
+          if (last_period_date) {
+            const update = getWeeklyUpdateByDate(last_period_date);
+            setWeeklyUpdate(update);
+          } else {
+            console.warn("No LMP found. Falling back.");
+            setWeeklyUpdate(getRandomWeeklyUpdate());
+          }
+        } catch (err) {
+          console.error("Error fetching weekly update from saved LMP:", err);
+          setWeeklyUpdate(getRandomWeeklyUpdate());
+        }
+      };
+  
+      fetchAccurateWeeklyUpdate();
     }
-  }, [activeTab, formData.last_period_date]);
+  }, [activeTab]);
   
   const handleChange = e => {
     const { name, value } = e.target;
@@ -143,12 +140,7 @@ export default function MomLandingPage() {
         ))}
       </div>
 
-      {/* {activeTab === 'profile' && (
-        <section>
-          <h4 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium ">My Tracker</h4>
-          <MomPage />
-        </section>
-      )} */}
+      
       {activeTab === 'profile' && (
         <section className="w-full px-4 py-6 overflow-y-auto max-h-screen">
           <h4 className="text-lg sm:text-xl md:text-2xl text-gray-800 mb-4 font-medium">My Tracker</h4>
@@ -165,28 +157,28 @@ export default function MomLandingPage() {
             Week {weeklyUpdate.week} Baby Update
           </h3>
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="bg-yellow-50 rounded shadow p-4">
-              <p className="font-semibold text-purple-800">👶 Baby Size</p>
+            <div className="bg-cyan-500 rounded shadow p-4">
+              <p className="font-bold text-purple-800">👶 Baby Size</p>
               <p>{weeklyUpdate.babySize}</p>
             </div>
-            <div className="bg-yellow-50 rounded shadow p-4">
-              <p className="font-semibold text-purple-800">🧠 Development</p>
+            <div className="bg-cyan-500 rounded shadow p-4">
+              <p className="font-bold text-purple-800">🧠 Development</p>
               <p>{weeklyUpdate.development}</p>
             </div>
-            <div className="bg-yellow-50 rounded shadow p-4">
-              <p className="font-semibold text-purple-800">🤰 Mama Tip</p>
+            <div className="bg-cyan-500 rounded shadow p-4">
+              <p className="font-bold text-purple-800">🤰 Mama Tip</p>
               <p>{weeklyUpdate.mamaTip}</p>
             </div>
-            <div className="bg-yellow-50 rounded shadow p-4">
-              <p className="font-semibold text-purple-800">🌿 Proverb</p>
+            <div className="bg-cyan-500 rounded shadow p-4">
+              <p className="font-bold text-purple-800">🌿 Proverb</p>
               <p>{weeklyUpdate.proverb}</p>
             </div>
-            <div className="bg-yellow-50 rounded shadow p-4">
+            <div className="bg-cyan-500 rounded shadow p-4">
               <p className="font-semibold text-purple-800">🥗 Nutrition Tip</p>
               <p>{weeklyUpdate.nutritionTip}</p>
             </div>
-            <div className="bg-yellow-50 rounded shadow p-4">
-              <p className="font-semibold text-purple-800">💬 Ask Your Midwife</p>
+            <div className="bg-cyan-500 rounded shadow p-4">
+              <p className="font-bold text-purple-800">💬 Ask Your Midwife</p>
               <p>{weeklyUpdate.askMidwife}</p>
             </div>
           </div>
@@ -202,12 +194,13 @@ export default function MomLandingPage() {
 
       {activeTab === 'questions' && (
         <section>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Ask the Community / Experts</h3>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-900 mb-4">Ask the Community / Experts</h3>
+          
           <textarea
             placeholder="Ask your question here..."
             value={question}
             onChange={e => setQuestion(e.target.value)}
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded text-black bg-cyan-100"
           />
           <button onClick={handleQuestionSubmit} className="mt-2 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">
             Submit Question
@@ -224,8 +217,8 @@ export default function MomLandingPage() {
 
       {activeTab === 'appointments' && (
         <section>
-          <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">My Appointments</h3>
-          <MomCalendar />
+          {/* <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">My Appointments</h3> */}
+          {/* <MomCalendar /> */}
           <MomReminders />
         </section>
       )}
@@ -234,6 +227,7 @@ export default function MomLandingPage() {
         <section>
           <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">Mum Groups</h3>
           <p className="text-gray-600">You can explore communities here.</p>
+          
         </section>
       )}
 

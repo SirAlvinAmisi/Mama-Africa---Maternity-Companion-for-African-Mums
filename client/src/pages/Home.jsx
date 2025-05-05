@@ -63,7 +63,7 @@ export default function Home() {
                 768: { slidesPerView: 2 },
                 1024: { slidesPerView: 3 },
               }}
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              autoplay={{ delay: 2000, disableOnInteraction: false }}
               loop
               pagination={{ clickable: true }}
             >

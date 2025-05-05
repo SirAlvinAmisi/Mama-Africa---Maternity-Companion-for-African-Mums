@@ -2,15 +2,15 @@
 
 export default function CommunityGuidelines() {
     return (
-      <div className="bg-white flex flex-col w-full">
+      <div className="bg-cyan-500 flex flex-col w-full">
         <main className="flex-1">
           {/* Community Guidelines Section */}
           <section className="container mx-auto px-6 pt-16 pb-8">
-            <h1 className="font-montserrat font-medium text-[#665e5e] text-5xl text-center mb-12">
+            <h1 className="font-montserrat font-bold text-black text-5xl text-center mb-12">
               Community Guidelines
             </h1>
   
-            <div className="flex flex-col gap-8 w-full max-w-[930px] mx-auto">
+            <div className="flex flex-col gap-8 w-full max-w-[930px] mx-auto text-black">
               {/* Guidelines */}
               {[
                 {
@@ -35,7 +35,7 @@ export default function CommunityGuidelines() {
                 }
               ].map((rule, idx) => (
                 <div key={idx} className="bg-cards-color rounded-[20px] p-8">
-                  <h2 className="font-montserrat font-medium text-black text-3xl mb-4">
+                  <h2 className="font-montserrat font-bold text-black text-2xl mb-4">
                     {rule.title}
                   </h2>
                   <p className="font-montserrat font-light text-black text-xl">{rule.text}</p>

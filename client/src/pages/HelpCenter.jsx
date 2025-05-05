@@ -2,11 +2,11 @@
 
 export default function HelpCenter() {
     return (
-      <div className="bg-white flex flex-col w-full">
+      <div className="bg-cyan-500 flex flex-col w-full">
         <main className="flex-1">
           {/* Help Center Section */}
           <section className="container mx-auto px-6 pt-16 pb-8">
-            <h1 className="font-montserrat font-medium text-[#665e5e] text-5xl text-center mb-12">
+            <h1 className="font-montserrat font-bold text-black text-4xl text-center mb-12">
               Help Center
             </h1>
   
@@ -35,7 +35,7 @@ export default function HelpCenter() {
                 }
               ].map((topic, idx) => (
                 <div key={idx} className="bg-cards-color rounded-[20px] p-8">
-                  <h2 className="font-montserrat font-medium text-black text-3xl mb-4">
+                  <h2 className="font-montserrat font-bold text-black text-2xl mb-4">
                     {topic.title}
                   </h2>
                   <p className="font-montserrat font-light text-black text-xl">{topic.text}</p>

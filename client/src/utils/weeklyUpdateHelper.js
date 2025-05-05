@@ -20,3 +20,12 @@ export function getWeeklyUpdateByDate(lastPeriodDate) {
 
   return { week: currentWeek, ...weeklyUpdates[currentWeek] };
 }
+
+// Returns update by week number (for use after saving pregnancy info)
+export function getWeeklyUpdateByWeek(weekNumber) {
+  const week = Math.min(Math.max(weekNumber, 1), 40); // Clamp between 1–40
+  return { week, ...weeklyUpdates[week] };
+}
+
+// Export all updates if needed elsewhere
+export const WEEKLY_UPDATES = weeklyUpdates;
