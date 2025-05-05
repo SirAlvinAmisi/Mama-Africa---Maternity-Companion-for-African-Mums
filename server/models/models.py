@@ -217,3 +217,13 @@ class VerificationRequest(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
     user = db.relationship('User')
+
+# --- Notifications ---
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    message = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(255))  # Optional: link to article, question, etc.
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+

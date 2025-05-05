@@ -4,15 +4,14 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from dotenv import load_dotenv
-from flask_socketio import SocketIO
 import os
 
 from models import db
-from routes import register_routes  # your custom function
+from routes import register_routes
+from extensions import socketio, mail  # ✅ now from extensions
+from utils.email_utils import init_mail  # ✅ your mail setup
 
 load_dotenv()
-
-socketio = SocketIO(cors_allowed_origins=["http://127.0.0.1:5173", "http://localhost:5173"], async_mode='threading')
 
 def create_app():
     app = Flask(__name__)
@@ -21,8 +20,10 @@ def create_app():
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
+    mail.init_app(app)         # ✅ setup Flask-Mail
+    socketio.init_app(app)     # ✅ setup Flask-SocketIO
 
-    # ✅ Enable full CORS before registering routes
+    # CORS
     CORS(app, supports_credentials=True, resources={
         r"/*": {
             "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -32,7 +33,6 @@ def create_app():
     })
 
     register_routes(app)
-    socketio.init_app(app)
     return app
 
 app = create_app()
