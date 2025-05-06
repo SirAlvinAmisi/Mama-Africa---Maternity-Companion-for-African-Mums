@@ -1,31 +1,39 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getCurrentWeek } from '../utils/weeklyUpdateHelper';  //how did we get this week?
+// e.g. from mom’s pregnancy-info
+import { useAuth } from '../store/Store'; // also implement auth context
+export default function Nutrition() {
+  const { token } = useAuth();
+  const week = getCurrentWeek();  // e.g. from mom’s pregnancy-info
+  const { data, isLoading, error } = useQuery(
+    ['nutrition', week],
+    () =>
+      fetch(`/api/nutrition?week=${week}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => res.json()),
+    { enabled: !!token }
+  );
 
-function Nutrition() {
+  if (isLoading) return <div>Loading nutrition…</div>;
+  if (error || data.error) return <div>Error fetching nutrition</div>;
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-      <h2 className="text-2xl font-bold mb-4 text-cyan-700">
-        Nutrition <span className="text-cyan-500">Corner</span>
-      </h2>
-
-      <img 
-        src="https://s3.amazonaws.com/images.icliniq.com/infographics/nutrients-during-pregnancy.jpg" 
-        alt="Nutrition Corner" 
-        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
-      />
-
-      <p className="text-gray-600 mt-4 mb-6">
-        Tips and advice on nutrition during pregnancy and postpartum!
-      </p>
-
-      {/* Explore Button */}
-      <Link to="/nutrition">
-        <button className="bg-cyan-600 text-white px-6 py-2 rounded-full hover:bg-cyan-700 transition">
-          Explore
-        </button>
-      </Link>
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-2">Nutrition for Week {data.week}</h2>
+      <ul className="text-gray-700 mb-4">
+        {Object.entries(data.nutrients).map(([nutrient, amt]) => (
+          <li key={nutrient}>
+            <strong>{nutrient.charAt(0).toUpperCase() + nutrient.slice(1)}:</strong> {amt}
+          </li>
+        ))}
+      </ul>
+      <h3 className="font-semibold mb-1">Try these foods:</h3>
+      <ul className="list-disc list-inside text-gray-600">
+        {data.food_suggestions.map(food => (
+          <li key={food}>{food}</li>
+        ))}
+      </ul>
     </div>
   );
 }
-
-export default Nutrition;
