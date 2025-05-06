@@ -185,6 +185,48 @@ with app.app_context():
     db.session.add_all(pregnancies)
     db.session.commit()
 
+    # 4b. REMINDERS (factual, aligned with /mums/pregnancy route)
+    all_reminders = []
+
+    for user, preg in zip(mum_users, pregnancies):
+        lmp = preg.last_period_date
+
+        all_reminders.extend([
+            # First Trimester
+            Reminder(user_id=user.id, reminder_text='Start taking folic acid', reminder_date=lmp + timedelta(weeks=4), type='health'),
+            Reminder(user_id=user.id, reminder_text='Book first antenatal appointment', reminder_date=lmp + timedelta(weeks=6), type='checkup'),
+            Reminder(user_id=user.id, reminder_text='Initial Prenatal Visit', reminder_date=lmp + timedelta(weeks=8), type='checkup'),
+            Reminder(user_id=user.id, reminder_text='Dating Ultrasound', reminder_date=lmp + timedelta(weeks=10), type='scan'),
+            Reminder(user_id=user.id, reminder_text='First Trimester Blood Tests', reminder_date=lmp + timedelta(weeks=11), type='test'),
+            Reminder(user_id=user.id, reminder_text='Join a mama support group', reminder_date=lmp + timedelta(weeks=12), type='support'),
+
+            # Second Trimester
+            Reminder(user_id=user.id, reminder_text='Begin light exercises (e.g., walking, stretching)', reminder_date=lmp + timedelta(weeks=14), type='health'),
+            Reminder(user_id=user.id, reminder_text='Quad Screen / NIPT Testing', reminder_date=lmp + timedelta(weeks=16), type='test'),
+            Reminder(user_id=user.id, reminder_text='Attend prenatal nutrition class', reminder_date=lmp + timedelta(weeks=18), type='education'),
+            Reminder(user_id=user.id, reminder_text='Anatomy Scan', reminder_date=lmp + timedelta(weeks=20), type='scan'),
+            Reminder(user_id=user.id, reminder_text='Kick Count Education', reminder_date=lmp + timedelta(weeks=24), type='education'),
+            Reminder(user_id=user.id, reminder_text='Glucose Tolerance Test', reminder_date=lmp + timedelta(weeks=26), type='test'),
+
+            # Third Trimester
+            Reminder(user_id=user.id, reminder_text='Start Birth Plan Discussion', reminder_date=lmp + timedelta(weeks=30), type='preparation'),
+            Reminder(user_id=user.id, reminder_text='Prenatal Depression Check-In', reminder_date=lmp + timedelta(weeks=32), type='support'),
+            Reminder(user_id=user.id, reminder_text='Pack Hospital Bag', reminder_date=lmp + timedelta(weeks=34), type='preparation'),
+            Reminder(user_id=user.id, reminder_text='Install Car Seat or Transport Plan', reminder_date=lmp + timedelta(weeks=35), type='preparation'),
+            Reminder(user_id=user.id, reminder_text='Group B Strep Test', reminder_date=lmp + timedelta(weeks=36), type='test'),
+            Reminder(user_id=user.id, reminder_text='Start Weekly Checkups', reminder_date=lmp + timedelta(weeks=36), type='checkup'),
+            Reminder(user_id=user.id, reminder_text='Due Date Reminder', reminder_date=lmp + timedelta(weeks=40), type='checkup'),
+
+            # Cultural / Contextual
+            Reminder(user_id=user.id, reminder_text='Share news with elders (if ready)', reminder_date=lmp + timedelta(weeks=16), type='cultural'),
+            Reminder(user_id=user.id, reminder_text='Plan for traditional postpartum care', reminder_date=lmp + timedelta(weeks=34), type='cultural'),
+            Reminder(user_id=user.id, reminder_text='Prepare traditional baby items (lesos, oils, beads)', reminder_date=lmp + timedelta(weeks=36), type='cultural'),
+        ])
+
+    db.session.add_all(all_reminders)
+    db.session.commit()
+
+
     # 5. MEDICAL UPLOADS
     uploads = [
         MedicalUpload(user_id=user.id, file_url=f"/uploads/scan_week{preg.current_week}.jpg", file_type="ultrasound", notes=f"Scan for week {preg.current_week}") 

@@ -1,4 +1,3 @@
-// src/components/calculator/CalculatorResults.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -31,20 +30,31 @@ export default function CalculatorResults({ trigger }) {
         const data = res.data;
         setDueDate(data.due_date);
         setCurrentWeek(data.current_week);
-        setMilestones(
-          (data.appointments || []).map((m, i) => ({
-            week: i * 8 + 8,
-            label: m.title,
-            desc: `Scheduled on ${m.date}`,
-          }))
-        );
+
+        const lmpDate = new Date(data.last_period_date);
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+        const futureMilestones = (data.appointments || [])
+          .map((appointment) => {
+            const milestoneDate = new Date(appointment.date);
+            const weeksFromLMP = Math.floor((milestoneDate - lmpDate) / msPerWeek);
+
+            return {
+              week: weeksFromLMP,
+              label: appointment.title,
+              desc: `Scheduled on ${appointment.date}`,
+            };
+          })
+          .filter((m) => m.week >= (data.current_week ?? 0));
+
+        setMilestones(futureMilestones);
       } catch (err) {
-        console.error("Failed to fetch results:", err);
+        console.error("❌ Failed to fetch results:", err);
       }
     };
 
     fetchData();
-  }, [trigger]); // Refetch when trigger changes
+  }, [trigger]);
 
   if (!dueDate) return null;
 
@@ -56,23 +66,21 @@ export default function CalculatorResults({ trigger }) {
   }));
 
   return (
-    // <div className="w-full mt-6 p-4 border rounded-xl shadow-inner bg-cyan-300">
-    <div className="w-full max-w-3xl mx-auto mt-6 p-4 border rounded-xl shadow-inner bg-cyan-300">
-      <h3 className="text-lg font-semibold text-purple-700 mb-2">Results</h3>
+    <div className="w-full max-w-screen-xl mx-auto mt-6 p-4 border rounded-xl shadow-inner bg-cyan-300">
+      <h3 className="text-lg font-bold text-purple-900 mb-2"><strong>Results</strong></h3>
+      <p className="text-lg font-semibold text-purple-900 mb-2"><strong>Estimated Due Date:</strong> {dueDate}</p>
+      <p className="text-lg font-semibold text-purple-900 mb-2"><strong>Current Week:</strong> {currentWeek}</p>
 
-      <p><strong>Estimated Due Date:</strong> {dueDate}</p>
-      <p><strong>Current Week:</strong> {currentWeek}</p>
-
-      <h4 className="mt-4 mb-2 font-semibold text-green-900">Key Milestones:</h4>
-      <ul className="list-disc list-inside space-y-1">
+      <h4 className="mt-4 mb-2 font-bold text-purple-900"><strong>Key Milestones:</strong></h4>
+      <ul className="list-disc list-inside space-y-1 font-bold text-purple-900">
         {milestones.map((m, i) => (
           <li key={i}>
-            Week {m.week}: {m.label} — <span className="text-gray-600">{m.desc}</span>
+            Week {m.week}: {m.label} — <span className="text-black">{m.desc}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 bg-cyan-50 p-4 rounded-xl">
+      <div className="mt-6 bg-cyan-50 p-4 rounded-xl mx-auto shadow-md">
         <h3 className="text-lg font-bold text-cyan-700 mb-2">Progress Chart</h3>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={milestoneGraphData}>
