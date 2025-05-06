@@ -45,7 +45,9 @@ class User(db.Model):
     messages_received = db.relationship("Message", foreign_keys='Message.receiver_id', backref="receiver", cascade="all, delete-orphan")
     flags = db.relationship("FlagReport", backref="reporter", cascade="all, delete-orphan")
     shared_content = db.relationship("SharedContent", backref="user", cascade="all, delete-orphan")
-
+    notifications = db.relationship("Notification", backref="user", cascade="all, delete-orphan")
+    verification_requests = db.relationship("VerificationRequest", backref="user", cascade="all, delete-orphan")
+    
     joined_communities = db.relationship("Community", secondary=community_members, back_populates="members")
     followed_topics = db.relationship("Topic", secondary=mum_topic_follow, back_populates="followers")
 
@@ -68,13 +70,6 @@ class PregnancyDetail(db.Model):
     due_date = db.Column(Date)
     current_week = db.Column(Integer)
     pregnancy_status = db.Column(String(50))  # 'active', 'completed'
-
-class Reminder(db.Model):
-    id = db.Column(Integer, primary_key=True)
-    user_id = db.Column(Integer, ForeignKey('user.id'))
-    reminder_text = db.Column(String(255))
-    reminder_date = db.Column(DateTime)
-    type = db.Column(String(50))  # 'checkup', 'scan', etc.
 
 # --- Content ---
 class Post(db.Model):
@@ -162,7 +157,8 @@ class Topic(db.Model):
     description = db.Column(String(255))
 
     followers = db.relationship('User', secondary=mum_topic_follow, back_populates="followed_topics")
-
+    
+# --- Moderation ---
 class FlagReport(db.Model):
     id = db.Column(Integer, primary_key=True)
     reporter_id = db.Column(Integer, ForeignKey('user.id'))
@@ -193,6 +189,14 @@ class NutritionBlog(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     author = db.Column(String(100))
 
+# nutrition mvp
+class Nutrition(db.Model):
+    __tablename__ = 'nutrition'
+    id = db.Column(db.Integer, primary_key=True)
+    week = db.Column(db.Integer, nullable=False, unique=True)
+    nutrients = db.Column(JSON, nullable=False)
+    food_suggestions = db.Column(JSON, nullable=False)
+
 # --- Messaging ---
 class Message(db.Model):
     id = db.Column(Integer, primary_key=True)
@@ -217,7 +221,7 @@ class VerificationRequest(db.Model):
     is_resolved = db.Column(Boolean, default=False)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
-    user = db.relationship('User')
+    # user = db.relationship('User')
 
 # --- Notifications ---
 class Notification(db.Model):
@@ -235,10 +239,3 @@ class Reminder(db.Model):
     reminder_date = db.Column(db.Date, nullable=False)
     type = db.Column(db.String(50), default='custom')  # e.g., test, checkup, support, etc.
 
-# nutrition mvp
-class Nutrition(db.Model):
-    __tablename__ = 'nutrition'
-    id = db.Column(db.Integer, primary_key=True)
-    week = db.Column(db.Integer, nullable=False, unique=True)
-    nutrients = db.Column(JSON, nullable=False)
-    food_suggestions = db.Column(JSON, nullable=False)

@@ -26,6 +26,16 @@ export function getWeeklyUpdateByWeek(weekNumber) {
   const week = Math.min(Math.max(weekNumber, 1), 40); // Clamp between 1–40
   return { week, ...weeklyUpdates[week] };
 }
+// Add this at the bottom or anywhere in weeklyUpdateHelper.js
+export function getCurrentWeek() {
+  const lmp = localStorage.getItem("lmp");
+  if (!lmp) return 1;
+
+  const startDate = new Date(lmp);
+  const now = new Date();
+  const diffInWeeks = Math.floor((now - startDate) / (1000 * 60 * 60 * 24 * 7));
+  return Math.min(Math.max(1, diffInWeeks), 40);
+}
 
 // Export all updates if needed elsewhere
 export const WEEKLY_UPDATES = weeklyUpdates;

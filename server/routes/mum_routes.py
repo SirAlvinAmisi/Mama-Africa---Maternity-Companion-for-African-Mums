@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post, Notification
+from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post, Notification, Nutrition
 from flask_jwt_extended import get_jwt_identity, get_jwt
 from utils.email_utils import send_email
 from middleware.auth import role_required
@@ -293,4 +293,22 @@ def get_health_pros():
                 "name": hp.profile.full_name if hp.profile else f"Doctor {hp.id}"
             } for hp in health_pros
         ]
+    })
+    
+    
+@mum_bp.route('/mums/nutrition', methods=['GET', 'OPTIONS'])
+@role_required("mum")
+def get_weekly_nutrition():
+    week = request.args.get('week', type=int)
+    if not week or not (1 <= week <= 40):
+        return jsonify({"error": "Invalid or missing week"}), 400
+
+    entry = Nutrition.query.filter_by(week=week).first()
+    if not entry:
+        return jsonify({"error": "No data for this week"}), 404
+
+    return jsonify({
+        "week": entry.week,
+        "nutrients": entry.nutrients,
+        "food_suggestions": entry.food_suggestions
     })
