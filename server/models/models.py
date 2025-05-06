@@ -2,6 +2,7 @@ from . import db
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, Boolean, Table
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import JSON
 
 # --- Association Tables ---
 community_members = db.Table('community_members',
@@ -233,3 +234,11 @@ class Reminder(db.Model):
     reminder_text = db.Column(db.String(255), nullable=False)
     reminder_date = db.Column(db.Date, nullable=False)
     type = db.Column(db.String(50), default='custom')  # e.g., test, checkup, support, etc.
+
+# nutrition mvp
+class Nutrition(db.Model):
+    __tablename__ = 'nutrition'
+    id = db.Column(db.Integer, primary_key=True)
+    week = db.Column(db.Integer, nullable=False, unique=True)
+    nutrients = db.Column(JSON, nullable=False)
+    food_suggestions = db.Column(JSON, nullable=False)
