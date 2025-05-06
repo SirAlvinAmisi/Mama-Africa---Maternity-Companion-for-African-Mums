@@ -1,3 +1,5 @@
+
+/* 
 export default function HealthProfessionalScheduler() {
   return (
     <div className="p-6 bg-white rounded-2xl shadow-lg">
@@ -8,4 +10,10 @@ export default function HealthProfessionalScheduler() {
       </div>
     </div>
   );
+}
+*/
+
+
+export default function HealthProfessionalScheduler() {
+  return null;
 }

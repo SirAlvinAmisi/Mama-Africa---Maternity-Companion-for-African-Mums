@@ -22,7 +22,7 @@ const Calendar = ({ userType = "mom", events = [], onDateSelect, pregnancyInfo =
     return (
       <div className={`flex justify-between items-center p-4 ${headerColor} rounded-t-lg`}>
         <button onClick={prevMonth} className="p-2 rounded-full bg-cyan-500 hover:bg-cyan-200">
-          <span className="material-icons text-black font-bold">Previuos</span>
+          <span className="material-icons text-black font-bold">Previous</span>
         </button>
         <h2 className="font-bold text-gray-800 text-lg">
           {format(currentMonth, 'MMMM yyyy')}

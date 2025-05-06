@@ -23,6 +23,7 @@ import Admin from './pages/Admin';
 
 // Health Professionals
 import Specialists from './pages/Specialists';
+import SpecialistProfile from './pages/SpecialistProfile';
 import { HealthProfessional } from './pages/HealthProfessional';
 import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
 import HealthProDashboard from './pages/HealthProDashboard';
