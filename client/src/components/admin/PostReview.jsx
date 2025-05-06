@@ -1,106 +1,81 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function PostReview() {
+const PostReview = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://localhost:5000/admin/posts", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPosts(response.data.posts || []);
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  const handleAction = async (id, action) => {
+  const fetchPosts = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.patch(`http://localhost:5000/admin/posts/${id}`, { status: action }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get("http://localhost:5000/admin/posts", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setPosts((prev) => prev.filter((p) => p.id !== id));
+      setPosts(response.data.posts || []);
     } catch (error) {
-      console.error(`Error trying to ${action} the post:`, error);
+      console.error("Error fetching posts:", error.response || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return <p>Loading pending posts...</p>;
-  }
+  const updatePostStatus = async (postId, status) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.patch(
+        `http://localhost:5000/admin/posts/${postId}`,
+        { status },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert(`Post ${status} successfully`);
+      fetchPosts(); // Refresh the posts list
+    } catch (error) {
+      console.error(`Error updating post status:`, error.response || error.message);
+    }
+  };
 
-  if (posts.length === 0) {
-    return <p>No posts awaiting review!</p>;
-  }
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  if (loading) return <p className="text-gray-600 text-center">Loading posts...</p>;
+  if (posts.length === 0) return <p className="text-gray-600 text-center">No pending posts to review.</p>;
 
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        <div
-          key={post.id}
-          className="p-4 border border-gray-200 rounded-lg shadow-sm bg-cyan-400"
-        >
-          <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
-          <p className="text-gray-800">{post.content}</p>
-
-          {post.user?.full_name || post.community?.name ? (
-            <p className="text-sm text-white mt-2">
-              {post.user?.full_name && (
-                <>By: <span className="font-semibold">{post.user.full_name}</span></>
-              )}
-              {post.community?.name && (
-                <> | Community: <span className="italic">{post.community.name}</span></>
-              )}
-            </p>
-          ) : null}
-
-          <div className="flex justify-between items-center mt-3">
-            <p className="flex items-center gap-2">
-              Status:
-              {post.is_approved ? (
-                <span className="text-green-600">✅ Approved</span>
-              ) : (
-                <span className="text-gray-600">⏳ Pending</span>
-              )}
-            </p>
-
-            <div className="flex gap-2 text-black">
-              <button
-                onClick={() => handleAction(post.id, "approved")}
-                disabled={post.is_approved}
-                className={`px-4 py-1 rounded ${
-                  post.is_approved
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-cyan-500 text-green-700 hover:bg-green-200"
-                }`}
-              >
-                Approve
-              </button>
-              <button
-                onClick={() => handleAction(post.id, "rejected")}
-                disabled={post.is_approved}
-                className={`px-4 py-1 rounded ${
-                  post.is_approved
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                }`}
-              >
-                Reject
-              </button>
-            </div>
+        <div key={post.id} className="p-4 border rounded shadow-sm bg-gray-100">
+          {/* Post Title */}
+          <h3 className="text-lg font-bold text-gray-800">{post.title}</h3>
+          {/* Post Content */}
+          <p className="text-gray-700">{post.content}</p>
+          {/* Post Metadata */}
+          <p className="text-sm text-gray-500">
+            By: <span className="font-medium text-gray-800">{post.user.full_name || "Unknown"}</span> | Community:{" "}
+            <span className="font-medium text-gray-800">{post.community.name || "N/A"}</span>
+          </p>
+          {/* Action Buttons */}
+          <div className="flex gap-4 mt-2">
+            <button
+              onClick={() => updatePostStatus(post.id, "approved")}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              style={{ backgroundColor: "#16a34a" }} // Explicit green background
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => updatePostStatus(post.id, "rejected")}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Reject
+            </button>
           </div>
         </div>
       ))}
     </div>
   );
-}
+};
+
+export default PostReview;
