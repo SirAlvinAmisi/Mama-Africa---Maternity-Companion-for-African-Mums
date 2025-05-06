@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify
-from models import NutritionBlog
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from models import NutritionBlog, Nutrition
 
 nutrition_bp = Blueprint('nutrition', __name__)
 
@@ -22,6 +23,7 @@ def get_blogs():
 @jwt_required()
 def get_weekly_nutrition():
     week = int(request.args.get('week', 1))
+    print("✅ JWT received:", get_jwt())
     rec = Nutrition.query.filter_by(week=week).first()
     if not rec:
         return jsonify({"error": "No data for that week"}), 404

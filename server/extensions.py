@@ -1,5 +1,9 @@
-from flask_socketio import SocketIO
+from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
+from flask_socketio import SocketIO
+from flask_migrate import Migrate
 
-socketio = SocketIO(cors_allowed_origins=["http://127.0.0.1:5173", "http://localhost:5173"], async_mode='threading')
+db = SQLAlchemy()
 mail = Mail()
+socketio = SocketIO(cors_allowed_origins=["http://127.0.0.1:5173", "http://localhost:5173"], async_mode='threading')
+migrate = Migrate()

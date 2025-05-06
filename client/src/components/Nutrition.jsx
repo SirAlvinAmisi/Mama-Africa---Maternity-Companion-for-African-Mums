@@ -1,22 +1,26 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getCurrentWeek } from '../utils/weeklyUpdateHelper';  //how did we get this week?
-// e.g. from mom’s pregnancy-info
-import { useAuth } from '../store/Store'; // also implement auth context
+import { getCurrentWeek } from '../utils/weeklyUpdateHelper';
+import { useAuth } from '../context/AuthContext';
+
 export default function Nutrition() {
   const { token } = useAuth();
-  const week = getCurrentWeek();  // e.g. from mom’s pregnancy-info
-  const { data, isLoading, error } = useQuery(
-    ['nutrition', week],
-    () =>
-      fetch(`/api/nutrition?week=${week}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(res => res.json()),
-    { enabled: !!token }
-  );
+  const week = getCurrentWeek();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['nutrition', week],
+    queryFn: () =>
+      fetch(`http://localhost:5000/api/nutrition?week=${week}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(res => {
+        if (!res.ok) throw new Error("Unauthorized or bad response");
+        return res.json();
+      }),
+    enabled: !!token,
+  });
 
   if (isLoading) return <div>Loading nutrition…</div>;
-  if (error || data.error) return <div>Error fetching nutrition</div>;
+  if (error || !data?.nutrients) return <div>Error fetching nutrition</div>;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
