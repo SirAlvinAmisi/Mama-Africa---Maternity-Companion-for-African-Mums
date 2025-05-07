@@ -32,7 +32,8 @@ class User(db.Model):
 
     profile = db.relationship("Profile", backref="user", uselist=False, cascade="all, delete-orphan")
     pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False, cascade="all, delete-orphan")
-    uploads = db.relationship("MedicalUpload", backref="user", cascade="all, delete-orphan")
+    uploads = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.user_id', back_populates="uploader")
+    sent_scans = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.doctor_id', back_populates="doctor")
     certifications = db.relationship("Certification", backref="user", cascade="all, delete-orphan")
     posts = db.relationship("Post", backref="author", cascade="all, delete-orphan")
     articles = db.relationship("Article", backref="author", cascade="all, delete-orphan")
@@ -118,10 +119,15 @@ class Question(db.Model):
 class MedicalUpload(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
+    doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     file_url = db.Column(String(200))
     file_type = db.Column(String(50))
     uploaded_at = db.Column(DateTime, default=datetime.utcnow)
     notes = db.Column(Text)
+   
+    # Relationships (NO backref, just back_populates to avoid conflict)
+    uploader = db.relationship("User", foreign_keys=[user_id], back_populates="uploads")
+    doctor = db.relationship("User", foreign_keys=[doctor_id], back_populates="sent_scans")
 
 class Certification(db.Model):
     id = db.Column(Integer, primary_key=True)

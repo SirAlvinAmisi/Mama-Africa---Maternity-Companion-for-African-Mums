@@ -19,6 +19,7 @@ def get_blogs():
         } for blog in blogs
     ]
     return jsonify(data), 200
+
 @nutrition_bp.route('/api/nutrition', methods=['GET'])
 @jwt_required()
 def get_weekly_nutrition():
