@@ -46,7 +46,7 @@ export default function CalculatorResults({ trigger }) {
             };
           })
           .filter((m) => m.week >= (data.current_week ?? 0));
-
+          console.log("Pregnancy info response:", data);
         setMilestones(futureMilestones);
       } catch (err) {
         console.error("❌ Failed to fetch results:", err);

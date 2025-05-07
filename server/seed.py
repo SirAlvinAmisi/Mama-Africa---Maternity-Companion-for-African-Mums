@@ -1,6 +1,6 @@
 from app import db, app
 from models import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 from sqlalchemy import text
 
@@ -588,45 +588,63 @@ with app.app_context():
     db.session.commit()
     
     # 17. REMINDERS (based on pregnancy week)
+    def create_standard_pregnancy_reminders(user_id, lmp):
+        return [
+            Reminder(user_id=user_id, reminder_text="Antenatal visit", reminder_date=lmp + timedelta(weeks=6), type="checkup"),
+            Reminder(user_id=user_id, reminder_text="First ultrasound", reminder_date=lmp + timedelta(weeks=8), type="scan"),
+            Reminder(user_id=user_id, reminder_text="First trimester screening", reminder_date=lmp + timedelta(weeks=12), type="screening"),
+            Reminder(user_id=user_id, reminder_text="Nutrition counseling", reminder_date=lmp + timedelta(weeks=16), type="support"),
+            Reminder(user_id=user_id, reminder_text="Anomaly scan", reminder_date=lmp + timedelta(weeks=20), type="scan"),
+            Reminder(user_id=user_id, reminder_text="Glucose screening", reminder_date=lmp + timedelta(weeks=24), type="test"),
+            Reminder(user_id=user_id, reminder_text="Third trimester checkup", reminder_date=lmp + timedelta(weeks=28), type="checkup"),
+            Reminder(user_id=user_id, reminder_text="Delivery planning", reminder_date=lmp + timedelta(weeks=36), type="delivery"),
+        ]
+
+
+    def create_static_reminders(user_id, base_date):
+        return [
+            Reminder(user_id=user_id, reminder_text="Join trimester community session", reminder_date=base_date + timedelta(days=3), type="community"),
+            Reminder(user_id=user_id, reminder_text="Weekly mom wellness check-in", reminder_date=base_date + timedelta(days=7), type="support"),
+            Reminder(user_id=user_id, reminder_text="Ask your midwife a question", reminder_date=base_date + timedelta(days=10), type="custom"),
+        ]
+
+
+    def create_custom_manual_reminders(user_id):
+        today = datetime.today().date()
+        return [
+            Reminder(user_id=user_id, reminder_text="Upload ultrasound photo", reminder_date=today + timedelta(days=2), type="custom"),
+            Reminder(user_id=user_id, reminder_text="Track fetal movement", reminder_date=today + timedelta(days=5), type="custom"),
+        ]
+
+    # --- Main reminder seeding block ---
+
     reminders = []
 
     for mum, preg in zip(mum_users, pregnancies):
-        base_date = datetime.now()
+        lmp = preg.last_period_date
+        base = datetime.today().date()
 
-        # First Reminder - Antenatal Checkup (7 days ahead)
-        reminders.append(Reminder(
-            user_id=mum.id,
-            reminder_text=f"Antenatal checkup for week {preg.current_week + 1}",
-            reminder_date=(base_date + timedelta(days=7)).date(),
-            type="checkup"
-        ))
+        reminders += create_standard_pregnancy_reminders(mum.id, lmp)
+        reminders += create_static_reminders(mum.id, base)
+        reminders += create_custom_manual_reminders(mum.id)
 
-        # Second Reminder - Ultrasound Scan (2 weeks ahead)
-        reminders.append(Reminder(
-            user_id=mum.id,
-            reminder_text=f"Ultrasound scan scheduled around week {preg.current_week + 3}",
-            reminder_date=(base_date + timedelta(days=14)).date(),
-            type="scan"
-        ))
+    # # Optional: Add reminders for test user 18 (if not included above)
+    # test_user = User.query.get(18)
+    # test_preg = PregnancyDetail.query.filter_by(user_id=18).first()
 
-        # Third Reminder - Nutrition Support Session (1 week ahead)
-        reminders.append(Reminder(
-            user_id=mum.id,
-            reminder_text="Attend your virtual nutrition support session",
-            reminder_date=(base_date + timedelta(days=10)).date(),
-            type="support"
-        ))
+    # if test_user and test_preg:
+    #     print(f"Adding extra test reminders for user 18 ({test_user.email})")
+    #     lmp = test_preg.last_period_date
+    #     base = datetime.today().date()
 
-        # Fourth Reminder - Community Group Check-in
-        reminders.append(Reminder(
-            user_id=mum.id,
-            reminder_text="Check in with your trimester group for updates and questions",
-            reminder_date=(base_date + timedelta(days=5)).date(),
-            type="community"
-        ))
+    #     reminders += create_standard_pregnancy_reminders(18, lmp)
+    #     reminders += create_static_reminders(18, base)
+    #     reminders += create_custom_manual_reminders(18)
 
-    db.session.add_all(reminders)
+    # --- Save all reminders ---
+    db.session.bulk_save_objects(reminders)
     db.session.commit()
+    print(f"✅ Seeded {len(reminders)} reminders.")
 
     # 18. VERIFICATION REQUESTS (from some health professionals)
     verifications = [

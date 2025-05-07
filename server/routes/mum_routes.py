@@ -4,6 +4,9 @@ from flask_jwt_extended import get_jwt_identity, get_jwt
 from utils.email_utils import send_email
 from middleware.auth import role_required
 from datetime import datetime, timedelta
+import os
+from werkzeug.utils import secure_filename
+from flask import current_app
 
 mum_bp = Blueprint('mum', __name__)
 
@@ -187,16 +190,28 @@ def leave_community(id):
 @role_required("mum")
 def upload_scan():
     user_id = get_jwt_identity()
-    data = request.get_json()
 
-    if not data.get("file_url"):
-        return jsonify({"error": "File URL is required"}), 400
+    file = request.files.get('file')
+    file_url = request.form.get('file_url')
+    notes = request.form.get('notes', '')
+    doctor_id = request.form.get('doctor_id')
+
+    if not file_url and not file:
+        return jsonify({"error": "Either file or file URL is required"}), 400
+
+    # If file was uploaded, save it to a folder and generate a URL
+    if file:
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+        file_url = f"/static/avatars/{filename}"  # or wherever you're serving from
 
     scan = MedicalUpload(
         user_id=user_id,
-        file_url=data["file_url"],
-        notes=data.get("notes", ""),
-        uploaded_at=datetime.utcnow()
+        file_url=file_url,
+        notes=notes,
+        uploaded_at=datetime.utcnow(),
+        doctor_id=doctor_id
     )
     db.session.add(scan)
     db.session.commit()
