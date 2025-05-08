@@ -9,7 +9,6 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from werkzeug.exceptions import Unauthorized
 from middleware.auth import role_required
 from utils.email_utils import send_email
-import traceback
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
