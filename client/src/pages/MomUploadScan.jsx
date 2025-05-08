@@ -116,7 +116,7 @@ export default function MomUploadScan() {
           ))}
         </select> */}
         <select
-          className="w-full px-4 py-2 border rounded bg-cyan text-black"
+          className="w-full px-4 py-2 border rounded bg-gray-200 text-black"
           value={selectedDoctor}
           onChange={(e) => setSelectedDoctor(e.target.value)}
           required

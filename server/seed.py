@@ -12,7 +12,9 @@ with app.app_context():
     admin = User(email="admin@mama.africa", password_hash="hashed_admin", role="admin")
     db.session.add(admin)
     db.session.commit()
+    print("✅ Seeded admin user.")
 
+    
     # 2. HEALTH SPECIALISTS
     specialists_data = [
         {
@@ -108,7 +110,8 @@ with app.app_context():
         specialist_users.append(user)
 
     db.session.commit()
-
+    print(f"✅ Seeded {len(specialist_users)} specialists.")
+    
     # 3. ARTICLES for each specialist
     sample_articles = [
         ("Nutrition Tips During Pregnancy", "Pregnancy"),
@@ -136,6 +139,7 @@ with app.app_context():
 
     db.session.add_all(articles)
     db.session.commit()
+    print(f"✅ Seeded {len(articles)} articles.")
 
     # 3. MUMS
     mums = [
@@ -160,7 +164,8 @@ with app.app_context():
 
     db.session.add_all(mum_profiles)
     db.session.commit()
-
+    print(f"✅ Seeded {len(mum_profiles)} mum profiles.")
+    
     # 4. PREGNANCY DETAILS
     pregnancy_records = [
         (mum_users[0].id, 8),
@@ -184,7 +189,8 @@ with app.app_context():
         )
     db.session.add_all(pregnancies)
     db.session.commit()
-
+    print(f"✅ Seeded {len(pregnancies)} pregnancies.")
+    
     # 5. MEDICAL UPLOADS
     uploads = [
         MedicalUpload(user_id=user.id, file_url=f"/uploads/scan_week{preg.current_week}.jpg", file_type="ultrasound", notes=f"Scan for week {preg.current_week}") 
@@ -226,7 +232,7 @@ with app.app_context():
 
     db.session.add_all(posts)
     db.session.commit()
-
+    print(f"✅ Seeded {len(posts)} posts.")
    
 
     # 8. COMMENTS (on Posts)
@@ -246,7 +252,7 @@ with app.app_context():
 
     db.session.add_all(comments)
     db.session.commit()
-
+    print(f"✅ Seeded {len(comments)} comments.")
     # 9. QUESTIONS
     questions = []
     sample_questions = [
@@ -264,14 +270,16 @@ with app.app_context():
                 user_id=mum_users[idx % len(mum_users)].id,
                 question_text=q_text,
                 is_anonymous=bool(idx % 2),
-                answered_by=random.choice(specialist_users).id,
+                # answered_by=random.choice(specialist_users).id,
+                doctor_id=random.choice(specialist_users).id,
                 answer_text=a_text
             )
         )
 
     db.session.add_all(questions)
     db.session.commit()
-
+    print(f"✅ Seeded {len(questions)} questions.")
+    
     # 10. CLINICS
     clinics = [
         Clinic(
@@ -296,7 +304,8 @@ with app.app_context():
 
     db.session.add_all(clinics)
     db.session.commit()
-
+    print(f"✅ Seeded {len(clinics)} clinics.")
+    
     # 11. COMMUNITIES
     communities = [
         Community(
@@ -353,7 +362,7 @@ with app.app_context():
 
     db.session.add_all(communities)
     db.session.commit()
-    
+    print(f"✅ Seeded {len(communities)} communities.")
     #12 Nutrion Blog
     sample_blogs = [
     # Seasonal Blogs
@@ -470,7 +479,7 @@ with app.app_context():
 
     db.session.bulk_save_objects(sample_blogs)
     db.session.commit()
-
+    print(f"✅ Seeded {len(sample_blogs)} nutrition blogs.")
     # 13. MESSAGES
     messages = []
 
@@ -496,7 +505,8 @@ with app.app_context():
 
     db.session.add_all(messages)
     db.session.commit() 
-
+    print(f"✅ Seeded {len(messages)} messages.")
+    
     # 13. BABY WEEK UPDATES
     baby_updates = [
         BabyWeekUpdate(
@@ -546,7 +556,8 @@ with app.app_context():
         )
     ]
     db.session.add_all(baby_updates)
-
+    db.session.commit()
+    print(f"✅ Seeded {len(baby_updates)} baby_updates.")
     # 14. TOPICS + FOLLOWED TOPICS
     topics = [
         Topic(name="Nutrition during 2nd trimester", description="Focus on iron and protein-rich foods."),
@@ -555,7 +566,7 @@ with app.app_context():
     ]
     db.session.add_all(topics)
     db.session.commit()
-
+    print(f"✅ Seeded {len(topics)} topics.")
     # Link mums to topics if they exist
     if len(mum_users) >= 3:
         mum_users[0].followed_topics.append(topics[0])
@@ -573,8 +584,9 @@ with app.app_context():
             reviewed=False
         )
         db.session.add(flagged)
-        db.session.commit()
-
+    db.session.commit()
+    print(f"✅ Seeded flagged posts.")
+    
     # 16. SHARED CONTENT
     if len(articles) > 0:
         share = SharedContent(
@@ -586,7 +598,7 @@ with app.app_context():
         )
         db.session.add(share)
     db.session.commit()
-    
+    print(f"✅ Seeded shares.")
     # 17. REMINDERS (based on pregnancy week)
     def create_standard_pregnancy_reminders(user_id, lmp):
         return [
@@ -628,20 +640,7 @@ with app.app_context():
         reminders += create_static_reminders(mum.id, base)
         reminders += create_custom_manual_reminders(mum.id)
 
-    # # Optional: Add reminders for test user 18 (if not included above)
-    # test_user = User.query.get(18)
-    # test_preg = PregnancyDetail.query.filter_by(user_id=18).first()
-
-    # if test_user and test_preg:
-    #     print(f"Adding extra test reminders for user 18 ({test_user.email})")
-    #     lmp = test_preg.last_period_date
-    #     base = datetime.today().date()
-
-    #     reminders += create_standard_pregnancy_reminders(18, lmp)
-    #     reminders += create_static_reminders(18, base)
-    #     reminders += create_custom_manual_reminders(18)
-
-    # --- Save all reminders ---
+        # --- Save all reminders ---
     db.session.bulk_save_objects(reminders)
     db.session.commit()
     print(f"✅ Seeded {len(reminders)} reminders.")
@@ -653,7 +652,7 @@ with app.app_context():
     ]
     db.session.add_all(verifications)
     db.session.commit()
-
+    print(f"✅ Seeded {len(verifications)} verifications.")
     # 19. NOTIFICATIONS (new messages and scan reminders)
     notifications = []
 
@@ -673,7 +672,7 @@ with app.app_context():
 
     db.session.add_all(notifications)
     db.session.commit()
-    
+    print(f"✅ Seeded {len(notifications)} notifications.")
     # 20. CERTIFICATIONS (for all specialists)
     certifications = [
         Certification(
@@ -686,6 +685,6 @@ with app.app_context():
     ]
     db.session.add_all(certifications)
     db.session.commit()
-
+    print(f"✅ Seeded {len(certifications)} certifications.")
 
     print("✅ Database seeded successfully.")
