@@ -17,6 +17,8 @@ const Admin = () => {
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('mum');
+  const [newUserRegion, setNewUserRegion] = useState('');
+  const [newUserLicenseNumber, setNewUserLicenseNumber] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,6 +88,8 @@ const Admin = () => {
           name: newUserName,
           email: newUserEmail,
           role: newUserRole,
+          region: newUserRegion,
+          license_number: newUserLicenseNumber,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -209,6 +213,20 @@ const Admin = () => {
                 <option value="health_pro">Health Professional</option>
                 <option value="admin">Admin</option>
               </select>
+              <input
+                type="text"
+                placeholder="Region"
+                className="border p-2 rounded w-full mb-4 text-gray-800"
+                value={newUserRegion}
+                onChange={(e) => setNewUserRegion(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="License Number"
+                className="border p-2 rounded w-full mb-4 text-gray-800"
+                value={newUserLicenseNumber}
+                onChange={(e) => setNewUserLicenseNumber(e.target.value)}
+              />
               <div className="flex justify-end gap-4">
                 <button
                   type="submit"
