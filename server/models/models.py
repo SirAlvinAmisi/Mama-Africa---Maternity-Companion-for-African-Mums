@@ -49,7 +49,7 @@ class User(db.Model):
     notifications = db.relationship("Notification", backref="user", cascade="all, delete-orphan")
     verification_requests = db.relationship("VerificationRequest", backref="user", cascade="all, delete-orphan")
     
-    joined_communities = db.relationship("Community", secondary=community_members, back_populates="members")
+    communities = db.relationship("Community", secondary=community_members, back_populates="members")
     followed_topics = db.relationship("Topic", secondary=mum_topic_follow, back_populates="followers")
 
 class Profile(db.Model):
@@ -157,7 +157,7 @@ class Community(db.Model):
     status = db.Column(db.String(50), default="pending")
 
     posts = db.relationship('Post', backref='community', cascade="all, delete-orphan")
-    members = db.relationship('User', secondary=community_members, back_populates="joined_communities")
+    members = db.relationship('User', secondary=community_members, back_populates="communities")
 
 class Topic(db.Model):
     id = db.Column(Integer, primary_key=True)

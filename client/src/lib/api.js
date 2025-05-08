@@ -10,7 +10,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -320,9 +320,22 @@ export const getTrimesterCommunities = async (trimester) => {
   return response.data;
 };
 
+// export const getJoinedCommunities = async () => {
+//   const response = await api.get('/communities/joined');
+//   return response.data;
+// };
 export const getJoinedCommunities = async () => {
-  const response = await api.get('/communities/joined');
+  const token = localStorage.getItem("access_token");
+  const response = await api.get('/mums/communities/joined', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
   return response.data;
 };
+
+api.leaveCommunity = leaveCommunity;
+api.joinCommunity = joinCommunity;
+api.getJoinedCommunities = getJoinedCommunities;
 
 export default api;

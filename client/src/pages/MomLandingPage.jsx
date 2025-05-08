@@ -3,6 +3,7 @@ import axios from 'axios';
 import MomPage from "./MomPage";
 import MomUploadScan from "./MomUploadScan";
 import MomReminders from "./MomReminders";
+import PopularGroups from '../components/PopularGroups';
 import Topics from "./Topics";
 import { getRandomWeeklyUpdate, getWeeklyUpdateByDate } from '../utils/weeklyUpdateHelper';
 import Notification  from '../components/Notification';
@@ -23,6 +24,29 @@ export default function MomLandingPage() {
   const [groups, setGroups] = useState([]);
   const token = localStorage.getItem('access_token');
 
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+  
+        const res = await axios.get("http://localhost:5000/mums/communities/joined", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+  
+        console.log("✅ Joined groups fetched:", res.data); // optional debug
+        setGroups(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching joined communities:", err);
+      }
+    };
+  
+    if (activeTab === 'groups') {
+      fetchGroups();  // ✅ This was missing!
+    }
+  }, [activeTab, token]);
+  
+    
   
   useEffect(() => {
     if (activeTab === 'weekly') {
@@ -215,10 +239,11 @@ export default function MomLandingPage() {
 
       {activeTab === 'groups' && (
         <section>
-          <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">Mum Groups</h3>
-          <p className="text-gray-600">You can explore communities here.</p>
-          
+          <h3 className="text-lg sm:text-xl md:text-2xl  text-gray-800 mb-4 font-medium">Groups you have Joined</h3>
+          {/* <p className="text-gray-600">You can explore communities here.</p> */}
+          <PopularGroups groups={groups} setGroups={setGroups}/>
         </section>
+        
       )}
 
       {activeTab === 'notifications' && (

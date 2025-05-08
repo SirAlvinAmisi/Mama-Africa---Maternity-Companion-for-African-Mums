@@ -72,7 +72,9 @@ export default function MomReminders() {
   };
 
   return (
-    <div>
+    // <div className="bg-cyan-600 text-black p-6 rounded shadow-xl w-full max-w-md mx-auto mt-10">
+    <div className="bg-cyan-600 text-black p-4 sm:p-6 rounded shadow-xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto mt-10">
+  
       {/* <Calendar
         userType="mom"
         events={list}
@@ -115,7 +117,7 @@ export default function MomReminders() {
       <h3 className="text-lg font-bold text-cyan mt-6 mb-2">📋 Upcoming Reminders</h3>
       {list.length ? (
         list.map((r, i) => (
-          <div key={i} className="mb-3 p-4 border-l-4 border-blue-500 bg-blue-50 rounded shadow">
+          <div key={i} className="mb-3 p-4 border-l-4 border-blue-500 bg-cyan-300 rounded shadow">
             <p className="font-medium text-blue-800">{new Date(r.date).toLocaleDateString()}</p>
             <p>{r.text}</p>
           </div>
