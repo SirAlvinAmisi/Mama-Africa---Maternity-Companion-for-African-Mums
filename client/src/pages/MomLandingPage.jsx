@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import MomPage from "./MomPage";
-import MomPregnancy from "./MomPregnancy";
-import QuestionCard from '../components/posts/QuestionCard';
 import MomUploadScan from "./MomUploadScan";
 import MomReminders from "./MomReminders";
-import MomCalendar from "../components/Calendar/MomCalendar";
-import PopularGroups from '../components/PopularGroups';
+import Topics from "./Topics";
 import { getRandomWeeklyUpdate, getWeeklyUpdateByDate } from '../utils/weeklyUpdateHelper';
 import Notification  from '../components/Notification';
+import MomAskQuestion from './MomAskQuestion';
 
 export default function MomLandingPage() {
   const [formData, setFormData] = useState({
@@ -194,17 +192,8 @@ export default function MomLandingPage() {
 
       {activeTab === 'questions' && (
         <section>
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-900 mb-4">Ask the Community / Experts</h3>
-          
-          <textarea
-            placeholder="Ask your question here..."
-            value={question}
-            onChange={e => setQuestion(e.target.value)}
-            className="w-full p-3 border rounded text-black bg-cyan-100"
-          />
-          <button onClick={handleQuestionSubmit} className="mt-2 bg-cyan-600 text-white py-2 px-4 rounded hover:bg-cyan-700">
-            Submit Question
-          </button>
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-900 mb-4">Ask an Experts</h3>
+          <MomAskQuestion />
         </section>
       )}
 
@@ -212,6 +201,7 @@ export default function MomLandingPage() {
         <section>
           <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Follow Topics by Trimester</h3>
           <p className="text-gray-600">Coming soon: personalized topic suggestions based on your trimester.</p>
+          <Topics />
         </section>
       )}
 

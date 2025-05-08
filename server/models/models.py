@@ -40,7 +40,7 @@ class User(db.Model):
     comments = db.relationship("Comment", backref="user", cascade="all, delete-orphan")
     reminders = db.relationship("Reminder", backref="user", cascade="all, delete-orphan")
     questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', cascade="all, delete-orphan")
-    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.answered_by', cascade="all, delete-orphan")
+    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.doctor_id', cascade="all, delete-orphan")
     clinics = db.relationship("Clinic", backref="recommender", cascade="all, delete-orphan")
     messages_sent = db.relationship("Message", foreign_keys='Message.sender_id', backref="sender", cascade="all, delete-orphan")
     messages_received = db.relationship("Message", foreign_keys='Message.receiver_id', backref="receiver", cascade="all, delete-orphan")
@@ -76,7 +76,8 @@ class PregnancyDetail(db.Model):
 class Post(db.Model):
     id = db.Column(Integer, primary_key=True)
     author_id = db.Column(Integer, ForeignKey('user.id'))
-    community_id = db.Column(Integer, ForeignKey('community.id'))
+    # community_id = db.Column(Integer, ForeignKey('community.id'))
+    community_id = db.Column(Integer, db.ForeignKey('community.id'), nullable=True)
     title = db.Column(String(255))
     content = db.Column(Text)
     media_url = db.Column(String(200))
@@ -109,11 +110,12 @@ class Comment(db.Model):
 class Question(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
+    doctor_id = db.Column(Integer, ForeignKey('user.id'))  # doctor the question is directed to
     question_text = db.Column(Text)
     is_anonymous = db.Column(Boolean, default=False)
-    answered_by = db.Column(Integer, ForeignKey('user.id'))
     answer_text = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
+
 
 # --- Supplementary ---
 class MedicalUpload(db.Model):

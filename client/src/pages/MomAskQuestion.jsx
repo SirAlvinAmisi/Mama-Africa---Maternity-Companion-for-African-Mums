@@ -1,44 +1,153 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function MomAskQuestion() {
-  const [q, setQ]         = useState('');
-  const [anon, setAnon]   = useState(false);
-  const [msg, setMsg]     = useState('');
-  const token = localStorage.token;
+  const [questionText, setQuestionText] = useState('');
+  const [anon, setAnon] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState('');
+  const [doctors, setDoctors] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [msg, setMsg] = useState('');
 
-  const submit = async e => {
-    e.preventDefault();
+  // const token = localStorage.token;
+  const token = localStorage.getItem("access_token");
+
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    withCredentials: true
+  };
+
+  useEffect(() => {
+    fetchDoctors();
+    fetchQuestions();
+  }, []);
+
+  const fetchDoctors = async () => {
     try {
-      await axios.post('http://localhost:5000/mums/questions',
-        { question_text: q, is_anonymous: anon },
-        { headers:{ Authorization:`Bearer ${token}` } }
-      );
-      setMsg('Question posted!');
+      const res = await axios.get('http://localhost:5000/healthpros', axiosConfig);
+      // setDoctors(res.data.doctors || []);
+      setDoctors(res.data.specialists || []); 
     } catch {
-      setMsg('Error posting');
+      setMsg('Failed to load doctors');
     }
   };
 
+  const fetchQuestions = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/mums/questions', axiosConfig);
+      setQuestions(res.data);
+    } catch {
+      setMsg('Failed to load questions');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await axios.patch('http://localhost:5000/mums/questions', {
+          question_id: editingId,
+          question_text: questionText,
+        }, axiosConfig);
+        setMsg('Question updated!');
+        setEditingId(null);
+      } else {
+        await axios.post('http://localhost:5000/mums/questions', {
+          question_text: questionText,
+          is_anonymous: anon,
+          doctor_id: selectedDoctor
+        }, axiosConfig);
+        setMsg('Question posted!');
+      }
+
+      setQuestionText('');
+      setAnon(false);
+      setSelectedDoctor('');
+      fetchQuestions();
+    } catch {
+      setMsg('Error posting or updating question');
+    }
+  };
+
+  const handleEdit = (q) => {
+    setQuestionText(q.question_text);
+    setSelectedDoctor(q.doctor_id);
+    setEditingId(q.id);
+    setAnon(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <h2 className="text-2xl font-semibold">Ask a Question</h2>
-      <textarea
-        required placeholder="Your question..."
-        className="w-full p-3 border rounded"
-        value={q} onChange={e => setQ(e.target.value)}
-      />
-      <label className="flex items-center space-x-2">
-        <input
-          type="checkbox" checked={anon}
-          onChange={e => setAnon(e.target.checked)}
+    <div className="space-y-6 bg-cyan-200 p-6 rounded-lg shadow-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <h2 className="text-2xl font-bold text-cyan-900">
+          {editingId ? 'Edit Your Question' : 'Ask a Question'}
+        </h2>
+
+        <select
+          className="w-full px-4 py-2 border rounded bg-gray-200 text-black"
+          value={selectedDoctor}
+          onChange={(e) => setSelectedDoctor(e.target.value)}
+          required
+        >
+          <option value="">Select Doctor</option>
+          {doctors.map((doc) => (
+            <option key={doc.id} value={doc.id}>
+              {doc.full_name}
+            </option>
+          ))}
+        </select>
+
+        <textarea
+          required
+          placeholder="Your question..."
+          className="w-full p-3 border rounded text-black bg-gray-200"
+          value={questionText}
+          onChange={e => setQuestionText(e.target.value)}
         />
-        <span>Post anonymously</span>
-      </label>
-      <button className="bg-blue-button text-white px-6 py-2 rounded font-inria">
-        Submit
-      </button>
-      {msg && <p className="text-green mt-2">{msg}</p>}
-    </form>
+
+        {!editingId && (
+          <label className="flex items-center space-x-2 font-bold text-cyan-900">
+            <input
+              type="checkbox"
+              checked={anon}
+              onChange={e => setAnon(e.target.checked)}
+            />
+            <span>Post anonymously</span>
+          </label>
+        )}
+
+        <button className="bg-cyan-900 text-black px-6 py-2 rounded font-bold">
+          {editingId ? 'Update Question' : 'Submit Question'}
+        </button>
+
+        {msg && <p className="text-cyan-900 font-bold mt-2">{msg}</p>}
+      </form>
+
+      <div>
+        <h3 className="text-xl mt-6 font-bold text-cyan-900">Your Previous Questions</h3>
+        <ul className="mt-2 space-y-3 bg-gray-100 p-4 rounded-lg">
+          {questions.map(q => (
+            <li key={q.id} className="border p-3 rounded bg-cyan-500 text-black">
+              <p><strong>To:</strong> {q.doctor_name}</p>
+              <p><strong>Q:</strong> {q.question_text}</p>
+              <p><strong>A:</strong> {q.answer_text || "Not answered yet."}</p>
+              {!q.answer_text && (
+                <button
+                  onClick={() => handleEdit(q)}
+                  className="mt-2 text-blue-600 underline text-sm"
+                >
+                  Edit
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

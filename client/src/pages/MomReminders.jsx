@@ -73,12 +73,20 @@ export default function MomReminders() {
 
   return (
     <div>
-      <Calendar
+      {/* <Calendar
         userType="mom"
         events={list}
         onDateSelect={handleDateClick}
         pregnancyInfo={pregnancyInfo}
+      /> */}
+      <Calendar
+        userType="mom"
+        events={list}
+        setEvents={setList} // ✅ Add this!
+        onDateSelect={handleDateClick}
+        pregnancyInfo={pregnancyInfo}
       />
+
 
       <Modal
         isOpen={isModalOpen}

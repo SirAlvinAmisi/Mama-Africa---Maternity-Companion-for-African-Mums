@@ -14,6 +14,8 @@ export default function CalculatorResults({ trigger }) {
   const [dueDate, setDueDate] = useState("");
   const [milestones, setMilestones] = useState([]);
   const [currentWeek, setCurrentWeek] = useState(null);
+  const [overdueMessage, setOverdueMessage] = useState("");
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +32,7 @@ export default function CalculatorResults({ trigger }) {
         const data = res.data;
         setDueDate(data.due_date);
         setCurrentWeek(data.current_week);
+        setOverdueMessage(data.overdue_message || "");
 
         const lmpDate = new Date(data.last_period_date);
         const msPerWeek = 7 * 24 * 60 * 60 * 1000;
@@ -45,9 +48,17 @@ export default function CalculatorResults({ trigger }) {
               desc: `Scheduled on ${appointment.date}`,
             };
           })
-          .filter((m) => m.week >= (data.current_week ?? 0));
+          // .filter((m) => m.week >= (data.current_week ?? 0));
+          .filter((m) => m.week >= (data.current_week ?? 0) && m.week <= 40);
           console.log("Pregnancy info response:", data);
-        setMilestones(futureMilestones);
+        // setMilestones(futureMilestones);
+        const seen = new Set();
+        const deduped = futureMilestones.filter(m => {
+          const key = `${m.week}-${m.label}`;
+          return seen.has(key) ? false : seen.add(key);
+        });
+        setMilestones(deduped);
+
       } catch (err) {
         console.error("❌ Failed to fetch results:", err);
       }
@@ -70,6 +81,11 @@ export default function CalculatorResults({ trigger }) {
       <h3 className="text-lg font-bold text-purple-900 mb-2"><strong>Results</strong></h3>
       <p className="text-lg font-semibold text-purple-900 mb-2"><strong>Estimated Due Date:</strong> {dueDate}</p>
       <p className="text-lg font-semibold text-purple-900 mb-2"><strong>Current Week:</strong> {currentWeek}</p>
+      {overdueMessage && (
+        <p className="text-red-600 font-bold mt-2">
+          {overdueMessage}
+        </p>
+      )}
 
       <h4 className="mt-4 mb-2 font-bold text-purple-900"><strong>Key Milestones:</strong></h4>
       <ul className="list-disc list-inside space-y-1 font-bold text-purple-900">
