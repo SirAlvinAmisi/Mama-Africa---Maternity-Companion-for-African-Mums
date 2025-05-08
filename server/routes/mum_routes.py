@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post, Notification, Nutrition
-from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request
+from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request, jwt_required
 from utils.email_utils import send_email
 from middleware.auth import role_required
 from datetime import datetime, timedelta
@@ -196,7 +196,6 @@ def delete_reminder(reminder_id):
     return jsonify({"message": "Reminder deleted successfully."})
 
 # ------------------ Community Participation ------------------
-
 @mum_bp.route('/communities', methods=['GET'])
 @mum_bp.route('/communities', methods=['OPTIONS'])
 @role_required("mum")
@@ -213,6 +212,7 @@ def list_communities():
     } for c in communities])
 
 @mum_bp.route('/communities/<int:id>/join', methods=['POST'])
+@jwt_required()
 @role_required("mum")
 def join_community(id):
     if request.method == 'OPTIONS':
@@ -223,15 +223,34 @@ def join_community(id):
         return jsonify({"error": "Community not found"}), 404
 
     user = User.query.get(user_id)
+    print("📍Before join:", [c.id for c in user.communities])
     if user in community.members:
         return jsonify({"message": "Already joined"}), 200
 
     community.members.append(user)
     community.member_count += 1
     db.session.commit()
+    print("✅ After join:", [c.id for c in user.communities])
     return jsonify({"message": "Joined community successfully"})
 
+@mum_bp.route('/communities/joined', methods=['GET'])
+@jwt_required()
+@role_required('mum')
+def get_joined_communities():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    # joined = user.communities  # assuming many-to-many relationship
+    print("🎯 Joined communities:", [c.id for c in user.communities])
+    return jsonify([{
+        "id": c.id,
+        "name": c.name,
+        "description": c.description,
+        "image": c.image,
+        "member_count": c.member_count
+    } for c in user.communities])
+
 @mum_bp.route('/communities/<int:id>/leave', methods=['POST'])
+@jwt_required()   
 @role_required("mum")
 def leave_community(id):
     if request.method == 'OPTIONS':

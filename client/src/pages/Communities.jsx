@@ -1,5 +1,5 @@
 // src/pages/Communities.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -56,9 +56,81 @@ const Communities = () => {
     enabled: !!groups.length
   });
 
+  
+  // const joinMutation = useMutation({
+  //   mutationFn: async (communityId) => {
+  //     // const token = localStorage.getItem('token');
+  //     const isTokenExpired = (token) => {
+  //       try {
+  //         if (!token) return true;
+  //         const payload = JSON.parse(atob(token.split('.')[1]));
+  //         const now = Math.floor(Date.now() / 1000);
+  //         return payload.exp < now;
+  //       } catch (err) {
+  //         console.warn("Failed to decode token", err);
+  //         return true; // treat bad tokens as expired
+  //       }
+  //     };
+      
+  //     const token = localStorage.getItem("token");
+      
+  //     if (isTokenExpired(token)) {
+  //       alert("Your session has expired. Please log in again.");
+  //       localStorage.removeItem("token");
+  //       window.location.href = "/login";
+  //     }
+      
+      
+  //     console.log("🔐 Token being used:", token); // 🔍 Add this line to debug
+  
+  //     const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
+  
+  //     if (!res.ok) {
+  //       const errorText = await res.text();
+  //       console.error("❌ Join community failed:", res.status, errorText);
+  //       throw new Error('Failed to join community');
+  //     }
+  
+  //     return res.json();
+  //   },
+  //   onSuccess: () => queryClient.invalidateQueries(['communities'])
+  // });
   const joinMutation = useMutation({
     mutationFn: async (communityId) => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("access_token");
+  
+      // ✅ Only check when token exists
+      if (!token) {
+        alert("Please log in to join a community.");
+        navigate("/login");
+        return;
+      }
+  
+      // ✅ Validate token expiry
+      const isTokenExpired = (token) => {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const now = Math.floor(Date.now() / 1000);
+          return payload.exp < now;
+        } catch (err) {
+          return true;
+        }
+      };
+  
+      if (isTokenExpired(token)) {
+        alert("Your session has expired. Please log in again.");
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+  
+      // ✅ Proceed with join if token is valid
       const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
         method: 'POST',
         headers: {
@@ -66,11 +138,18 @@ const Communities = () => {
           'Content-Type': 'application/json'
         }
       });
-      if (!res.ok) throw new Error('Failed to join community');
+  
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("❌ Join community failed:", res.status, errorText);
+        throw new Error('Failed to join community');
+      }
+  
       return res.json();
     },
     onSuccess: () => queryClient.invalidateQueries(['communities'])
   });
+  
 
   const leaveMutation = useMutation({
     mutationFn: async (communityId) => {
@@ -128,14 +207,22 @@ const Communities = () => {
                   >
                     View Community
                   </button>
-                  <button
+                  {/* <button
                     onClick={() =>
                       joinMutation.mutate(group.id)
                     }
                     className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
                   >
                     Join
-                  </button>
+                  </button> */}
+                  {localStorage.getItem("access_token") && (
+                    <button
+                      onClick={() => joinMutation.mutate(group.id)}
+                      className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
+                    >
+                      Join
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
