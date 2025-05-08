@@ -23,6 +23,7 @@ class User(db.Model):
     role = db.Column(String(50), nullable=False)  # 'admin', 'health_pro', 'mum'
     is_active = db.Column(Boolean, default=True)
     created_at = db.Column(DateTime, default=datetime.utcnow)
+    is_validated = db.Column(Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -83,7 +84,7 @@ class Post(db.Model):
     media_url = db.Column(String(200))
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
-
+    is_flagged = db.Column(db.Boolean, default=False)
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
 
 class Article(db.Model):
@@ -94,11 +95,12 @@ class Article(db.Model):
     media_url = db.Column(String(200))
     category = db.Column(String(100))  # Nutrition, Mental Health...
     is_approved = db.Column(Boolean, default=False)
-    flagged = db.Column(Boolean, default=False)
+    is_flagged = db.Column(Boolean, default=False)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
     comments = db.relationship("Comment", backref="article", cascade="all, delete-orphan")
 
+    
 class Comment(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))

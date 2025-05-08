@@ -167,6 +167,44 @@ const Communities = () => {
     onSuccess: () => queryClient.invalidateQueries(['communities'])
   });
 
+  const flagPost = async (postId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/posts/${postId}/flag`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to flag post');
+      alert('Post flagged successfully');
+      queryClient.invalidateQueries(['posts']); // Refresh posts
+    } catch (error) {
+      console.error('Error flagging post:', error);
+      alert('Failed to flag post');
+    }
+  };
+
+  const flagArticle = async (articleId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/articles/${articleId}/flag`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to flag article');
+      alert('Article flagged successfully');
+      queryClient.invalidateQueries(['articles']); // Refresh articles
+    } catch (error) {
+      console.error('Error flagging article:', error);
+      alert('Failed to flag article');
+    }
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentGroups = groups.slice(indexOfFirstItem, indexOfLastItem);
@@ -196,6 +234,8 @@ const Communities = () => {
               >
                 <div>
                   <h3 className="text-xl font-semibold mb-2 text-black">{group.name}</h3>
+                  {/* Updated class for darker text */}
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{group.name}</h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {group.description?.slice(0, 120)}...
                   </p>
@@ -249,7 +289,7 @@ const Communities = () => {
         </section>
 
         {/* Posts */}
-        <PostList posts={posts} />
+        <PostList posts={posts} flagPost={flagPost} />
       </div>
 
       {/* Sidebar */}

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom'; // Needed to get the :id from URL
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+
 export const HealthProfessional = () => {
   const { id } = useParams(); // Get id from URL
   const [profile, setProfile] = useState(null);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchProfileAndArticles = async () => {
       try {
@@ -69,7 +70,6 @@ export const HealthProfessional = () => {
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/chat/${profile.id}`);
-                    // navigate(`/chat/${specialist.id}`);
                   }}
                 >
                   Chat
@@ -124,11 +124,57 @@ export const HealthProfessional = () => {
                 <p className="text-center text-gray-500 text-xl">No articles published yet.</p>
               )}
             </div>
-
           </div>
         </section>
 
+        {/* Flagged Articles Section */}
+        <section className="w-full bg-gray-100 rounded-[20px] p-12 mt-8">
+          <h2 className="font-montserrat font-medium text-[#665e5e] text-5xl mb-12 text-center">
+            Flagged Articles
+          </h2>
+          <FlaggedArticles />
+        </section>
       </main>
     </div>
   );
 };
+
+const FlaggedArticles = () => {
+  const [flaggedArticles, setFlaggedArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchFlaggedArticles = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get("http://localhost:5000/articles/flagged", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFlaggedArticles(response.data.flagged_articles || []);
+    } catch (error) {
+      console.error("Error fetching flagged articles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFlaggedArticles();
+  }, []);
+
+  if (loading) return <p>Loading flagged articles...</p>;
+  if (flaggedArticles.length === 0) return <p>No flagged articles found!</p>;
+
+  return (
+    <div className="space-y-4 bg-gray-100 p-4 rounded-lg shadow-md">
+      {flaggedArticles.map((article) => (
+        <div key={article.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
+          <h3 className="text-lg font-bold text-black">{article.title}</h3>
+          <p className="text-black">{article.content}</p>
+          <p className="text-sm text-red-600 font-semibold mt-2">🚩 This article has been flagged.</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default HealthProfessional;

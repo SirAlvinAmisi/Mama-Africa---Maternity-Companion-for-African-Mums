@@ -73,6 +73,64 @@ def delete_user(user_id):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "Server error", "details": str(e)}), 500
+    #add user
+@admin_bp.route('/admin/add_user', methods=['POST'])
+@jwt_required()
+@role_required("admin")
+def add_user():
+    data = request.get_json()
+    
+    # Validation
+    if not all([data.get('name'), data.get('email'), data.get('role')]):
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    # Check if user exists
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({"error": "User already exists"}), 400
+
+    try:
+        new_user = User(
+            email=data['email'],
+            role=data['role'],
+            is_active=True
+        )
+        db.session.add(new_user)
+        
+        # Create profile
+        profile = UserProfile(
+            user=new_user,
+            full_name=data['name'],
+            is_verified=data['role'] == 'health_pro'  # Auto-verify non-health pros
+        )
+        db.session.add(profile)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "message": "User added successfully",
+            "user_id": new_user.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# ✅ Remove Content (Post)
+@admin_bp.route('/admin/remove_content/<int:content_id>', methods=['DELETE', 'OPTIONS'])
+@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
+def remove_content(content_id):
+    if request.method == 'OPTIONS':
+        return preflight_ok()
+    if not is_admin():
+        return jsonify({"error": "Admin access only"}), 403
+
+
+    content = Post.query.get(content_id)
+    if content:
+        db.session.delete(content)
+        db.session.commit()
+        return jsonify({"message": "Content removed successfully"}), 200
+    return jsonify({"error": "Content not found"}), 404
 
 # ---------------------------- POSTS ----------------------------
 
@@ -200,3 +258,28 @@ def get_admin_stats():
         "pending_communities": Community.query.filter_by(status="pending").count(),
         "pending_verifications": VerificationRequest.query.filter_by(is_resolved=False).count()
     })
+
+@admin_bp.route('/admin/articles', methods=['GET'])
+@jwt_required()
+def get_all_articles():
+    articles = Article.query.all()  # Fetch all articles
+    return jsonify({"articles": [article.to_dict() for article in articles]}), 200
+
+
+@admin_bp.route('/admin/notifications', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_admin_notifications():
+    notifications = [
+        {
+            "type": "health_pro_request",
+            "message": "New health professional registration",
+            "user_id": 123,
+            "created_at": "2025-05-05T12:00:00Z"
+        }
+        # Add real queries here:
+        # 1. Pending health pro requests (User.query.filter_by(role="health_pro", is_verified=False))
+        # 2. Reported content
+        # 3. Pending community approvals
+    ]
+    return jsonify({"notifications": notifications})
