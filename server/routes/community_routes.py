@@ -25,6 +25,7 @@ def serialize_comment(comment):
 @jwt_required(optional=True)
 def get_communities():
     identity = get_jwt_identity()
+    print("JWT identity in /communities:", identity)
     user_id = int(identity) if identity else None
 
     communities = Community.query.all()

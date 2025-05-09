@@ -24,14 +24,11 @@ def signup():
             "health professional": "health_pro",
             "health_pro": "health_pro"
         }
-<<<<<<< HEAD
-        role = role_map.get(raw_role, raw_role)
-=======
+        # role = role_map.get(raw_role, raw_role)
         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
         
         if role == "admin":
             return jsonify({"error": "Cannot signup as admin"}), 403
->>>>>>> origin/main
 
         # Check for duplicate email
         if User.query.filter_by(email=email).first():
