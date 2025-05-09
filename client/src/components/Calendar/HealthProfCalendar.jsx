@@ -108,7 +108,7 @@
 
 // export default HealthProfCalendar;
 import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isBefore, isSameMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isBefore, isSameMonth, addMonths, subMonths } from 'date-fns';
 
 const HealthProfCalendar = ({ userId }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -192,6 +192,16 @@ const HealthProfCalendar = ({ userId }) => {
       alert("Could not save event.");
     }
   };
+
+  // Function to go to the previous month
+  const prevMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  // Function to go to the next month
+  const nextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
   
   const renderDays = () => {
     const monthStart = startOfMonth(currentMonth);
@@ -206,16 +216,18 @@ const HealthProfCalendar = ({ userId }) => {
       for (let i = 0; i < 7; i++) {
         const cloneDay = day;
         const isToday = isSameDay(cloneDay, new Date());
+        const isPast = isBefore(cloneDay, new Date().setHours(0, 0, 0, 0));
         const hasEvent = events.some(event => isSameDay(new Date(event.datetime), cloneDay));
         days.push(
           <div
             key={cloneDay}
-            className={`p-3 border text-center cursor-pointer transition rounded
+            className={`p-3 border text-center transition rounded
               ${!isSameMonth(cloneDay, monthStart) ? 'bg-gray-100 text-gray-400' : ''}
+              ${isPast ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'cursor-pointer hover:bg-purple-50'}
               ${isToday ? 'bg-purple-100 border-purple-500 font-bold' : ''}
               ${hasEvent ? 'bg-purple-200 border-purple-300' : ''}
-              hover:bg-purple-50`}
-            onClick={() => handleDayClick(cloneDay)}
+              `}
+            onClick={isPast ? undefined : () => handleDayClick(cloneDay)}
           >
             {format(cloneDay, 'd')}
           </div>
@@ -235,7 +247,28 @@ const HealthProfCalendar = ({ userId }) => {
     <div className="max-w-5xl bg-white mx-auto p-6">
       <h2 className="text-3xl font-bold text-purple-700 text-center mb-6">Health Professional Calendar</h2>
 
-      <div className="grid grid-cols-7  text-center font-bold mb-2">
+      {/* Month Navigation */}
+      <div className="flex justify-between items-center mb-4">
+        <button 
+          onClick={prevMonth}
+          className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded"
+        >
+          &lt;
+        </button>
+        
+        <h3 className="text-2xl font-bold text-cyan-900">
+          {format(currentMonth, 'MMMM yyyy')}
+        </h3>
+        
+        <button 
+          onClick={nextMonth}
+          className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded"
+        >
+          &gt;
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 text-center font-bold mb-2">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="text-purple-700 font-bold">{day}</div>
         ))}
@@ -243,7 +276,6 @@ const HealthProfCalendar = ({ userId }) => {
 
       <div className="space-y-2 text-black font-bold">{renderDays()}</div>
      
-
       {/* Modal */}
       {showModal && (
       <div className="fixed inset-0 bg-cyan-900 bg-opacity-40 flex justify-center items-center z-20">
