@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export default function QAModeration({questions, setQuestions}) {
-  // const [questions, setQuestions] = useState([]);
+export default function QAModeration({ questions, setQuestions }) {
   const [activeTab, setActiveTab] = useState('unanswered');
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +19,7 @@ export default function QAModeration({questions, setQuestions}) {
 
   const handleAnswer = (id, answer) => {
     axios.patch(`http://localhost:5000/api/questions/${id}/answer`, { answer })
-      .then(response => {
+      .then(() => {
         setQuestions(prev =>
           prev.map(q => q.id === id ? { ...q, answered: true, answer } : q)
         );
@@ -28,56 +27,68 @@ export default function QAModeration({questions, setQuestions}) {
       .catch(error => console.error("Error submitting answer", error));
   };
 
-  const filteredQuestions = questions.filter(q => 
+  const filteredQuestions = questions.filter(q =>
     activeTab === 'unanswered' ? !q.answered : q.answered
   );
 
-  if (loading) return <p className="p-6 text-gray-500">Loading questions...</p>;
+  if (loading) return <p className="p-6 text-gray-500 animate-pulse">Loading questions...</p>;
 
   return (
-    <div className="p-6 bg-cyan-100 rounded-lg shadow mt-6">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Q&A Moderation</h2>
+    <div className="p-8 bg-white rounded-2xl shadow-xl mt-6 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Q&A Moderation</h2>
 
-      <div className="flex border-b mb-4">
+      <div className="flex justify-center gap-6 mb-6 border-b pb-2">
         {['unanswered', 'answered'].map(tab => (
           <button
             key={tab}
-            className={`px-4 py-2 ${activeTab === tab ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+            className={`pb-2 text-lg font-semibold transition-all duration-300 ${
+              activeTab === tab
+                ? 'border-b-4 border-blue-600 text-blue-700'
+                : 'text-gray-500 hover:text-blue-600'
+            }`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)} ({questions.filter(q => tab === 'unanswered' ? !q.answered : q.answered).length})
+            {tab.charAt(0).toUpperCase() + tab.slice(1)} (
+            {questions.filter(q => tab === 'unanswered' ? !q.answered : q.answered).length})
           </button>
         ))}
       </div>
 
       {filteredQuestions.length > 0 ? (
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {filteredQuestions.map(q => (
-            <li key={q.id} className="p-4 border rounded">
-              <div className="flex justify-between mb-2">
+            <li key={q.id} className="p-6 bg-blue-50 rounded-xl shadow">
+              <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
                 <span className="font-medium">{q.user}</span>
-                <span className="text-sm text-gray-500">{q.date}</span>
+                <span>{q.date}</span>
               </div>
-              <p className="mb-3">{q.question}</p>
+              <p className="text-lg text-gray-800 mb-4">{q.question}</p>
 
               {q.answered ? (
-                <div className="bg-green-50 p-3 rounded">
-                  <p className="font-medium text-green-800">Your Answer:</p>
-                  <p>{q.answer}</p>
+                <div className="bg-green-100 p-4 rounded-md border border-green-300">
+                  <p className="font-medium text-green-700 mb-1">Your Answer:</p>
+                  <p className="text-gray-800">{q.answer}</p>
                 </div>
               ) : (
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAnswer(q.id, e.target.answer.value);
-                }} className="mt-2">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAnswer(q.id, e.target.answer.value);
+                    e.target.reset();
+                  }}
+                  className="mt-2"
+                >
                   <textarea
                     name="answer"
                     rows="3"
-                    className="w-full border rounded p-2 mb-2"
+                    className="w-full border border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                     placeholder="Type your professional answer..."
                     required
                   />
-                  <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">
+                  <button
+                    type="submit"
+                    className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow"
+                  >
                     Submit Answer
                   </button>
                 </form>
@@ -86,107 +97,12 @@ export default function QAModeration({questions, setQuestions}) {
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500">
-          {activeTab === 'unanswered' ? 'No unanswered questions' : 'No answered questions yet'}
+        <p className="text-center text-gray-500 text-lg mt-6">
+          {activeTab === 'unanswered'
+            ? 'No unanswered questions at the moment.'
+            : 'No answered questions yet.'}
         </p>
       )}
     </div>
   );
 }
-
-// import React, { useState } from 'react';
-
-// const mockQuestions = [
-//   {
-//     id: 1,
-//     user: "Mary Karanja.",
-//     question: "Is it normal to have back pain in the first trimester?",
-//     date: "2023-10-12",
-//     answered: false
-//   },
-//   {
-//     id: 2,
-//     user: "Fatuma Daudi.",
-//     question: "What foods should I avoid during pregnancy?",
-//     date: "2023-10-10",
-//     answered: true,
-//     answer: "Avoid raw fish, unpasteurized dairy, and limit caffeine to 200mg per day."
-//   }
-// ];
-
-// export default function QAModeration() {
-//   const [questions, setQuestions] = useState(mockQuestions);
-//   const [activeTab, setActiveTab] = useState('unanswered');
-
-//   const filteredQuestions = questions.filter(q => 
-//     activeTab === 'unanswered' ? !q.answered : q.answered
-//   );
-
-//   const handleAnswer = (id, answer) => {
-//     setQuestions(questions.map(q => 
-//       q.id === id ? { ...q, answered: true, answer } : q
-//     ));
-//   };
-
-//   return (
-//     <div className="p-6 bg-white rounded-lg shadow mt-6">
-//       <h2 className="text-2xl font-bold text-gray-800 mb-4">Q&A Moderation</h2>
-      
-//       <div className="flex border-b mb-4">
-//         <button 
-//           className={`px-4 py-2 ${activeTab === 'unanswered' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
-//           onClick={() => setActiveTab('unanswered')}
-//         >
-//           Unanswered ({questions.filter(q => !q.answered).length})
-//         </button>
-//         <button 
-//           className={`px-4 py-2 ${activeTab === 'answered' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
-//           onClick={() => setActiveTab('answered')}
-//         >
-//           Answered ({questions.filter(q => q.answered).length})
-//         </button>
-//       </div>
-
-//       {filteredQuestions.length > 0 ? (
-//         <ul className="space-y-4">
-//           {filteredQuestions.map(q => (
-//             <li key={q.id} className="p-4 border rounded">
-//               <div className="flex justify-between mb-2">
-//                 <span className="font-medium">{q.user}</span>
-//                 <span className="text-sm text-gray-500">{q.date}</span>
-//               </div>
-//               <p className="mb-3">{q.question}</p>
-              
-//               {q.answered ? (
-//                 <div className="bg-green-50 p-3 rounded">
-//                   <p className="font-medium text-green-800">Your Answer:</p>
-//                   <p>{q.answer}</p>
-//                 </div>
-//               ) : (
-//                 <form onSubmit={(e) => {
-//                   e.preventDefault();
-//                   handleAnswer(q.id, e.target.answer.value);
-//                 }} className="mt-2">
-//                   <textarea
-//                     name="answer"
-//                     rows="3"
-//                     className="w-full border rounded p-2 mb-2"
-//                     placeholder="Type your professional answer..."
-//                     required
-//                   />
-//                   <button type="submit" className="px-3 py-1 bg-green-600 text-white rounded">
-//                     Submit Answer
-//                   </button>
-//                 </form>
-//               )}
-//             </li>
-//           ))}
-//         </ul>
-//       ) : (
-//         <p className="text-gray-500">
-//           {activeTab === 'unanswered' ? 'No unanswered questions' : 'No answered questions yet'}
-//         </p>
-//       )}
-//     </div>
-//   );
-// }
