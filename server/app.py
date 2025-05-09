@@ -48,8 +48,9 @@ import os
 
 from models import db
 from routes import register_routes
-from extensions import socketio, mail, migrate  # ✅ now import migrate here
+from extensions import socketio, mail, migrate  
 from utils.email_utils import init_mail
+
 
 load_dotenv()
 
@@ -58,15 +59,21 @@ def create_app():
     app.config.from_object('config.Config')
 
     db.init_app(app)
-    migrate.init_app(app, db)  # ✅ THIS is where we initialize it with app and db
+    migrate.init_app(app, db)
     JWTManager(app)
     mail.init_app(app)
     socketio.init_app(app)
 
+    # ✅ Updated CORS configuration
     CORS(app, supports_credentials=True, resources={
         r"/*": {
+<<<<<<< HEAD
+            "origins": ["http://localhost:5173","http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+            "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
+=======
             "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
             "methods": ["GET", "POST",  "OPTIONS", "DELETE", "PATCH"],
+>>>>>>> origin/main
             "allow_headers": ["Authorization", "Content-Type"]
         }
     })
@@ -77,4 +84,5 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
+    # app.run(debug=True)
     socketio.run(app, debug=True)

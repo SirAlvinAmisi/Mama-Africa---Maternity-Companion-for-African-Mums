@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 # from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 # from functools import wraps
 # from flask import jsonify
@@ -17,6 +19,7 @@
 #             return f(*args, **kwargs)
 #         return wrapper
 #     return decorator
+>>>>>>> origin/main
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from functools import wraps
 from flask import jsonify, request

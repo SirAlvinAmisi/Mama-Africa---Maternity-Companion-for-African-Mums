@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app as app
+from flask import Blueprint, request, jsonify, current_app as app, send_from_directory
 from models import db, User, Profile
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -24,10 +24,14 @@ def signup():
             "health professional": "health_pro",
             "health_pro": "health_pro"
         }
+<<<<<<< HEAD
+        role = role_map.get(raw_role, raw_role)
+=======
         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
         
         if role == "admin":
             return jsonify({"error": "Cannot signup as admin"}), 403
+>>>>>>> origin/main
 
         # Check for duplicate email
         if User.query.filter_by(email=email).first():
@@ -84,11 +88,9 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
-            # Use the exact stored role directly
             access_token = create_access_token(
                 identity=str(user.id),
-                # identity=user.id,
-                additional_claims={"role": user.role}  # Now correct
+                additional_claims={"role": user.role}
             )
             return jsonify(access_token=access_token), 200
 
@@ -100,6 +102,7 @@ def login():
 
     except Exception as e:
         return jsonify({"error": "Login failed", "details": str(e)}), 500
+
 
 # me Route
 @auth_bp.route('/me', methods=['GET'])
@@ -115,6 +118,7 @@ def get_me():
     parts = full_name.split()
 
     return jsonify({
+        "user_id": user.id,
         "email": user.email,
         "role": user.role,
         "created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -131,6 +135,8 @@ def get_me():
         }
     })
 
+
+# Update Profile
 @auth_bp.route('/profile/update', methods=['PATCH'])
 @jwt_required()
 def update_profile():
@@ -160,3 +166,9 @@ def update_profile():
     except Exception as e:
         print("❌ Error updating profile:", e)
         return jsonify({"error": "Server error", "details": str(e)}), 500
+
+
+# Serve uploaded files (images, videos, etc.)
+@auth_bp.route('/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

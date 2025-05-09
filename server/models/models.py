@@ -15,6 +15,16 @@ mum_topic_follow = db.Table('mum_topic_follow',
     db.Column('topic_id', db.Integer, db.ForeignKey('topic.id'))
 )
 
+post_likes = db.Table('post_likes',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'))
+)
+
+comment_likes = db.Table('comment_likes',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('comment_id', db.Integer, db.ForeignKey('comment.id'))
+)
+
 # --- User & Profile ---
 class User(db.Model):
     id = db.Column(Integer, primary_key=True)
@@ -79,6 +89,18 @@ class PregnancyDetail(db.Model):
 
 # --- Content ---
 class Post(db.Model):
+<<<<<<< HEAD
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    title = db.Column(db.String(255))  # Optional for caption
+    content = db.Column(db.Text)       # Body or additional text
+    media_url = db.Column(db.String(255))  # Image or video path
+    media_type = db.Column(db.String(50))  # 'image', 'video', etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_approved = db.Column(db.Boolean, default=True)  # Instant publish for now
+
+=======
     id = db.Column(Integer, primary_key=True)
     author_id = db.Column(Integer, ForeignKey('user.id'))
     community_id = db.Column(Integer, db.ForeignKey('community.id'), nullable=True)
@@ -88,7 +110,9 @@ class Post(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
     is_flagged = db.Column(db.Boolean, default=False)
+>>>>>>> origin/main
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
+    likers = db.relationship("User", secondary="post_likes", backref="liked_posts")
 
 class Article(db.Model):
     id = db.Column(Integer, primary_key=True)
@@ -108,10 +132,26 @@ class Comment(db.Model):
     user_id = db.Column(Integer, ForeignKey('user.id'))
     post_id = db.Column(Integer, ForeignKey('post.id'))
     article_id = db.Column(Integer, ForeignKey('article.id'))
+    parent_comment_id = db.Column(Integer, db.ForeignKey('comment.id'))  # used for replies
     content = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
+<<<<<<< HEAD
+    replies = db.relationship(
+        "Comment",
+        backref=db.backref('parent', remote_side=[id]),
+        cascade="all, delete-orphan"
+    )
+    likers = db.relationship("User", secondary=comment_likes, backref="liked_comments")
+
+    @property
+    def parent_id(self):
+        return self.parent_comment_id
+
+
+=======
 # --- Updated Question Model ---
+>>>>>>> origin/main
 class Question(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
