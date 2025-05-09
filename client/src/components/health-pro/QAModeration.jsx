@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export default function QAModeration() {
-  const [questions, setQuestions] = useState([]);
+export default function QAModeration({questions, setQuestions}) {
+  // const [questions, setQuestions] = useState([]);
   const [activeTab, setActiveTab] = useState('unanswered');
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +35,7 @@ export default function QAModeration() {
   if (loading) return <p className="p-6 text-gray-500">Loading questions...</p>;
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow mt-6">
+    <div className="p-6 bg-cyan-100 rounded-lg shadow mt-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Q&A Moderation</h2>
 
       <div className="flex border-b mb-4">

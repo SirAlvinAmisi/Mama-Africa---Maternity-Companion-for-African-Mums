@@ -25,6 +25,9 @@ def signup():
             "health_pro": "health_pro"
         }
         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
+        
+        if role == "admin":
+            return jsonify({"error": "Cannot signup as admin"}), 403
 
         # Check for duplicate email
         if User.query.filter_by(email=email).first():
@@ -41,7 +44,7 @@ def signup():
             "region": request.form.get('county')
         }
 
-        if role == 'health_pro' and 'license_number' in request.form:
+        if role == 'health_pro': # and 'license_number' in request.form:
             profile_data["license_number"] = request.form['license_number']
 
         user.profile = Profile(**profile_data)

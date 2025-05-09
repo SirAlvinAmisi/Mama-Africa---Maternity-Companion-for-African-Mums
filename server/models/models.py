@@ -37,8 +37,10 @@ class User(db.Model):
     articles = db.relationship("Article", backref="author", cascade="all, delete-orphan")
     comments = db.relationship("Comment", backref="user", cascade="all, delete-orphan")
     reminders = db.relationship("Reminder", backref="user", cascade="all, delete-orphan")
-    questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', cascade="all, delete-orphan")
-    answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.doctor_id', cascade="all, delete-orphan")
+    # questions = db.relationship("Question", backref="asker", foreign_keys='Question.user_id', cascade="all, delete-orphan")
+    questions = db.relationship("Question", back_populates="asker", foreign_keys='Question.user_id', cascade="all, delete-orphan")
+    answered_questions = db.relationship("Question", back_populates="responder", foreign_keys='Question.doctor_id', cascade="all, delete-orphan")
+    # answered_questions = db.relationship("Question", backref="responder", foreign_keys='Question.doctor_id', cascade="all, delete-orphan")
     clinics = db.relationship("Clinic", backref="recommender", cascade="all, delete-orphan")
     messages_sent = db.relationship("Message", foreign_keys='Message.sender_id', backref="sender", cascade="all, delete-orphan")
     messages_received = db.relationship("Message", foreign_keys='Message.receiver_id', backref="receiver", cascade="all, delete-orphan")
@@ -123,6 +125,10 @@ class Question(db.Model):
     # Relationships
     asker = db.relationship('User', foreign_keys=[user_id])
     responder = db.relationship('User', foreign_keys=[doctor_id])
+    
+    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # user = db.relationship('User', back_populates='questions')
+
 
 # --- Supplementary ---
 class MedicalUpload(db.Model):
@@ -146,13 +152,26 @@ class Certification(db.Model):
     uploaded_at = db.Column(DateTime, default=datetime.utcnow)
     is_verified = db.Column(Boolean, default=False)
 
+# class Clinic(db.Model):
+#     id = db.Column(Integer, primary_key=True)
+#     name = db.Column(String(150))
+#     location = db.Column(String(150))
+#     contact_info = db.Column(String(150))
+#     recommended_by = db.Column(Integer, ForeignKey('user.id'))
 class Clinic(db.Model):
     id = db.Column(Integer, primary_key=True)
     name = db.Column(String(150))
     location = db.Column(String(150))
     contact_info = db.Column(String(150))
-    recommended_by = db.Column(Integer, ForeignKey('user.id'))
+    country = db.Column(String(100))
+    region = db.Column(String(50))
+    specialty = db.Column(String(100))
+    languages = db.Column(JSON)  # Store list of strings
+    services = db.Column(JSON)   # Store list of services
+    recommended = db.Column(Boolean, default=False)
+    recommended_by = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+    
 # --- Community, Topics, Flags ---
 class Community(db.Model):
     id = db.Column(Integer, primary_key=True)
