@@ -15,6 +15,7 @@ from .flag_routes import flag_bp
 from .share_routes import share_bp
 from .analytics_routes import analytics_bp
 from .notification_routes import notification_bp
+from .post_routes import post_bp
 def register_routes(app):
     app.register_blueprint(base_bp)
     app.register_blueprint(auth_bp)
@@ -34,3 +35,4 @@ def register_routes(app):
     app.register_blueprint(share_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(notification_bp)
+    app.register_blueprint(post_bp)

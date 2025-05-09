@@ -4,7 +4,7 @@ from models import db, User, Article, Clinic, Question, Profile, VerificationReq
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from middleware.auth import role_required
 from utils.email_utils import send_email
-from extensions import socketio
+# from extensions import socketio
 
 
 health_bp = Blueprint('health_pro', __name__)
