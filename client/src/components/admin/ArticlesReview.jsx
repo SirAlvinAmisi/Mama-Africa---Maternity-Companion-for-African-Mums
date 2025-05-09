@@ -48,10 +48,10 @@ export default function ArticlesReview() {
   if (articles.length === 0) return <p>No articles available for review.</p>;
 
   return (
-    <div className="space-y-4 bg-cyan-200 p-4 rounded-lg shadow-md">
+    <div className="space-y-4 bg-cyan-200 text-black p-4 rounded-lg shadow-md">
       {articles.map((article) => (
-        <div key={article.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
-          <h3 className="text-lg font-bold text-gray-800">{article.title}</h3>
+        <div key={article.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-cyan-500">
+          <h3 className="text-lg font-bold text-black">{article.title}</h3>
           <p className="text-gray-600">{article.content}</p>
           <div className="flex justify-between items-center mt-3">
             <p className="text-sm text-gray-700">
