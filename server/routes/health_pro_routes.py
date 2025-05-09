@@ -4,8 +4,8 @@ from models import db, User, Article, Clinic, Question, Profile, VerificationReq
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from middleware.auth import role_required
 from utils.email_utils import send_email
-# from extensions import socketio
-
+from extensions import socketio
+from dateutil.parser import isoparse
 
 health_bp = Blueprint('health_pro', __name__)
 
@@ -76,9 +76,11 @@ def update_healthpro_profile():
     return jsonify({"message": "Profile updated"})
 
 # 5. GET/POST articles
-@health_bp.route('/healthpros/articles', methods=['GET', 'POST'])
+@health_bp.route('/healthpros/articles', methods=['GET', 'POST','OPTIONS'])
 @role_required("health_pro")
 def health_pro_articles():
+    if request.method == 'OPTIONS':
+        return '', 200  # respond to preflight check
     identity = get_jwt_identity()
     if request.method == 'GET':
         articles = Article.query.filter_by(author_id=identity).all()
@@ -107,9 +109,11 @@ def health_pro_articles():
     return jsonify({"message": "Article submitted for approval"}), 201
 
 # 6. PATCH/DELETE articles
-@health_bp.route('/healthpros/articles/<int:article_id>', methods=['PATCH', 'DELETE'])
+@health_bp.route('/healthpros/articles/<int:article_id>', methods=['PATCH', 'DELETE', 'OPTIONS'])
 @role_required("health_pro")
 def update_or_delete_article(article_id):
+    if request.method == 'OPTIONS':
+        return '', 200  # respond to preflight check
     article = Article.query.get_or_404(article_id)
     if article.author_id != get_jwt_identity():
         return jsonify({"error": "Unauthorized"}), 403
@@ -128,7 +132,7 @@ def update_or_delete_article(article_id):
 @health_bp.route('/healthpros/questions', methods=['GET'])
 @role_required("health_pro")
 def get_healthpro_questions():
-    questions = Question.query.filter_by(answered_by=None).all()
+    questions = Question.query.filter_by(doctor_id=None).all()
     return jsonify({
         "questions": [
             {
@@ -194,29 +198,58 @@ def flag_article(article_id):
 @jwt_required()
 @role_required("health_pro")
 def request_verification():
-    current_user_id = get_jwt_identity()
-    current_user = User.query.get(current_user_id)
-    if not current_user or not current_user.profile:
-        return jsonify({"error": "User not found"}), 404
-    existing_request = VerificationRequest.query.filter_by(user_id=current_user_id, is_resolved=False).first()
-    if existing_request:
-        return jsonify({"message": "Verification already requested."}), 400
-    db.session.add(VerificationRequest(user_id=current_user_id))
-    for admin in User.query.filter_by(role="admin").all():
-        db.session.add(Notification(
-            user_id=admin.id,
-            message=f"{current_user.profile.full_name} requested verification.",
-            link="/admin/verification-requests"
-        ))
-        send_email(admin.email, "New Verification Request", f"{current_user.profile.full_name} has requested verification.")
-    db.session.commit()
-    socketio.emit('verification_request', {
-        "user_id": current_user_id,
-        "full_name": current_user.profile.full_name,
-        "region": current_user.profile.region,
-        "license_number": current_user.profile.license_number
-    })
-    return jsonify({"message": "Verification requested successfully."}), 201
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+       
+        if not user or not user.profile:
+            return jsonify({"error": "Incomplete profile"}), 422
+
+        profile = user.profile
+        print("DEBUG PROFILE:", profile.full_name, profile.region)
+        print(f"🔍 Request from: {user.email}, Role: {user.role}, FullName: '{profile.full_name}', Region: '{profile.region}'")
+
+        if not profile.full_name or not profile.region:
+            return jsonify({"error": "Full name and region are required in profile"}), 422
+
+        existing = VerificationRequest.query.filter_by(user_id=current_user_id, is_resolved=False).first()
+        if existing:
+            return jsonify({"message": "Verification already requested"}), 400
+
+        # Save verification request
+        vr = VerificationRequest(user_id=current_user_id)
+        db.session.add(vr)
+        db.session.flush()  # To access vr.id before commit
+
+        # Notify all admins
+        for admin in User.query.filter_by(role="admin").all():
+            db.session.add(Notification(
+                user_id=admin.id,
+                message=f"{profile.full_name} requested verification.",
+                link="/admin/verification-requests"
+            ))
+            try:
+                send_email(admin.email, "Verification Request", f"{profile.full_name} has requested verification.")
+            except Exception as e:
+                print("Email send failed:", e)
+
+        # Emit via SocketIO
+        from extensions import socketio
+        socketio.emit('verification_request', {
+            "user_id": current_user_id,
+            "full_name": profile.full_name,
+            "region": profile.region,
+            "license_number": profile.license_number or "N/A",
+            "request_id": vr.id
+        })
+
+        db.session.commit()
+        return jsonify({"message": "Verification requested successfully"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 # 13. GET verification status
 @health_bp.route('/healthpros/verification-status', methods=['GET'])
@@ -229,6 +262,7 @@ def get_verification_status():
 
 # 14. GET/POST reminders
 @health_bp.route('/healthpros/reminders', methods=['POST'])
+@jwt_required()
 @role_required("health_pro")
 def add_healthpro_reminder():
     data = request.get_json()
@@ -288,17 +322,79 @@ def mark_notification_read(id):
     return jsonify({"message": "Notification marked as read"})
 
 # 17. GET stats
-@health_bp.route('/healthpros/stats', methods=['GET'])
+@health_bp.route('/healthpros/events', methods=['GET', 'POST', 'OPTIONS'])
+@jwt_required()
 @role_required("health_pro")
-def get_stats():
-    id = get_jwt_identity()
-    answered = Question.query.filter_by(answered_by=id).count()
-    submitted = Article.query.filter_by(author_id=id).count()
-    approved = Article.query.filter_by(author_id=id, is_approved=True).count()
-    clinics = Clinic.query.filter_by(recommended_by=id).count()
-    return jsonify({
-        "answered_questions": answered,
-        "articles_submitted": submitted,
-        "articles_approved": approved,
-        "clinics_recommended": clinics
-    })
+def create_event():
+    if request.method == 'OPTIONS':
+        return '', 200  # ✅ Respond to CORS preflight
+
+    user_id = get_jwt_identity()
+
+    if request.method == 'GET':
+        reminders = Reminder.query.filter_by(user_id=user_id).all()
+        return jsonify({
+            "events": [
+                {
+                    "id": r.id,
+                    "title": r.reminder_text,
+                    "datetime": r.reminder_date.isoformat(),
+                    "type": r.type
+                } for r in reminders
+            ]
+        })
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            print(" Incoming data:", data) 
+            
+            title = data['title']
+            event_type = data['type']
+            # dt = datetime.fromisoformat(data['datetime'])  # ISO format from frontend
+            dt = isoparse(data['datetime']).replace(tzinfo=None) 
+
+            if dt < datetime.utcnow():
+                return jsonify({"error": "Cannot schedule event in the past"}), 400
+
+            reminder = Reminder(
+                user_id=user_id,
+                reminder_text=title,
+                reminder_date=dt,
+                type=event_type
+            )
+            db.session.add(reminder)
+            db.session.commit()
+
+            return jsonify({
+                "event": {
+                    "id": reminder.id,
+                    "title": reminder.reminder_text,
+                    "datetime": reminder.reminder_date.isoformat(),
+                    "type": reminder.type
+                }
+            }), 201
+
+        except Exception as e:
+            print("❌ ERROR:", e) 
+            return jsonify({"error": str(e)}), 500
+
+
+
+# @health_bp.route('/healthpros/events', methods=['GET'])
+# @jwt_required()
+# @role_required("health_pro")
+# def get_my_events():
+#     user_id = get_jwt_identity()
+#     reminders = Reminder.query.filter_by(user_id=user_id).all()
+
+#     return jsonify({
+#         "events": [
+#             {
+#                 "id": r.id,
+#                 "title": r.reminder_text,
+#                 "datetime": r.reminder_date.isoformat(),
+#                 "type": r.type
+#             } for r in reminders
+#         ]
+#     })

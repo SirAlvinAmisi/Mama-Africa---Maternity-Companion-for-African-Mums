@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import  api  from '../../lib/api';
 import CommentThread from '../CommentThread';
 
-const PostList = ({ posts }) => {
+const PostList = ({ posts, flagPost }) => {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState({});
   const [shareMsg, setShareMsg] = useState('');
@@ -80,6 +80,15 @@ const PostList = ({ posts }) => {
               }}
             >
               Share via Email
+            </button>
+            <button
+              onClick={() => flagPost(post.id)}
+              className={`text-sm px-2 py-1 rounded ${
+                post.is_flagged ? 'bg-red-200 text-red-600' : 'bg-gray-200 text-gray-600'
+              }`}
+              disabled={post.is_flagged}
+            >
+              {post.is_flagged ? '🚩 Flagged' : '🚩 Flag'}
             </button>
           </div>
           <textarea

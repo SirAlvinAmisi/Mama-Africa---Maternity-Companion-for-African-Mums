@@ -1,16 +1,21 @@
 from flask import Blueprint, request, jsonify
 from models import db, User, Profile, PregnancyDetail, Reminder, Community, MedicalUpload, Question, Article, Post, Notification, Nutrition
-from flask_jwt_extended import get_jwt_identity, get_jwt
+from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request, jwt_required
 from utils.email_utils import send_email
 from middleware.auth import role_required
 from datetime import datetime, timedelta
+import os
+from werkzeug.utils import secure_filename
+from flask import current_app
 
-mum_bp = Blueprint('mum', __name__)
+mum_bp = Blueprint('mum', __name__, url_prefix='/mums')
 
 # ------------------ Registration & Profile ------------------
 
-@mum_bp.route('/mums/register', methods=['POST'])
+@mum_bp.route('/register', methods=['POST', 'OPTIONS'])
 def register_mum():
+    if request.method == 'OPTIONS':
+        return '', 204
     data = request.get_json()
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "User already exists"}), 400
@@ -20,9 +25,11 @@ def register_mum():
     db.session.commit()
     return jsonify({"message": "Mum registered successfully"})
 
-@mum_bp.route('/mums/profile', methods=['POST'])
+@mum_bp.route('/profile', methods=['POST', 'OPTIONS'])
 @role_required("mum")
 def update_mum_profile():
+    if request.method == 'OPTIONS':
+        return '', 204
     data = request.get_json()
     identity = get_jwt_identity()
     existing_profile = Profile.query.filter_by(user_id=identity).first()
@@ -37,9 +44,11 @@ def update_mum_profile():
 
 # ------------------ Pregnancy Info ------------------
 
-@mum_bp.route('/mums/pregnancy', methods=['POST'])
+@mum_bp.route('/pregnancy', methods=['POST', 'OPTIONS'])
 @role_required("mum")
 def add_pregnancy_details():
+    if request.method == 'OPTIONS':
+        return '', 204
     data = request.get_json()
     user_id = get_jwt_identity()
 
@@ -57,13 +66,52 @@ def add_pregnancy_details():
     existing.due_date = edd
     existing.current_week = current_week
     existing.pregnancy_status = pregnancy_status
+
+    # 🌟 Add default reminders if none exist
+    standard_reminders = [
+        ("Initial prenatal checkup", lmp + timedelta(weeks=6), "checkup"),
+        ("First antenatal visit", lmp + timedelta(weeks=8), "checkup"),
+        ("Dating ultrasound", lmp + timedelta(weeks=12), "scan"),
+        ("Supplements and nutrition check", lmp + timedelta(weeks=16), "support"),
+        ("Anatomy scan", lmp + timedelta(weeks=20), "scan"),
+        ("Diabetes screening", lmp + timedelta(weeks=24), "test"),
+        ("Tetanus vaccination & iron check", lmp + timedelta(weeks=28), "support"),
+        ("Fetal position + growth check", lmp + timedelta(weeks=32), "scan"),
+        ("Final prep & birth plan", lmp + timedelta(weeks=36), "checkup"),
+        ("Final ANC review", lmp + timedelta(weeks=38), "checkup"),
+    ]
+    for text, date, rtype in standard_reminders:
+        week_number = ((date - lmp).days) // 7
+        if week_number <= 40:
+            db.session.add(Reminder(
+                user_id=user_id,
+                reminder_text=text,
+                reminder_date=date.date(),
+                type=rtype
+            ))
+
+    existing_reminders = Reminder.query.filter_by(user_id=user_id).all()
+    if not existing_reminders:
+        for text, date, rtype in standard_reminders:
+            db.session.add(Reminder(
+                user_id=user_id,
+                reminder_text=text,
+                reminder_date=date.date(),
+                type=rtype
+            ))
+
+    db.session.commit()
+
     db.session.commit()
 
     return jsonify({"message": "Pregnancy info saved."})
 
-@mum_bp.route('/mums/pregnancy-info', methods=['GET'])
+@mum_bp.route('/pregnancy-info', methods=['GET', 'OPTIONS'])
 @role_required("mum")
 def get_pregnancy_info():
+    if request.method == 'OPTIONS':
+        return '', 204
+
     user_id = get_jwt_identity()
     pregnancy = PregnancyDetail.query.filter_by(user_id=user_id).first()
     reminders = Reminder.query.filter_by(user_id=user_id).order_by(Reminder.reminder_date).all()
@@ -78,18 +126,28 @@ def get_pregnancy_info():
             "type": r.type
         } for r in reminders
     ]
+
+    # ✅ Add overdue message if applicable
+    overdue_message = None
+    if pregnancy.current_week > 40:
+        overdue_message = "You're beyond 40 weeks — please consult your healthcare provider. You may have already delivered."
+
     return jsonify({
         "due_date": pregnancy.due_date.strftime('%Y-%m-%d'),
         "current_week": pregnancy.current_week,
         "last_period_date": pregnancy.last_period_date.strftime('%Y-%m-%d'),
-        "appointments": appointments
+        "appointments": appointments,
+        "overdue_message": overdue_message  # ✅ include in response
     })
 
 # ------------------ Reminder Management ------------------
 
-@mum_bp.route('/mums/reminder', methods=['POST'])
+@mum_bp.route('/reminder', methods=['POST'])
+@mum_bp.route('/reminder', methods=['OPTIONS'])
 @role_required("mum")
 def add_custom_reminder():
+    if request.method == 'OPTIONS':
+        return '', 204
     user_id = get_jwt_identity()
     data = request.get_json()
 
@@ -107,9 +165,11 @@ def add_custom_reminder():
     except (KeyError, ValueError) as e:
         return jsonify({"error": f"Invalid input: {str(e)}"}), 400
 
-@mum_bp.route('/mums/reminders/<int:reminder_id>', methods=['PATCH'])
+@mum_bp.route('/reminders/<int:reminder_id>', methods=['PATCH'])
 @role_required("mum")
 def update_reminder(reminder_id):
+    if request.method == 'OPTIONS':
+        return '', 204
     data = request.get_json()
     reminder = Reminder.query.get_or_404(reminder_id)
 
@@ -123,9 +183,11 @@ def update_reminder(reminder_id):
     db.session.commit()
     return jsonify({"message": "Reminder updated successfully."})
 
-@mum_bp.route('/mums/reminders/<int:reminder_id>', methods=['DELETE'])
+@mum_bp.route('/reminders/<int:reminder_id>', methods=['DELETE'])
 @role_required("mum")
 def delete_reminder(reminder_id):
+    if request.method == 'OPTIONS':
+        return '', 204
     reminder = Reminder.query.get_or_404(reminder_id)
     if reminder.user_id != get_jwt_identity():
         return jsonify({"error": "Unauthorized"}), 403
@@ -134,10 +196,12 @@ def delete_reminder(reminder_id):
     return jsonify({"message": "Reminder deleted successfully."})
 
 # ------------------ Community Participation ------------------
-
-@mum_bp.route('/mums/communities', methods=['GET'])
+@mum_bp.route('/communities', methods=['GET'])
+@mum_bp.route('/communities', methods=['OPTIONS'])
 @role_required("mum")
 def list_communities():
+    if request.method == 'OPTIONS':
+        return '', 204
     communities = Community.query.filter_by(status="approved").all()
     return jsonify([{
         "id": c.id,
@@ -147,26 +211,50 @@ def list_communities():
         "member_count": c.member_count
     } for c in communities])
 
-@mum_bp.route('/mums/communities/<int:id>/join', methods=['POST'])
+@mum_bp.route('/communities/<int:id>/join', methods=['POST'])
+@jwt_required()
 @role_required("mum")
 def join_community(id):
+    if request.method == 'OPTIONS':
+        return '', 204
     user_id = get_jwt_identity()
     community = Community.query.get(id)
     if not community:
         return jsonify({"error": "Community not found"}), 404
 
     user = User.query.get(user_id)
+    print("📍Before join:", [c.id for c in user.communities])
     if user in community.members:
         return jsonify({"message": "Already joined"}), 200
 
     community.members.append(user)
     community.member_count += 1
     db.session.commit()
+    print("✅ After join:", [c.id for c in user.communities])
     return jsonify({"message": "Joined community successfully"})
 
-@mum_bp.route('/mums/communities/<int:id>/leave', methods=['POST'])
+@mum_bp.route('/communities/joined', methods=['GET'])
+@jwt_required()
+@role_required('mum')
+def get_joined_communities():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    # joined = user.communities  # assuming many-to-many relationship
+    print("🎯 Joined communities:", [c.id for c in user.communities])
+    return jsonify([{
+        "id": c.id,
+        "name": c.name,
+        "description": c.description,
+        "image": c.image,
+        "member_count": c.member_count
+    } for c in user.communities])
+
+@mum_bp.route('/communities/<int:id>/leave', methods=['POST'])
+@jwt_required()   
 @role_required("mum")
 def leave_community(id):
+    if request.method == 'OPTIONS':
+        return '', 204
     user_id = get_jwt_identity()
     community = Community.query.get(id)
     if not community:
@@ -183,29 +271,47 @@ def leave_community(id):
 
 # ------------------ Medical Uploads ------------------
 
-@mum_bp.route('/mums/upload_scan', methods=['POST'])
+@mum_bp.route('/upload_scan', methods=['POST'])
+@mum_bp.route('/upload_scan', methods=['OPTIONS'])
 @role_required("mum")
 def upload_scan():
+    if request.method == 'OPTIONS':
+        return '', 204
     user_id = get_jwt_identity()
-    data = request.get_json()
 
-    if not data.get("file_url"):
-        return jsonify({"error": "File URL is required"}), 400
+    file = request.files.get('file')
+    file_url = request.form.get('file_url')
+    notes = request.form.get('notes', '')
+    doctor_id = request.form.get('doctor_id')
+
+    if not file_url and not file:
+        return jsonify({"error": "Either file or file URL is required"}), 400
+
+    # If file was uploaded, save it to a folder and generate a URL
+    if file:
+        filename = secure_filename(file.filename)
+        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+        file_url = f"/static/avatars/{filename}"  # or wherever you're serving from
 
     scan = MedicalUpload(
         user_id=user_id,
-        file_url=data["file_url"],
-        notes=data.get("notes", ""),
-        uploaded_at=datetime.utcnow()
+        file_url=file_url,
+        notes=notes,
+        uploaded_at=datetime.utcnow(),
+        doctor_id=doctor_id
     )
     db.session.add(scan)
     db.session.commit()
 
     return jsonify({"message": "Scan uploaded successfully"}), 201
 
-@mum_bp.route('/mums/scans', methods=['GET'])
+@mum_bp.route('/scans', methods=['GET'])
+@mum_bp.route('/scans', methods=['OPTIONS'])
 @role_required("mum")
 def get_uploaded_scans():
+    if request.method == 'OPTIONS':
+        return '', 204
     user_id = get_jwt_identity()
     scans = MedicalUpload.query.filter_by(user_id=user_id).order_by(MedicalUpload.uploaded_at.desc()).all()
     return jsonify({
@@ -220,57 +326,90 @@ def get_uploaded_scans():
     })
 
 # ------------------ Questions & Answers ------------------
-
-@mum_bp.route('/mums/questions', methods=['POST'])
+@mum_bp.route('/questions', methods=['GET', 'POST', 'PATCH'])
+@mum_bp.route('/questions', methods=['OPTIONS'])
 @role_required("mum")
-def ask_question():
+def handle_questions():
+    if request.method == 'OPTIONS':
+        return '', 204  # ✅ Preflight support
+    
+    verify_jwt_in_request()
+    role_data = get_jwt()
+    if role_data.get("role") != "mum":
+        return jsonify({"error": "Unauthorized role"}), 403
+
+    user_id = get_jwt_identity()
+
+    if request.method == 'GET':
+        # ✅ Fetch current user's questions
+        questions = Question.query.filter_by(user_id=user_id).all()
+        return jsonify([
+            {
+                "id": q.id,
+                "question_text": q.question_text,
+                "answer_text": q.answer_text,
+                "doctor_id": q.doctor_id,
+                "doctor_name": User.query.get(q.doctor_id).profile.full_name if q.doctor_id else "N/A"
+            } for q in questions
+        ])
+
     data = request.get_json()
-    user_id = get_jwt_identity()
 
-    if not data.get("question_text"):
-        return jsonify({"error": "Question text is required"}), 400
+    if request.method == 'POST':
+        # ✅ Validate
+        if not data.get("question_text") or not data.get("doctor_id"):
+            return jsonify({"error": "Both question text and doctor_id are required."}), 400
 
-    question = Question(
-        user_id=user_id,
-        question_text=data['question_text'],
-        is_anonymous=data.get("is_anonymous", False)
-    )
-    db.session.add(question)
-
-    # Notify health professionals
-    health_pros = User.query.filter_by(role='health_pro').all()
-    for hp in health_pros:
-        db.session.add(Notification(
-            user_id=hp.id,
-            message="New question submitted by a mum.",
-            link="/healthpro/questions"
-        ))
-        send_email(
-            hp.email,
-            "New Question Submitted",
-            "A new question has been posted by a mum. Please log in to respond."
+        # ✅ Create a new question
+        question = Question(
+            user_id=user_id,
+            question_text=data['question_text'],
+            is_anonymous=data.get("is_anonymous", False),
+            doctor_id=data["doctor_id"]
         )
+        db.session.add(question)
 
-    db.session.commit()
-    return jsonify({"message": "Question submitted successfully."}), 201
+        # ✅ Notify doctor
+        doctor = User.query.get(data["doctor_id"])
+        if doctor and doctor.role == 'health_pro':
+            db.session.add(Notification(
+                user_id=doctor.id,
+                message="New question directed to you.",
+                link="/healthpro/questions"
+            ))
+            # send_email(
+            #     doctor.email,
+            #     "You've received a new question",
+            #     "A mum has directed a question to you. Please log in to respond."
+            # )
 
-@mum_bp.route('/mums/questions', methods=['GET'])
-@role_required("mum")
-def get_mum_questions():
-    user_id = get_jwt_identity()
-    questions = Question.query.filter_by(user_id=user_id).all()
-    return jsonify([{
-        "id": q.id,
-        "question_text": q.question_text,
-        "answer_text": q.answer_text,
-        "answered_by": q.answered_by
-    } for q in questions])
+        db.session.commit()
+        return jsonify({"message": "Question submitted successfully."}), 201
+
+    if request.method == 'PATCH':
+        question_id = data.get("id")
+        new_text = data.get("question_text")
+
+        if not question_id or not new_text:
+            return jsonify({"error": "Both question ID and new text are required."}), 400
+
+        question = Question.query.filter_by(id=question_id, user_id=user_id).first()
+        if not question:
+            return jsonify({"error": "Question not found or unauthorized."}), 404
+
+        question.question_text = new_text
+        db.session.commit()
+        return jsonify({"message": "Question updated successfully."}), 200
+
 
 # ------------------ Others ------------------
 
-@mum_bp.route('/mums/followed-topics', methods=['GET'])
+@mum_bp.route('/followed-topics', methods=['GET'])
+@mum_bp.route('/followed-topics', methods=['OPTIONS'])
 @role_required("mum")
 def get_followed_topics():
+    if request.method == 'OPTIONS':
+        return '', 204
     user = User.query.get(get_jwt_identity())
     return jsonify({
         "topics": [
@@ -282,9 +421,11 @@ def get_followed_topics():
         ]
     })
 
-@mum_bp.route('/healthpros', methods=['GET'])
+@mum_bp.route('/healthpros', methods=['GET',  'OPTIONS'])
 @role_required("mum")
 def get_health_pros():
+    if request.method == 'OPTIONS':
+        return '', 204
     health_pros = User.query.filter_by(role="health_pro").all()
     return jsonify({
         "doctors": [

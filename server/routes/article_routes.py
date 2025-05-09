@@ -77,3 +77,19 @@ def get_parenting_articles():
 def get_baby_articles():
     articles = Article.query.filter_by(category='Baby Corner', is_approved=True).all()
     return jsonify({"articles": [a.serialize() for a in articles]})
+
+@article_bp.route('/articles/flagged', methods=['GET'])
+@jwt_required()
+def get_flagged_articles():
+    flagged_articles = Article.query.filter_by(is_flagged=True).all()
+    articles_data = [
+        {
+            "id": article.id,
+            "title": article.title,
+            "content": article.content,
+            "is_flagged": article.is_flagged,
+            "is_approved": article.is_approved,
+        }
+        for article in flagged_articles
+    ]
+    return jsonify({"flagged_articles": articles_data}), 200

@@ -22,7 +22,7 @@ def register_routes(app):
     app.register_blueprint(admin_bp)
     app.register_blueprint(health_bp)
     # app.register_blueprint(health_bp, url_prefix="/health")
-    app.register_blueprint(mum_bp)
+    app.register_blueprint(mum_bp, url_prefix="/mums")
     app.register_blueprint(community_bp)
     app.register_blueprint(article_bp)
     app.register_blueprint(clinic_bp)
