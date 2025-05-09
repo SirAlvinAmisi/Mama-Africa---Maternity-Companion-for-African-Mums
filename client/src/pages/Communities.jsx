@@ -1,5 +1,4 @@
-// src/pages/Communities.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -16,35 +15,55 @@ const Communities = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
+
+  const isTokenExpired = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp < now;
+    } catch {
+      return true;
+    }
+  };
+
+  const validToken = token && !isTokenExpired(token);
+
+  const getCommunities = async () => {
+    const url = selectedTrimester === 'all'
+      ? 'http://localhost:5000/communities'
+      : `http://localhost:5000/communities?trimester=${selectedTrimester}`;
+
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': validToken ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("❌ Fetch failed", res.status, text);
+      throw new Error('Failed to fetch communities');
+    }
+
+    const data = await res.json();
+    return data.communities;
+  };
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['communities', selectedTrimester],
-    queryFn: async () => {
-      const url = selectedTrimester === 'all'
-        ? 'http://localhost:5000/communities'
-        : `http://localhost:5000/communities?trimester=${selectedTrimester}`;
-
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch communities');
-      const data = await res.json();
-      return data.communities;
-    }
+    queryFn: getCommunities,
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['posts', selectedTrimester],
     queryFn: async () => {
-      const communityId = groups?.[0]?.id || 1;
+      const communityId = groups?.[0]?.id;
+      if (!communityId) return [];
       const res = await fetch(`http://localhost:5000/communities/${communityId}/posts`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: validToken ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
       });
@@ -53,118 +72,44 @@ const Communities = () => {
       const data = await res.json();
       return data.posts;
     },
-    enabled: !!groups.length
+    enabled: !!groups.length,
   });
 
-  
-  // const joinMutation = useMutation({
-  //   mutationFn: async (communityId) => {
-  //     // const token = localStorage.getItem('token');
-  //     const isTokenExpired = (token) => {
-  //       try {
-  //         if (!token) return true;
-  //         const payload = JSON.parse(atob(token.split('.')[1]));
-  //         const now = Math.floor(Date.now() / 1000);
-  //         return payload.exp < now;
-  //       } catch (err) {
-  //         console.warn("Failed to decode token", err);
-  //         return true; // treat bad tokens as expired
-  //       }
-  //     };
-      
-  //     const token = localStorage.getItem("token");
-      
-  //     if (isTokenExpired(token)) {
-  //       alert("Your session has expired. Please log in again.");
-  //       localStorage.removeItem("token");
-  //       window.location.href = "/login";
-  //     }
-      
-      
-  //     console.log("🔐 Token being used:", token); // 🔍 Add this line to debug
-  
-  //     const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json'
-  //       }
-  //     });
-  
-  //     if (!res.ok) {
-  //       const errorText = await res.text();
-  //       console.error("❌ Join community failed:", res.status, errorText);
-  //       throw new Error('Failed to join community');
-  //     }
-  
-  //     return res.json();
-  //   },
-  //   onSuccess: () => queryClient.invalidateQueries(['communities'])
-  // });
   const joinMutation = useMutation({
     mutationFn: async (communityId) => {
-      const token = localStorage.getItem("access_token");
-  
-      // ✅ Only check when token exists
-      if (!token) {
+      if (!validToken) {
         alert("Please log in to join a community.");
         navigate("/login");
         return;
       }
-  
-      // ✅ Validate token expiry
-      const isTokenExpired = (token) => {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const now = Math.floor(Date.now() / 1000);
-          return payload.exp < now;
-        } catch (err) {
-          return true;
-        }
-      };
-  
-      if (isTokenExpired(token)) {
-        alert("Your session has expired. Please log in again.");
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-  
-      // ✅ Proceed with join if token is valid
+
       const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
-  
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("❌ Join community failed:", res.status, errorText);
-        throw new Error('Failed to join community');
-      }
-  
+
+      if (!res.ok) throw new Error('Failed to join community');
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries(['communities'])
+    onSuccess: () => queryClient.invalidateQueries(['communities']),
   });
-  
 
   const leaveMutation = useMutation({
     mutationFn: async (communityId) => {
-      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/leave`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
       if (!res.ok) throw new Error('Failed to leave community');
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries(['communities'])
+    onSuccess: () => queryClient.invalidateQueries(['communities']),
   });
 
   const flagPost = async (postId) => {
@@ -179,7 +124,7 @@ const Communities = () => {
 
       if (!res.ok) throw new Error('Failed to flag post');
       alert('Post flagged successfully');
-      queryClient.invalidateQueries(['posts']); // Refresh posts
+      queryClient.invalidateQueries(['posts']);
     } catch (error) {
       console.error('Error flagging post:', error);
       alert('Failed to flag post');
@@ -198,7 +143,7 @@ const Communities = () => {
 
       if (!res.ok) throw new Error('Failed to flag article');
       alert('Article flagged successfully');
-      queryClient.invalidateQueries(['articles']); // Refresh articles
+      queryClient.invalidateQueries(['articles']);
     } catch (error) {
       console.error('Error flagging article:', error);
       alert('Failed to flag article');
@@ -233,8 +178,6 @@ const Communities = () => {
                 className="bg-cyan-200 p-4 rounded-lg shadow-md hover:shadow-lg transition flex flex-col justify-between"
               >
                 <div>
-                  <h3 className="text-xl font-semibold mb-2 text-black">{group.name}</h3>
-                  {/* Updated class for darker text */}
                   <h3 className="text-xl font-semibold mb-2 text-gray-900">{group.name}</h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {group.description?.slice(0, 120)}...
@@ -247,15 +190,7 @@ const Communities = () => {
                   >
                     View Community
                   </button>
-                  {/* <button
-                    onClick={() =>
-                      joinMutation.mutate(group.id)
-                    }
-                    className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
-                  >
-                    Join
-                  </button> */}
-                  {localStorage.getItem("access_token") && (
+                  {validToken && (
                     <button
                       onClick={() => joinMutation.mutate(group.id)}
                       className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"

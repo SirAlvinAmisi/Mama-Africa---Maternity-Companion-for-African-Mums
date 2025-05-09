@@ -89,18 +89,15 @@ class PregnancyDetail(db.Model):
 
 # --- Content ---
 class Post(db.Model):
-<<<<<<< HEAD
-    id = db.Column(db.Integer, primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
-    title = db.Column(db.String(255))  # Optional for caption
-    content = db.Column(db.Text)       # Body or additional text
-    media_url = db.Column(db.String(255))  # Image or video path
-    media_type = db.Column(db.String(50))  # 'image', 'video', etc.
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_approved = db.Column(db.Boolean, default=True)  # Instant publish for now
-
-=======
+    # id = db.Column(db.Integer, primary_key=True)
+    # author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    # title = db.Column(db.String(255))  # Optional for caption
+    # content = db.Column(db.Text)       # Body or additional text
+    # media_url = db.Column(db.String(255))  # Image or video path
+    # media_type = db.Column(db.String(50))  # 'image', 'video', etc.
+    # created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # is_approved = db.Column(db.Boolean, default=True)  # Instant publish for now
     id = db.Column(Integer, primary_key=True)
     author_id = db.Column(Integer, ForeignKey('user.id'))
     community_id = db.Column(Integer, db.ForeignKey('community.id'), nullable=True)
@@ -110,7 +107,6 @@ class Post(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
     is_flagged = db.Column(db.Boolean, default=False)
->>>>>>> origin/main
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
     likers = db.relationship("User", secondary="post_likes", backref="liked_posts")
 
@@ -136,7 +132,6 @@ class Comment(db.Model):
     content = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
-<<<<<<< HEAD
     replies = db.relationship(
         "Comment",
         backref=db.backref('parent', remote_side=[id]),
@@ -149,9 +144,7 @@ class Comment(db.Model):
         return self.parent_comment_id
 
 
-=======
 # --- Updated Question Model ---
->>>>>>> origin/main
 class Question(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
@@ -192,12 +185,6 @@ class Certification(db.Model):
     uploaded_at = db.Column(DateTime, default=datetime.utcnow)
     is_verified = db.Column(Boolean, default=False)
 
-# class Clinic(db.Model):
-#     id = db.Column(Integer, primary_key=True)
-#     name = db.Column(String(150))
-#     location = db.Column(String(150))
-#     contact_info = db.Column(String(150))
-#     recommended_by = db.Column(Integer, ForeignKey('user.id'))
 class Clinic(db.Model):
     id = db.Column(Integer, primary_key=True)
     name = db.Column(String(150))
