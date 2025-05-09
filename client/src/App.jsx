@@ -27,6 +27,7 @@ import SpecialistProfile from './pages/SpecialistProfile';
 import { HealthProfessional } from './pages/HealthProfessional';
 import { HealthProfessionalMom } from './pages/HealthProfessionalMom';
 import HealthProDashboard from './pages/HealthProDashboard';
+import RequestVerificationPage from './pages/RequestVerificationPage';  
 
 // Articles & Content
 import { ArticleDetail } from './components/articles/ArticleDetail';
@@ -92,7 +93,7 @@ function App() {
               <Route path="/specialist/:id" element={<HealthProfessional />} />
               <Route path="/healthpro/dashboard" element={<HealthProDashboard />} />
               <Route path="/health-professional-mom" element={<HealthProfessionalMom />} />
-
+              <Route path="/healthpro/request-verification" element={<RequestVerificationPage />} />
               {/* Articles */}
               <Route path="/article/:id" element={<ArticleDetail />} />
               <Route path="/parenting-development" element={<ParentingDevelopmentPage />} />

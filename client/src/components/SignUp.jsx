@@ -110,7 +110,7 @@ const Signup = () => {
           <option value="">Select Role</option>
           <option value="Mom">Mom</option>
           <option value="Health Professional">Health Professional</option>
-          <option value="Admin">Admin</option>
+          {/* <option value="Admin">Admin</option> */}
         </select>
 
         {formData.role === "Health Professional" && (

@@ -3,13 +3,17 @@ from models import *
 from datetime import datetime, timedelta, timezone
 import random
 from sqlalchemy import text
-
+from werkzeug.security import generate_password_hash
 with app.app_context():
     db.drop_all()
     db.create_all()
 
     # 1. ADMIN
-    admin = User(email="admin@mama.africa", password_hash="hashed_admin", role="admin")
+    admin = User(
+        email="admin@mama.africa",
+        password_hash=generate_password_hash("Admin123!"),  # ✅ Strong, hashed
+        role="admin"
+    )
     db.session.add(admin)
     db.session.commit()
     print("✅ Seeded admin user.")
