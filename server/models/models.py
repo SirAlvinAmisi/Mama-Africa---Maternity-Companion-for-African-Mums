@@ -25,13 +25,10 @@ class User(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_validated = db.Column(Boolean, default=False)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
+    # Fixed: Only one profile relationship
     profile = db.relationship("Profile", backref="user", uselist=False, cascade="all, delete-orphan")
+
+    # Other relationships
     pregnancy = db.relationship("PregnancyDetail", backref="user", uselist=False, cascade="all, delete-orphan")
     uploads = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.user_id', back_populates="uploader")
     sent_scans = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.doctor_id', back_populates="doctor")
@@ -49,12 +46,18 @@ class User(db.Model):
     shared_content = db.relationship("SharedContent", backref="user", cascade="all, delete-orphan")
     notifications = db.relationship("Notification", backref="user", cascade="all, delete-orphan")
     verification_requests = db.relationship("VerificationRequest", backref="user", cascade="all, delete-orphan")
-    
     communities = db.relationship("Community", secondary=community_members, back_populates="members")
     followed_topics = db.relationship("Topic", secondary=mum_topic_follow, back_populates="followers")
 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class Profile(db.Model):
     id = db.Column(Integer, primary_key=True)
+    user_id = db.Column(Integer, ForeignKey('user.id'), unique=True)  # Added unique constraint
     full_name = db.Column(String(150))
     bio = db.Column(Text)
     region = db.Column(String(100))  # County
@@ -62,7 +65,6 @@ class Profile(db.Model):
     profile_picture = db.Column(String(200))
     license_number = db.Column(String(100))  # For health professionals
     is_verified = db.Column(Boolean, default=False)
-    user_id = db.Column(Integer, ForeignKey('user.id'))
 
 # --- Pregnancy Tracking ---
 class PregnancyDetail(db.Model):
@@ -77,7 +79,6 @@ class PregnancyDetail(db.Model):
 class Post(db.Model):
     id = db.Column(Integer, primary_key=True)
     author_id = db.Column(Integer, ForeignKey('user.id'))
-    # community_id = db.Column(Integer, ForeignKey('community.id'))
     community_id = db.Column(Integer, db.ForeignKey('community.id'), nullable=True)
     title = db.Column(String(255))
     content = db.Column(Text)
@@ -100,7 +101,6 @@ class Article(db.Model):
 
     comments = db.relationship("Comment", backref="article", cascade="all, delete-orphan")
 
-    
 class Comment(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
@@ -109,15 +109,20 @@ class Comment(db.Model):
     content = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
+# --- Updated Question Model ---
 class Question(db.Model):
     id = db.Column(Integer, primary_key=True)
     user_id = db.Column(Integer, ForeignKey('user.id'))
-    doctor_id = db.Column(Integer, ForeignKey('user.id'))  # doctor the question is directed to
+    doctor_id = db.Column(Integer, ForeignKey('user.id'), nullable=True)  # Made nullable
     question_text = db.Column(Text)
     is_anonymous = db.Column(Boolean, default=False)
     answer_text = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
+    is_answered = db.Column(Boolean, default=False)  # Added this field
 
+    # Relationships
+    asker = db.relationship('User', foreign_keys=[user_id])
+    responder = db.relationship('User', foreign_keys=[doctor_id])
 
 # --- Supplementary ---
 class MedicalUpload(db.Model):

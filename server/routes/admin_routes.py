@@ -1,23 +1,39 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, Post, Article, Community, VerificationRequest, Notification
+from models import db, User, Post, Article, Community, VerificationRequest, Notification, Profile
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, jwt_required
 from flask_cors import cross_origin
+from flask_cors import CORS
+from jwt.exceptions import ExpiredSignatureError
 from jwt.exceptions import DecodeError as JWTDecodeError
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from werkzeug.exceptions import Unauthorized
 from middleware.auth import role_required
 from utils.email_utils import send_email
-import traceback
+from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
+CORS(admin_bp, origins=["http://localhost:5173"], supports_credentials=True)
 
-def is_admin():
+# Middleware to check if the user is an admin
+@admin_bp.before_request
+def check_admin():
+    if request.method == 'OPTIONS':
+        return preflight_ok()
+        
     try:
         verify_jwt_in_request()
         claims = get_jwt()
-        return claims.get("role", "").lower() == "admin"
-    except (NoAuthorizationError, JWTDecodeError, Unauthorized):
-        return False
+        
+        # More robust role checking
+        user_role = claims.get("role", "").lower()
+        if user_role != "admin":
+            return jsonify({
+                "error": "Admin access only",
+                "required_role": "admin",
+                "your_role": user_role
+            }), 403
+    except Exception as e:
+        return jsonify({"error": f"Authorization failed: {str(e)}"}), 401
 
 def preflight_ok():
     return jsonify({"message": "Preflight OK"}), 200
@@ -29,13 +45,14 @@ def preflight_ok():
 def get_users():
     if request.method == 'OPTIONS':
         return preflight_ok()
-    if not is_admin():
-        return jsonify({"error": "Admin access only"}), 403
 
-    users = User.query.all()
+    users = User.query.order_by(User.created_at.desc()).all()
     return jsonify({"users": [{
-        "id": u.id, "email": u.email, "role": u.role, "is_active": u.is_active,
-        "created_at": u.created_at,
+        "id": u.id, 
+        "email": u.email, 
+        "role": u.role, 
+        "is_active": u.is_active,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
         "profile": {
             "full_name": u.profile.full_name if u.profile else "N/A",
             "region": u.profile.region if u.profile else "",
@@ -44,242 +61,116 @@ def get_users():
         }
     } for u in users]})
 
-@admin_bp.route('/admin/deactivate_user/<int:user_id>', methods=['PATCH', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:5173"], supports_credentials=True)
-def toggle_user_status(user_id):
-    if request.method == 'OPTIONS':
-        return preflight_ok()
-    if not is_admin():
-        return jsonify({"error": "Admin access only"}), 403
-
-    user = User.query.get_or_404(user_id)
-    user.is_active = not user.is_active
-    db.session.commit()
-    return jsonify({"message": f"User {'activated' if user.is_active else 'deactivated'}"})
-
-@admin_bp.route('/admin/delete_user/<int:user_id>', methods=['DELETE', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:5173"], supports_credentials=True)
-def delete_user(user_id):
-    if request.method == 'OPTIONS':
-        return preflight_ok()
-    if not is_admin():
-        return jsonify({"error": "Admin access only"}), 403
-
-    try:
-        user = User.query.get_or_404(user_id)
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({"message": "User deleted"})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": "Server error", "details": str(e)}), 500
-    #add user
+# Fix the add_user endpoint
 @admin_bp.route('/admin/add_user', methods=['POST'])
 @jwt_required()
 @role_required("admin")
 def add_user():
     data = request.get_json()
     
-    # Validation
-    if not all([data.get('name'), data.get('email'), data.get('role')]):
-        return jsonify({"error": "Missing required fields"}), 400
-    
-    # Check if user exists
+    # Required fields validation
+    required_fields = ['email', 'role', 'full_name']
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": f"Missing required fields: {', '.join(required_fields)}"}), 400
+
+    # Check for existing user
     if User.query.filter_by(email=data['email']).first():
-        return jsonify({"error": "User already exists"}), 400
+        return jsonify({"error": "User with this email already exists"}), 400
 
     try:
+        # Create user
         new_user = User(
             email=data['email'],
             role=data['role'],
-            is_active=True
+            is_active=True,
+            created_at=datetime.utcnow()
         )
+        new_user.set_password("TempPassword123!")  # Set default password
         db.session.add(new_user)
-        
+
         # Create profile
-        profile = UserProfile(
+        profile = Profile(
             user=new_user,
-            full_name=data['name'],
-            is_verified=data['role'] == 'health_pro'  # Auto-verify non-health pros
+            full_name=data['full_name'],
+            region=data.get('region', ''),
+            license_number=data.get('license_number', ''),
+            is_verified=data.get('is_verified', False)
         )
         db.session.add(profile)
         
         db.session.commit()
-        
+
         return jsonify({
-            "message": "User added successfully",
-            "user_id": new_user.id
+            "message": "User created successfully",
+            "user_id": new_user.id,
+            "profile_id": profile.id
         }), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-# ✅ Remove Content (Post)
-@admin_bp.route('/admin/remove_content/<int:content_id>', methods=['DELETE', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
-def remove_content(content_id):
-    if request.method == 'OPTIONS':
-        return preflight_ok()
-    if not is_admin():
-        return jsonify({"error": "Admin access only"}), 403
-
-
-    content = Post.query.get(content_id)
-    if content:
-        db.session.delete(content)
-        db.session.commit()
-        return jsonify({"message": "Content removed successfully"}), 200
-    return jsonify({"error": "Content not found"}), 404
-
-# ---------------------------- POSTS ----------------------------
-
-@admin_bp.route('/admin/posts', methods=['GET'])
-@jwt_required()
-@role_required("admin")
-def get_pending_posts():
-    posts = Post.query.filter(Post.is_approved == False).all()
-    return jsonify({"posts": [{
-        "id": p.id, "title": p.title, "content": p.content,
-        "is_approved": p.is_approved,
-        "user": {"full_name": p.author.profile.full_name if p.author and p.author.profile else ""},
-        "community": {"name": p.community.name if p.community else ""}
-    } for p in posts]})
-
-@admin_bp.route('/admin/posts/<int:post_id>', methods=['PATCH'])
-@jwt_required()
-@role_required("admin")
-def update_post_status(post_id):
-    post = Post.query.get_or_404(post_id)
-    status = request.get_json().get("status")
-
-    if status == "approved":
-        post.is_approved = True
-    elif status == "rejected":
-        db.session.delete(post)
-    else:
-        return jsonify({"error": "Invalid status"}), 400
-
-    db.session.commit()
-    return jsonify({"message": f"Post {status} successfully"})
-
-# ---------------------------- ARTICLES ----------------------------
-
-@admin_bp.route('/admin/articles', methods=['GET'])
-@jwt_required()
-@role_required("admin")
-def list_all_articles():
-    articles = Article.query.order_by(Article.created_at.desc()).all()
-    return jsonify({"articles": [{
-        "id": a.id, "title": a.title, "category": a.category, "created_at": a.created_at,
-        "author_id": a.author_id, "is_approved": a.is_approved
-    } for a in articles]})
-
-@admin_bp.route('/admin/articles/<int:id>', methods=['PATCH'])
-@jwt_required()
-@role_required("admin")
-def update_article_status(id):
-    article = Article.query.get_or_404(id)
-    status = request.get_json().get("status")
-
-    if status == "approved":
-        article.is_approved = True
-    elif status == "rejected":
-        db.session.delete(article)
-    else:
-        return jsonify({"error": "Invalid status"}), 400
-
-    db.session.commit()
-    return jsonify({"message": f"Article {status}"})
-
-# ---------------------------- COMMUNITIES ----------------------------
-
-@admin_bp.route('/admin/communities/pending', methods=['GET'])
-@jwt_required()
-@role_required("admin")
-def get_pending_communities():
-    pending = Community.query.filter_by(status="pending").all()
-    return jsonify({"communities": [{
-        "id": c.id, "name": c.name, "description": c.description,
-        "image": c.image, "member_count": c.member_count
-    } for c in pending]})
-
-# ---------------------------- VERIFICATION ----------------------------
-
-@admin_bp.route('/admin/verification-requests', methods=['GET'])
-@jwt_required()
-@role_required("admin")
-def get_verification_requests():
-    requests = VerificationRequest.query.filter_by(is_resolved=False).all()
-    return jsonify([{
-        "id": r.id,
-        "user_id": r.user.id,
-        "full_name": r.user.profile.full_name,
-        "license_number": r.user.profile.license_number,
-        "region": r.user.profile.region
-    } for r in requests])
 
 @admin_bp.route('/admin/verify-user/<int:user_id>', methods=['POST'])
 @jwt_required()
 @role_required("admin")
 def verify_user(user_id):
     user = User.query.get(user_id)
-    if not user or not user.profile:
+    if not user:
         return jsonify({"error": "User not found"}), 404
+        
+    if not user.profile:
+        profile = Profile(
+            user_id=user_id,
+            full_name="",
+            is_verified=True
+        )
+        db.session.add(profile)
+    else:
+        user.profile.is_verified = True
 
-    user.profile.is_verified = True
+    # Mark verification requests as resolved
+    VerificationRequest.query.filter_by(user_id=user_id, is_resolved=False).update({'is_resolved': True})
 
-    request_record = VerificationRequest.query.filter_by(user_id=user_id, is_resolved=False).first()
-    if request_record:
-        request_record.is_resolved = True
-
-    # 🔔 Notify user
+    # Create notification
     db.session.add(Notification(
         user_id=user.id,
-        message="Your verification request has been approved.",
-        link="/healthpro/dashboard"
+        message="Your account has been verified by an administrator.",
+        link="/profile"
     ))
-    send_email(user.email, "Verification Approved", "You have been verified successfully.")
 
     db.session.commit()
-    return jsonify({"message": "User verified"})
+    return jsonify({"message": "User verified successfully"})
 
-# ---------------------------- STATS ----------------------------
-
-@admin_bp.route('/admin/stats', methods=['GET'])
-@jwt_required()
-@role_required("admin")
-def get_admin_stats():
-    return jsonify({
-        "total_users": User.query.count(),
-        "total_articles": Article.query.count(),
-        "approved_articles": Article.query.filter_by(is_approved=True).count(),
-        "pending_posts": Post.query.filter_by(is_approved=False).count(),
-        "pending_communities": Community.query.filter_by(status="pending").count(),
-        "pending_verifications": VerificationRequest.query.filter_by(is_resolved=False).count()
-    })
-
-@admin_bp.route('/admin/articles', methods=['GET'])
-@jwt_required()
-def get_all_articles():
-    articles = Article.query.all()  # Fetch all articles
-    return jsonify({"articles": [article.to_dict() for article in articles]}), 200
-
-
+# Add missing notifications endpoint
 @admin_bp.route('/admin/notifications', methods=['GET'])
 @jwt_required()
 @role_required("admin")
 def get_admin_notifications():
-    notifications = [
-        {
-            "type": "health_pro_request",
-            "message": "New health professional registration",
-            "user_id": 123,
-            "created_at": "2025-05-05T12:00:00Z"
-        }
-        # Add real queries here:
-        # 1. Pending health pro requests (User.query.filter_by(role="health_pro", is_verified=False))
-        # 2. Reported content
-        # 3. Pending community approvals
-    ]
-    return jsonify({"notifications": notifications})
+    try:
+        # Get unverified health professionals
+        health_pros = User.query.filter_by(role='health_pro', is_validated=False).all()
+        
+        # Get pending articles
+        pending_articles = Article.query.filter_by(is_approved=False).all()
+        
+        # Format response
+        notifications = []
+        
+        for user in health_pros:
+            notifications.append({
+                "type": "health_pro_verification",
+                "message": f"Health professional {user.email} needs verification",
+                "user_id": user.id
+            })
+            
+        for article in pending_articles:
+            notifications.append({
+                "type": "article_approval",
+                "message": f"Article '{article.title}' needs approval",
+                "article_id": article.id
+            })
+            
+        return jsonify({"notifications": notifications})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
