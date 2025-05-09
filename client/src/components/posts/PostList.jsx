@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import  api  from '../../lib/api';
 import CommentThread from '../CommentThread';
 
+
 const PostList = ({ posts, flagPost }) => {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState({});

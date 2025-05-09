@@ -31,7 +31,7 @@ function PopularGroups({ groups = [] }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
+    <div className="bg-cyan-400 p-6 rounded-lg shadow-lg">
       {currentGroups.length === 0 ? (
         <p className="text-gray-500 text-center">You haven't joined any communities yet.</p>
       ) : (

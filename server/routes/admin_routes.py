@@ -12,7 +12,7 @@ from utils.email_utils import send_email
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
-CORS(admin_bp, origins=["http://localhost:5173"], supports_credentials=True)
+CORS(admin_bp, origins=["http://localhost:5173",  "http://127.0.0.1:5173"], supports_credentials=True)
 
 # Middleware to check if the user is an admin
 @admin_bp.before_request
@@ -41,7 +41,7 @@ def preflight_ok():
 # ---------------------------- USERS ----------------------------
 
 @admin_bp.route('/admin/users', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:5173"], supports_credentials=True)
+@cross_origin(origins=["http://localhost:5173",  "http://127.0.0.1:5173"], supports_credentials=True)
 def get_users():
     if request.method == 'OPTIONS':
         return preflight_ok()

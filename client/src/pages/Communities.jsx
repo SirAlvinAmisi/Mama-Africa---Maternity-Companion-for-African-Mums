@@ -7,6 +7,8 @@ import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
 import PostList from '../components/posts/PostList';
 import Nutrition from '../components/Nutrition';
+import CommunityDetail from './CommunityDetail';
+import PostForm from '../components/posts/PostForm';
 
 const Communities = () => {
   const queryClient = useQueryClient();
@@ -60,6 +62,7 @@ const Communities = () => {
     queryKey: ['posts', selectedTrimester],
     queryFn: async () => {
       const communityId = groups?.[0]?.id;
+      // const joinedGroups = groups.filter(g => g.user_has_joined); 
       if (!communityId) return [];
       const res = await fetch(`http://localhost:5000/communities/${communityId}/posts`, {
         headers: {
@@ -224,7 +227,8 @@ const Communities = () => {
         </section>
 
         {/* Posts */}
-        <PostList posts={posts} flagPost={flagPost} />
+        {/* <PostList posts={posts} flagPost={flagPost} /> */}
+        <CommunityDetail posts={posts} flagPost={flagPost} flagArticle={flagArticle} />
       </div>
 
       {/* Sidebar */}
