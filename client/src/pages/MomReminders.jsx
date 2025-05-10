@@ -1,130 +1,244 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import Calendar from '../components/Calendar/Calendar'; 
-import Modal from 'react-modal';
+import React, { useState, useEffect } from 'react';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  isSameDay,
+  isBefore,
+  isSameMonth,
+  addMonths,
+  subMonths
+} from 'date-fns';
 
-export default function MomReminders() {
-  const [userName, setUserName] = useState('');
-  const [list, setList] = useState([]);
-  const [pregnancyInfo, setPregnancyInfo] = useState(null);
-
+const MomReminders = ({ userId }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
-  const [newReminderText, setNewReminderText] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    time: '',
+    type: 'appointment'
+  });
 
-  const token = localStorage.getItem('token');
-
+  const today = new Date();
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchEvents = async () => {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-        const [profileRes, remindersRes, pregRes] = await Promise.all([
-          axios.get('http://localhost:5000/me', { headers }),
-          axios.get('http://localhost:5000/mums/reminders', { headers }),
-          axios.get('http://localhost:5000/mums/pregnancy-info', { headers }),
-        ]);
-        setUserName(profileRes.data.first_name);
-        setList(remindersRes.data.reminders);
-        setPregnancyInfo({
-          ...pregRes.data,
-          firstTrimester: {
-            start: new Date(pregRes.data.last_period_date),
-            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 13 * 7 * 24 * 60 * 60 * 1000)
-          },
-          secondTrimester: {
-            start: new Date(new Date(pregRes.data.last_period_date).getTime() + 13 * 7 * 24 * 60 * 60 * 1000),
-            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 27 * 7 * 24 * 60 * 60 * 1000)
-          },
-          thirdTrimester: {
-            start: new Date(new Date(pregRes.data.last_period_date).getTime() + 27 * 7 * 24 * 60 * 60 * 1000),
-            end: new Date(new Date(pregRes.data.last_period_date).getTime() + 40 * 7 * 24 * 60 * 60 * 1000)
-          }
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('http://localhost:5000/mums/reminders', {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        if (!res.ok) throw new Error("Failed to fetch events");
+        const data = await res.json();
+
+        const normalized = (data.events || []).map(e => ({
+          id: e.id,
+          title: e.title || e.reminder_text, // Support both keys
+          type: e.type,
+          datetime: new Date(e.datetime)
+        }));
+
+        setEvents(normalized);
       } catch (err) {
-        console.error("Error loading data:", err);
+        console.error("Fetch error:", err);
       }
     };
-    fetchAll();
-  }, [token]);
 
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-    setIsModalOpen(true);
+    fetchEvents();
+  }, [userId]);
+
+
+  // useEffect(() => {
+  //   const fetchEvents = async () => {
+  //     try {
+  //       const token = localStorage.getItem('access_token');
+  //       const res = await fetch('http://localhost:5000/mums/reminders', {
+  //         headers: { Authorization: `Bearer ${token}` }
+  //       });
+  //       if (!res.ok) throw new Error("Failed to fetch events");
+  //       const data = await res.json();
+  //       const normalized = (data.events || []).map(e => ({
+  //         ...e,
+  //         datetime: new Date(e.datetime) // ⬅️ Ensure real Date object
+  //       }));
+  //       setEvents(normalized);
+  //     } catch (err) {
+  //       console.error("Fetch error:", err);
+  //     }
+  //   };
+
+  //   fetchEvents();
+  // }, [userId]);
+
+  const handleDayClick = (day) => {
+    if (isBefore(day, new Date(today.setHours(0, 0, 0, 0)))) {
+      alert("You cannot add events to past dates.");
+      return;
+    }
+    setSelectedDate(day);
+    setShowModal(true);
   };
 
-  const handleAddReminder = async () => {
-    if (!newReminderText || !selectedDate) return;
-    const reminderDate = selectedDate.toISOString().split('T')[0];
-    const payload = { reminder_text: newReminderText, reminder_date: reminderDate };
+  const handleSaveEvent = async () => {
+    if (!newEvent.title || !newEvent.time || !selectedDate) {
+      alert("All fields are required.");
+      return;
+    }
+
+    const token = localStorage.getItem('access_token');
+
     try {
-      await axios.post('http://localhost:5000/mums/reminders', payload, {
+      const res = await fetch(`http://localhost:5000/mums/reminder`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reminder_text: newEvent.title,
+          reminder_date: format(selectedDate, 'yyyy-MM-dd'),
+          reminder_time: newEvent.time,
+          type: newEvent.type
+        })
       });
-      setList(prev => [...prev, { text: newReminderText, date: reminderDate }]);
-      setNewReminderText('');
-      setIsModalOpen(false);
+
+      if (!res.ok) throw new Error("Failed to save");
+
+      const saved = await res.json();
+      setEvents(prev => [...prev, {
+        ...saved.event,
+        datetime: new Date(saved.event.datetime) // ensure real Date
+      }]);
+      setShowModal(false);
+      setNewEvent({ title: '', time: '', type: 'appointment' });
     } catch (err) {
-      console.error("Failed to add reminder:", err);
+      console.error("Save error:", err);
+      alert("Could not save event.");
     }
   };
 
-  return (
-    // <div className="bg-cyan-600 text-black p-6 rounded shadow-xl w-full max-w-md mx-auto mt-10">
-    <div className="bg-cyan-600 text-black p-4 sm:p-6 rounded shadow-xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto mt-10">
-  
-      {/* <Calendar
-        userType="mom"
-        events={list}
-        onDateSelect={handleDateClick}
-        pregnancyInfo={pregnancyInfo}
-      /> */}
-      <Calendar
-        userType="mom"
-        events={list}
-        setEvents={setList} // ✅ Add this!
-        onDateSelect={handleDateClick}
-        pregnancyInfo={pregnancyInfo}
-      />
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
+  const renderDays = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    const rows = [];
+    let day = startDate;
 
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        ariaHideApp={false}
-        className="bg-cyan-600 text-black p-6 rounded shadow-xl w-full max-w-md mx-auto mt-10"
-      >
-        <h3 className="text-lg font-semibold mb-2">
-          Add Reminder for {selectedDate?.toDateString()}
-        </h3>
-        <input
-          type="text"
-          value={newReminderText}
-          onChange={(e) => setNewReminderText(e.target.value)}
-          placeholder="E.g., Clinic visit at 9AM"
-          className="border p-2 w-full mb-4 rounded"
-        />
-        <button
-          onClick={handleAddReminder}
-          className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700"
-        >
-          Save Reminder
-        </button>
-      </Modal>
-
-      <h3 className="text-lg font-bold text-cyan mt-6 mb-2">📋 Upcoming Reminders</h3>
-      {list.length ? (
-        list.map((r, i) => (
-          <div key={i} className="mb-3 p-4 border-l-4 border-blue-500 bg-cyan-300 rounded shadow">
-            <p className="font-medium text-blue-800">{new Date(r.date).toLocaleDateString()}</p>
-            <p>{r.text}</p>
+    while (day <= endDate) {
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const cloneDay = day;
+        const isToday = isSameDay(cloneDay, new Date());
+        const isPast = isBefore(cloneDay, new Date().setHours(0, 0, 0, 0));
+        const hasEvent = events.some(event => isSameDay(event.datetime, cloneDay));
+        days.push(
+          <div
+            key={cloneDay}
+            className={`p-3 border text-center transition rounded
+              ${!isSameMonth(cloneDay, monthStart) ? 'bg-gray-100 text-gray-400' : ''}
+              ${isPast ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'cursor-pointer hover:bg-purple-50'}
+              ${isToday ? 'bg-purple-100 border-purple-500 font-bold' : ''}
+              ${hasEvent ? 'bg-purple-200 border-purple-300' : ''}`}
+            onClick={isPast ? undefined : () => handleDayClick(cloneDay)}
+          >
+            {format(cloneDay, 'd')}
           </div>
-        ))
-      ) : (
-        <p className="text-gray-600 italic">No reminders yet — you're all caught up! 🎉</p>
+        );
+        day = addDays(day, 1);
+      }
+      rows.push(<div key={day} className="grid grid-cols-7 gap-2">{days}</div>);
+    }
+    return rows;
+  };
+
+  const eventsForSelectedDate = selectedDate
+    ? events.filter(event => isSameDay(event.datetime, selectedDate))
+    : [];
+
+  return (
+    <div className="max-w-5xl bg-white mx-auto p-6">
+      <h2 className="text-3xl font-bold text-purple-700 text-center mb-6">Mom Calendar</h2>
+
+      <div className="flex justify-between items-center mb-4">
+        <button onClick={prevMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">&lt;</button>
+        <h3 className="text-2xl font-bold text-cyan-900">{format(currentMonth, 'MMMM yyyy')}</h3>
+        <button onClick={nextMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">&gt;</button>
+      </div>
+
+      <div className="grid grid-cols-7 text-center font-bold mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-purple-700 font-bold">{day}</div>
+        ))}
+      </div>
+
+      <div className="space-y-2 text-black font-bold">{renderDays()}</div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-cyan-900 bg-opacity-40 flex justify-center items-center z-20">
+          <div className="bg-cyan-300 p-6 rounded-lg w-[90%] max-w-md relative shadow-lg">
+            <button onClick={() => setShowModal(false)} className="absolute top-2 right-2 text-xl font-bold text-cyan-900 hover:text-red-600">✕</button>
+            <h3 className="text-xl font-bold mb-4 text-cyan-900">Add Event for {format(selectedDate, 'PPP')}</h3>
+            <input type="text" placeholder="Title" className="w-full border p-2 rounded bg-gray-100 text-black mb-3" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} />
+            <input type="time" className="w-full border bg-gray-100 text-black p-2 rounded mb-3" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} />
+            <select className="w-full border p-2 bg-gray-100 text-black rounded mb-3" value={newEvent.type} onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}>
+              <option value="appointment">Appointment</option>
+              <option value="scan">Scan</option>
+              <option value="class">Class</option>
+            </select>
+            <div className="flex justify-between">
+              <button onClick={() => setShowModal(false)} className="w-[48%] bg-cyan-600 font-bold text-black hover:bg-red-600 p-2 rounded">Cancel</button>
+              <button onClick={handleSaveEvent} className="w-[48%] bg-cyan-600 font-bold text-black p-2 rounded hover:bg-purple-700">Save Event</button>
+            </div>
+          </div>
+        </div>
       )}
+      <div className="mt-8">
+        <h3 className="text-xl font-bold text-cyan-900 mb-4">
+          All Saved Events
+        </h3>
+        {events.length === 0 ? (
+          <p className="text-black">No saved events yet.</p>
+        ) : (
+          events
+            .sort((a, b) => new Date(a.datetime) - new Date(b.datetime)) // sort chronologically
+            .map((event, index) => (
+              <div key={index} className="bg-cyan-300 border p-4 rounded mb-2">
+                <h4 className="font-bold text-purple-700">{event.title}</h4>
+                <p className="capitalize font-black text-black">{event.type}</p>
+                <p className="text-black">
+                  {format(new Date(event.datetime), 'PPPP p')}
+                </p>
+              </div>
+            ))
+        )}
+      </div>
+
+      {/* {selectedDate && (
+        <div className="mt-8">
+          <h3 className="text-xl font-bold text-cyan-900 mb-4">Events for {format(selectedDate, 'PPP')}</h3>
+          {eventsForSelectedDate.length === 0 ? (
+            <p className="text-black">No events on this date.</p>
+          ) : (
+            eventsForSelectedDate.map((event, index) => (
+              <div key={index} className="bg-cyan-300 border p-4 rounded mb-2">
+                <h4 className="font-bold text-purple-700">{event.title}</h4>
+                <p className="capitalize font-black text-black">{event.type}</p>
+                <p className='text-black'>{format(event.datetime, 'hh:mm a')}</p>
+              </div>
+            ))
+          )}
+        </div>
+      )} */}
     </div>
   );
-}
+};
+
+export default MomReminders;

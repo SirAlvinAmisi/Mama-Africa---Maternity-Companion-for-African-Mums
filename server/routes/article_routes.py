@@ -1,25 +1,29 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Article
+from models import db, Article, User, Profile
 from sqlalchemy import desc
 
 article_bp = Blueprint('article', __name__)
 
 @article_bp.route('/articles', methods=['GET'])
 def get_articles():
-    limit = request.args.get('limit', default=None, type=int)
-    query = Article.query.filter_by(is_approved=True).order_by(desc(Article.created_at))
-    articles = query.limit(limit).all() if limit else query.all()
-    return jsonify({"articles": [
-        {
+    articles = Article.query.join(User).join(Profile).filter(
+        Article.is_approved == True,
+        User.role == 'health_pro',
+        Profile.is_verified == True
+    ).order_by(desc(Article.created_at)).all()
+
+    return jsonify({
+        "articles": [{
             "id": a.id,
             "title": a.title,
             "content": a.content,
             "category": a.category,
-            "created_at": a.created_at,
-            "author_id": a.author_id
-        } for a in articles
-    ]})
+            "created_at": a.created_at.isoformat(),
+            "author": a.author.profile.full_name if a.author and a.author.profile else "Unknown"
+        } for a in articles]
+    }), 200
+
 
 @article_bp.route('/articles', methods=['POST'])
 @jwt_required()

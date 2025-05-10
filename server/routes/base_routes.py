@@ -11,12 +11,18 @@ def index():
 @base_bp.route('/profile', methods=['GET'])
 def get_profile():
     users = Profile.query.all()
+    # users = Profile.query.filter(
+    #     (Profile.role != 'health_pro') | (Profile.is_verified == True)
+    # ).all()
+
     return jsonify({"users": [
         {
             "id": user.id,
             "full_name": user.full_name,
             "region": user.region,
-            "bio": user.bio
+            "bio": user.bio, 
+            "role": user.role,
+            "profile_picture": user.profile_picture,
         } for user in users
     ]})
 
