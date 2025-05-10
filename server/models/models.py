@@ -104,11 +104,12 @@ class Post(db.Model):
     title = db.Column(String(255))
     content = db.Column(Text)
     media_url = db.Column(String(200))
+    media_type = db.Column(db.String(50))
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
     is_flagged = db.Column(db.Boolean, default=False)
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
-    likers = db.relationship("User", secondary="post_likes", backref="liked_posts")
+    likers = db.relationship("User", secondary="post_likes", backref="liked_posts", passive_deletes=True)
 
 class Article(db.Model):
     id = db.Column(Integer, primary_key=True)
@@ -137,7 +138,7 @@ class Comment(db.Model):
         backref=db.backref('parent', remote_side=[id]),
         cascade="all, delete-orphan"
     )
-    likers = db.relationship("User", secondary=comment_likes, backref="liked_comments")
+    likers = db.relationship("User", secondary=comment_likes, backref="liked_comments", passive_deletes=True)
 
     @property
     def parent_id(self):

@@ -30,7 +30,7 @@ def create_post(community_id):
             os.makedirs(upload_folder, exist_ok=True)
             filepath = os.path.join(upload_folder, filename)
             media_file.save(filepath)
-            media_url = f"/{filepath}"
+            media_url = f"/uploads/{filename}"
             media_type = 'video' if filename.lower().endswith(('mp4', 'mov')) else 'image'
 
     new_post = Post(

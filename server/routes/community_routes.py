@@ -117,6 +117,7 @@ def get_community_posts(id):
 
 
 # Join community
+# Join community
 @community_bp.route('/communities/<int:community_id>/join', methods=['POST'])
 @jwt_required()
 def join_community(community_id):
@@ -124,18 +125,27 @@ def join_community(community_id):
     user = User.query.get(user_id)
     community = Community.query.get_or_404(community_id)
 
-    if user in community.members:
-        return jsonify({"error": "Already a member"}), 400
+    member_ids = {u.id for u in community.members}
+    print("📍Before join:", list(member_ids))
+
+    if user_id in member_ids:
+        return jsonify({
+            "success": False,
+            "message": "You are already a member of this community.",
+            "is_member": True,
+            "member_count": len(member_ids)
+        }), 400
 
     community.members.append(user)
     db.session.commit()
 
     return jsonify({
         "success": True,
-        "message": "Successfully joined community",
-        "member_count": len(community.members),
-        "is_member": True
+        "message": "Successfully joined community.",
+        "is_member": True,
+        "member_count": len(community.members)
     }), 200
+
 
 
 # Leave community

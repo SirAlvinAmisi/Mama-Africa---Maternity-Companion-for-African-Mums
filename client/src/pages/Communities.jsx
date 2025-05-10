@@ -15,6 +15,7 @@ const Communities = () => {
   const navigate = useNavigate();
   const [selectedTrimester, setSelectedTrimester] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 5;
 
   const token = localStorage.getItem('access_token');
@@ -62,7 +63,6 @@ const Communities = () => {
     queryKey: ['posts', selectedTrimester],
     queryFn: async () => {
       const communityId = groups?.[0]?.id;
-      // const joinedGroups = groups.filter(g => g.user_has_joined); 
       if (!communityId) return [];
       const res = await fetch(`http://localhost:5000/communities/${communityId}/posts`, {
         headers: {
@@ -86,7 +86,7 @@ const Communities = () => {
         return;
       }
 
-      const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/join`, {
+      const res = await fetch(`http://localhost:5000/communities/${communityId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -100,63 +100,14 @@ const Communities = () => {
     onSuccess: () => queryClient.invalidateQueries(['communities']),
   });
 
-  const leaveMutation = useMutation({
-    mutationFn: async (communityId) => {
-      const res = await fetch(`http://localhost:5000/mums/communities/${communityId}/leave`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!res.ok) throw new Error('Failed to leave community');
-      return res.json();
-    },
-    onSuccess: () => queryClient.invalidateQueries(['communities']),
-  });
-
-  const flagPost = async (postId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/posts/${postId}/flag`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to flag post');
-      alert('Post flagged successfully');
-      queryClient.invalidateQueries(['posts']);
-    } catch (error) {
-      console.error('Error flagging post:', error);
-      alert('Failed to flag post');
-    }
-  };
-
-  const flagArticle = async (articleId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/articles/${articleId}/flag`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to flag article');
-      alert('Article flagged successfully');
-      queryClient.invalidateQueries(['articles']);
-    } catch (error) {
-      console.error('Error flagging article:', error);
-      alert('Failed to flag article');
-    }
-  };
+  const filteredGroups = groups.filter(group =>
+    group.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentGroups = groups.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(groups.length / itemsPerPage);
+  const currentGroups = filteredGroups.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
 
   if (groupsLoading || postsLoading) {
     return (
@@ -171,9 +122,15 @@ const Communities = () => {
       <div className="flex-1 flex flex-col gap-6">
         <Welcome />
 
-        {/* Community Cards */}
         <section className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-cyan-700">Explore Communities</h2>
+          <input
+            type="text"
+            placeholder="Search communities..."
+            className="mb-4 p-2 border rounded w-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             {currentGroups.map(group => (
               <div
@@ -193,7 +150,7 @@ const Communities = () => {
                   >
                     View Community
                   </button>
-                  {validToken && (
+                  {validToken && !group.is_member && (
                     <button
                       onClick={() => joinMutation.mutate(group.id)}
                       className="text-xs text-black font-bold border border-cyan-900 hover:bg-cyan-100 px-4 py-2 rounded-full transition"
@@ -206,7 +163,6 @@ const Communities = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           <div className="flex justify-center mt-6 gap-4">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -217,8 +173,8 @@ const Communities = () => {
             </button>
             <span className="text-gray-700 pt-2">Page {currentPage} of {totalPages}</span>
             <button
-              onClick={() => setCurrentPage(prev => (indexOfLastItem < groups.length ? prev + 1 : prev))}
-              disabled={indexOfLastItem >= groups.length}
+              onClick={() => setCurrentPage(prev => (indexOfLastItem < filteredGroups.length ? prev + 1 : prev))}
+              disabled={indexOfLastItem >= filteredGroups.length}
               className="px-4 py-2 bg-cyan-600 text-white rounded disabled:bg-gray-400"
             >
               Next
@@ -226,12 +182,9 @@ const Communities = () => {
           </div>
         </section>
 
-        {/* Posts */}
-        {/* <PostList posts={posts} flagPost={flagPost} /> */}
-        <CommunityDetail posts={posts} flagPost={flagPost} flagArticle={flagArticle} />
+        <CommunityDetail posts={posts} />
       </div>
 
-      {/* Sidebar */}
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
         <ParentingDevelopment />
         <BabyCorner />
