@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+// client/src/components/health-pro/ProfileSection.jsx
+import React, { useState, useEffect } from 'react';
 import { MdVerified, MdEdit, MdSave, MdEmail, MdCalendarToday } from 'react-icons/md';
+import axios from 'axios';
 
 const mockProfile = {
   name: "Dr. Wanjiku Mumbi",
@@ -19,6 +21,36 @@ const mockProfile = {
 export default function ProfileSection() {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState(mockProfile);
+
+  // New state variables for articles, scans, and recommended clinics
+  const [articles, setArticles] = useState([]);
+  const [scans, setScans] = useState([]);
+  const [clinics, setClinics] = useState([]);
+
+  // Fetch data when component mounts
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    const authHeaders = {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    };
+
+    // Fetch articles
+    axios.get('http://localhost:5000/healthpros/articles', authHeaders)
+      .then(response => setArticles(response.data))
+      .catch(error => console.error('Error fetching articles:', error));
+
+    // Fetch scans
+    axios.get('http://localhost:5000/mums/upload_scan', authHeaders)
+      .then(response => setScans(response.data))
+      .catch(error => console.error('Error fetching scans:', error));
+
+    // Fetch recommended clinics
+    axios.get('http://localhost:5000/healthpros/recommendations', authHeaders)
+      .then(response => setClinics(response.data))
+      .catch(error => console.error('Error fetching clinics:', error));
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,6 +108,45 @@ export default function ProfileSection() {
             <span className="text-yellow-600">Verification Pending</span>
           )}
         </div>
+      </div>
+
+      {/* New Sections for Articles, Scans, and Recommended Clinics */}
+      <div className="mt-6">
+        {/* Articles Section */}
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">Articles</h3>
+        {articles.length > 0 ? (
+          <ul className="list-disc list-inside">
+            {articles.map((article, index) => (
+              <li key={index}>{article.title}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">No articles available.</p>
+        )}
+
+        {/* Scans Section */}
+        <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">Scans</h3>
+        {scans.length > 0 ? (
+          <ul className="list-disc list-inside">
+            {scans.map((scan, index) => (
+              <li key={index}>{scan.description}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">No scans available.</p>
+        )}
+
+        {/* Recommended Clinics Section */}
+        <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">Recommended Clinics</h3>
+        {clinics.length > 0 ? (
+          <ul className="list-disc list-inside">
+            {clinics.map((clinic, index) => (
+              <li key={index}>{clinic.name}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">No recommended clinics available.</p>
+        )}
       </div>
     </div>
   );
