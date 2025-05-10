@@ -12,6 +12,9 @@ export default function Home() {
   useEffect(() => {
     axios.get('http://localhost:5000/profile')
       .then(response => {
+        console.log("🔍 Raw response:", response.data);
+        const keywords = ["mum", "pregnan", "expect", "mother"];
+        
         const mums = response.data.users.filter(user =>
           user.bio && (
             user.bio.toLowerCase().includes("mum") ||
@@ -20,14 +23,18 @@ export default function Home() {
             user.bio.toLowerCase().includes("mother")
           )
         );
-
+        console.log("🔍 Filtered Mums:", mums);     
+         
+        // if (mums.length > 0) {
+        //   const randomMums = [];
+        //   while (randomMums.length < 3 && mums.length > 0) {
+        //     const randomIndex = Math.floor(Math.random() * mums.length);
+        //     randomMums.push(mums.splice(randomIndex, 1)[0]);
+        //   }
+        //   setFeaturedMums(randomMums);
+        // }
         if (mums.length > 0) {
-          const randomMums = [];
-          while (randomMums.length < 3 && mums.length > 0) {
-            const randomIndex = Math.floor(Math.random() * mums.length);
-            randomMums.push(mums.splice(randomIndex, 1)[0]);
-          }
-          setFeaturedMums(randomMums);
+          setFeaturedMums(mums); // use all mums
         }
       })
       .catch(error => {
@@ -55,7 +62,7 @@ export default function Home() {
               Meet Our Members and Their Stories
             </h2>
 
-            <Swiper
+            {/* <Swiper
               modules={[Autoplay, Pagination]}
               spaceBetween={30}
               breakpoints={{
@@ -66,18 +73,34 @@ export default function Home() {
               autoplay={{ delay: 2000, disableOnInteraction: false }}
               loop
               pagination={{ clickable: true }}
+            > */}
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={30}
+              breakpoints={{
+                640: { slidesPerView: 1, slidesPerGroup: 1 },
+                768: { slidesPerView: 2, slidesPerGroup: 1 },
+                1024: { slidesPerView: 3, slidesPerGroup: 1 }, // 👈 3 visible, scroll 1
+              }}
+              autoplay={{ delay: 2000, disableOnInteraction: false }}
+              loop={true}
+              speed={800}
+              grabCursor={true}
+              pagination={{ clickable: true }}
             >
+
               {featuredMums.map((mum, index) => (
                 <SwiperSlide key={index}>
                   <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
                     {/* Mum's Photo */}
                     <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
                       <img
-                        src="https://source.unsplash.com/featured/?african,motherhood"
+                        src={mum.profile_picture}
                         loading="lazy"
-                        alt={`Featured Mum ${index + 1}`}
+                        alt={`Profile of ${mum.full_name}`}
                         className="object-cover w-full h-full"
                       />
+
                     </div>
 
                     {/* Mum's Details */}

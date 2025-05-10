@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import ArticlesReview from '../components/admin/ArticlesReview';
 import PostReview from '../components/admin/PostReview';
 import CommunityReview from '../components/admin/CommunityReview';
+import Notification from '../components/Notification';
 import NotificationsTab from '../components/admin/NotificationsTab';
 
 const Admin = () => {
@@ -177,7 +178,8 @@ const Admin = () => {
             {activeTab === 'articles' && <ArticlesReview />}
             {activeTab === 'posts' && <PostReview />}
             {activeTab === 'communities' && <CommunityReview />}
-            {activeTab === 'notifications' && <NotificationsTab />}
+            {activeTab === 'notifications' && <Notification />}
+            {/* {activeTab === 'notifications' && <NotificationsTab />} */}
           </>
         )}
       </div>

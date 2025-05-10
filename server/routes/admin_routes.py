@@ -14,7 +14,7 @@ from datetime import datetime
 admin_bp = Blueprint('admin', __name__)
 CORS(admin_bp, origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
 
-# Middleware to check if the user is an admin
+# ====Middleware to check if the user is an admin============
 @admin_bp.before_request
 def check_admin():
     if request.method == 'OPTIONS':
@@ -36,7 +36,7 @@ def check_admin():
 def preflight_ok():
     return jsonify({"message": "Preflight OK"}), 200
 
-# ---------------------------- USERS ----------------------------
+# ----------------------------View USERS ----------------------------
 @admin_bp.route('/admin/users', methods=['GET', 'OPTIONS'])
 @cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
 def get_users():
@@ -44,6 +44,11 @@ def get_users():
         return preflight_ok()
 
     users = User.query.order_by(User.created_at.desc()).all()
+    filtered_users = []
+    
+    for u in users:
+        filtered_users.append(u)
+
     return jsonify({"users": [{
         "id": u.id,
         "email": u.email,
@@ -56,8 +61,10 @@ def get_users():
             "license_number": u.profile.license_number if u.profile else "",
             "is_verified": u.profile.is_verified if u.profile else False
         }
-    } for u in users]})
+    } for u in filtered_users]})
 
+
+# ----------------------------Add USERS ----------------------------
 @admin_bp.route('/admin/add_user', methods=['POST'])
 @jwt_required()
 @role_required("admin")
@@ -101,6 +108,7 @@ def add_user():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+# ----------------------------Verify USERS ----------------------------
 @admin_bp.route('/admin/verify-user/<int:user_id>', methods=['POST'])
 @jwt_required()
 @role_required("admin")
@@ -126,29 +134,85 @@ def verify_user(user_id):
     db.session.commit()
     return jsonify({"message": "User verified successfully"})
 
+# ----------------------------Approve USERS ----------------------------
+# @admin_bp.route('/admin/approve_healthpro/<int:user_id>', methods=['POST'])
+# @jwt_required()
+# @role_required("admin")
+# def approve_healthpro(user_id):
+#     user = User.query.get(user_id)
+#     if not user or user.role != 'health_pro':
+#         return jsonify({"error": "Invalid health professional"}), 404
+
+#     if not user.profile:
+#         return jsonify({"error": "User profile not found"}), 404
+
+#     user.profile.is_verified = True
+
+#     VerificationRequest.query.filter_by(user_id=user.id, is_resolved=False).update({"is_resolved": True})
+
+#     db.session.add(Notification(
+#         user_id=user.id,
+#         message="Your verification request has been approved by admin.",
+#         link="/profile"
+#     ))
+
+#     db.session.commit()
+#     return jsonify({"message": "Health professional verified successfully"})
 @admin_bp.route('/admin/approve_healthpro/<int:user_id>', methods=['POST'])
 @jwt_required()
-@role_required("admin")
-def approve_healthpro(user_id):
-    user = User.query.get(user_id)
-    if not user or user.role != 'health_pro':
-        return jsonify({"error": "Invalid health professional"}), 404
+@role_required('admin')
+def approve_health_pro(user_id):
+    user = User.query.get_or_404(user_id)
 
-    if not user.profile:
-        return jsonify({"error": "User profile not found"}), 404
+    if user.role != 'health_pro' or not user.profile:
+        return jsonify({"error": "Invalid health professional"}), 400
 
-    user.profile.is_verified = True
-
-    VerificationRequest.query.filter_by(user_id=user.id, is_resolved=False).update({"is_resolved": True})
-
-    db.session.add(Notification(
-        user_id=user.id,
-        message="Your verification request has been approved by admin.",
-        link="/profile"
-    ))
-
+    user.profile.is_verified = True  # ✅ This must be here
     db.session.commit()
-    return jsonify({"message": "Health professional verified successfully"})
+
+    return jsonify({"message": f"{user.profile.full_name} verified successfully"}), 200
+
+# ----------------------------Promote USERS to admin----------------------------
+@admin_bp.route('/admin/promote/<int:user_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def promote_user_to_admin(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.role = "admin"
+    db.session.commit()
+
+    return jsonify({"message": f"User {user.email} promoted to admin"}), 200
+
+# ----------------------------Deactivate/delete USERS ----------------------------
+@admin_bp.route('/admin/deactivate/<int:user_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def deactivate_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.is_active = False
+    db.session.commit()
+
+    return jsonify({"message": f"User {user.email} deactivated"}), 200
+
+
+@admin_bp.route('/admin/activate/<int:user_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def activate_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.is_active = True
+    db.session.commit()
+
+    return jsonify({"message": f"User {user.email} activated"}), 200
 
 # ---------------------------- NOTIFICATIONS ----------------------------
 @admin_bp.route('/admin/notifications', methods=['GET'])
@@ -177,5 +241,204 @@ def get_admin_notifications():
 
         return jsonify({"notifications": notifications})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ----------------------------Create Category----------------------------
+@admin_bp.route('/admin/create_category', methods=['POST'])
+@jwt_required()
+@role_required("admin")
+def create_category():
+    data = request.get_json()
+    name = data.get("name")
+
+    if not name:
+        return jsonify({"error": "Category name required"}), 400
+
+    from models import Category
+    if Category.query.filter_by(name=name).first():
+        return jsonify({"error": "Category already exists"}), 400
+
+    new_category = Category(name=name)
+    db.session.add(new_category)
+    db.session.commit()
+
+    return jsonify({"message": f"Category '{name}' created successfully"}), 201
+
+# ----------------------------Get articles----------------------------
+@admin_bp.route('/admin/articles', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_pending_articles():
+    try:
+        articles = Article.query.filter_by(is_approved=False).order_by(Article.created_at.desc()).all()
+
+        return jsonify({
+            "articles": [{
+                "id": a.id,
+                "title": a.title,
+                "content": a.content,
+                "is_approved": a.is_approved,
+                "is_flagged": a.is_flagged,
+                "created_at": a.created_at.isoformat()
+            } for a in articles]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ----------------------------Approve Article----------------------------
+@admin_bp.route('/admin/approve_article/<int:article_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def approve_article(article_id):
+    article = Article.query.get(article_id)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+
+    article.is_approved = True
+    db.session.commit()
+
+    return jsonify({"message": f"Article '{article.title}' approved"}), 200
+
+# ----------------------------Flag Article----------------------------
+@admin_bp.route('/admin/flag_article/<int:article_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def flag_article(article_id):
+    article = Article.query.get(article_id)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+
+    article.is_flagged = True
+    db.session.commit()
+
+    return jsonify({"message": f"Article '{article.title}' flagged"}), 200
+
+# ----------------------------delete Article----------------------------
+@admin_bp.route('/admin/delete_article/<int:article_id>', methods=['DELETE'])
+@jwt_required()
+@role_required("admin")
+def delete_article(article_id):
+    article = Article.query.get(article_id)
+    if not article:
+        return jsonify({"error": "Article not found"}), 404
+
+    db.session.delete(article)
+    db.session.commit()
+
+    return jsonify({"message": f"Article '{article.title}' deleted"}), 200
+
+# ----------------------------View and Delete Post----------------------------
+@admin_bp.route('/admin/posts', methods=['GET', 'OPTIONS'])
+@cross_origin(origins=["http://127.0.0.1:5173", "http://localhost:5173"], supports_credentials=True)
+def get_admin_posts():
+    if request.method == 'OPTIONS':
+        return '', 200  # Preflight response
+
+    # Your actual logic
+    posts = Post.query.all()
+    return jsonify({
+        "posts": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "content": p.content,
+                "status": p.status,
+                "user": {
+                    "full_name": p.author.profile.full_name if p.author and p.author.profile else "Unknown"
+                },
+                "community": {
+                    "name": p.community.name if p.community else "N/A"
+                }
+            }
+            for p in posts
+        ]
+    })
+    
+@admin_bp.route('/admin/delete_post/<int:post_id>', methods=['DELETE'])
+@jwt_required()
+@role_required("admin")
+def delete_post(post_id):
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({"error": "Post not found"}), 404
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({"message": "Post deleted"}), 200
+
+# ----------------------------Create Community----------------------------
+@admin_bp.route('/admin/create_community', methods=['POST'])
+@jwt_required()
+@role_required("admin")
+def create_community():
+    data = request.get_json()
+    name = data.get("name")
+    description = data.get("description", "")
+    image = data.get("image", "")
+
+    if not name:
+        return jsonify({"error": "Community name required"}), 400
+
+    new_community = Community(name=name, description=description, image=image)
+    db.session.add(new_community)
+    db.session.commit()
+
+    return jsonify({"message": f"Community '{name}' created"}), 201
+
+# ----------------------------Reset Password----------------------------
+@admin_bp.route('/admin/reset_password', methods=['POST'])
+@jwt_required()
+@role_required("admin")
+def reset_password():
+    data = request.get_json()
+    email = data.get("email")
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    temp_password = "Temp1234Reset!"
+    user.set_password(temp_password)
+    db.session.commit()
+
+    send_email(
+        to=email,
+        subject="Your Password Has Been Reset",
+        body=f"Your temporary password is: {temp_password}\nPlease log in and change it immediately."
+    )
+
+    return jsonify({"message": f"Temporary password sent to {email}"}), 200
+
+# ----------------------------Approve Community----------------------------
+@admin_bp.route('/admin/approve_community/<int:community_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def approve_community(community_id):
+    community = Community.query.get(community_id)
+    if not community:
+        return jsonify({"error": "Community not found"}), 404
+
+    community.status = "approved"
+    db.session.commit()
+    return jsonify({"message": f"Community '{community.name}' approved"}), 200
+
+# ----------------------------Pending Community----------------------------
+@admin_bp.route('/admin/communities/pending', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_pending_communities():
+    try:
+        pending = Community.query.filter_by(status="pending").all()
+        return jsonify({
+            "communities": [{
+                "id": c.id,
+                "name": c.name,
+                "description": c.description,
+                "image": c.image,
+                "status": c.status
+            } for c in pending]
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

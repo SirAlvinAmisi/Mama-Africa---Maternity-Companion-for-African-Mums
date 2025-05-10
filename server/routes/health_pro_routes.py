@@ -13,7 +13,8 @@ health_bp = Blueprint('health_pro', __name__)
 # 1. GET all health professionals
 @health_bp.route('/healthpros', methods=['GET'])
 def get_healthpros():
-    specialists = User.query.filter_by(role='health_pro').all()
+    # specialists = User.query.filter_by(role='health_pro').all()
+    specialists = User.query.filter_by(role='health_pro').join(Profile).filter(Profile.is_verified == True).all()
     results = []
     for specialist in specialists:
         profile = specialist.profile
@@ -35,9 +36,11 @@ def get_healthpros():
 # 2. GET single health pro
 @health_bp.route('/healthpros/<int:id>', methods=['GET'])
 def get_healthpro_by_id(id):
-    specialist = User.query.filter_by(id=id, role='health_pro').first()
-    if not specialist:
-        return jsonify({"error": "Health professional not found"}), 404
+    # specialist = User.query.filter_by(id=id, role='health_pro').first()
+    specialist = User.query.filter_by(id=id, role='health_pro').join(Profile).filter(Profile.is_verified == True).first()
+    if not specialist or not specialist.profile or not specialist.profile.is_verified:
+        return jsonify({"error": "Health professional not verified"}), 403
+
     profile = specialist.profile
     return jsonify({
         "health_professional": {
@@ -56,11 +59,23 @@ def get_healthpro_by_id(id):
     })
 
 # 3. GET current health pro info
+# @health_bp.route('/healthpros/me', methods=['GET'])
+# @role_required("health_pro")
+# def health_pro_me():
+#     user = User.query.get(int(get_jwt_identity()))
+#     return {"email": user.email, "created_at": user.created_at}
 @health_bp.route('/healthpros/me', methods=['GET'])
 @role_required("health_pro")
 def health_pro_me():
     user = User.query.get(int(get_jwt_identity()))
-    return {"email": user.email, "created_at": user.created_at}
+    return {
+        "email": user.email,
+        "created_at": user.created_at,
+        "full_name": user.profile.full_name if user.profile else "",
+        "region": user.profile.region if user.profile else "",
+        "is_verified": user.profile.is_verified if user.profile else False
+    }
+
 
 # 4. POST update profile
 @health_bp.route('/healthpros/profile', methods=['POST'])
@@ -382,20 +397,3 @@ def create_event():
 
 
 
-# @health_bp.route('/healthpros/events', methods=['GET'])
-# @jwt_required()
-# @role_required("health_pro")
-# def get_my_events():
-#     user_id = get_jwt_identity()
-#     reminders = Reminder.query.filter_by(user_id=user_id).all()
-
-#     return jsonify({
-#         "events": [
-#             {
-#                 "id": r.id,
-#                 "title": r.reminder_text,
-#                 "datetime": r.reminder_date.isoformat(),
-#                 "type": r.type
-#             } for r in reminders
-#         ]
-#     })

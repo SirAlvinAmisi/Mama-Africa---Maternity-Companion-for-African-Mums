@@ -6,7 +6,7 @@ from .mum_routes import mum_bp
 from .community_routes import community_bp
 from .article_routes import article_bp
 from .clinic_routes import clinic_bp
-from .media_routes import media_bp
+# from .media_routes import media_bp
 from .nutrition_routes import nutrition_bp
 from .chat_routes import chat_bp
 from .topic_routes import topic_bp
@@ -26,7 +26,7 @@ def register_routes(app):
     app.register_blueprint(community_bp)
     app.register_blueprint(article_bp)
     app.register_blueprint(clinic_bp)
-    app.register_blueprint(media_bp)
+    # app.register_blueprint(media_bp)
     app.register_blueprint(nutrition_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(topic_bp)

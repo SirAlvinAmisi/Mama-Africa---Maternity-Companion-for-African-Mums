@@ -137,7 +137,8 @@ with app.app_context():
                 title=title,
                 content=f"This is a helpful article about {category.lower()} authored by {specialist.profile.full_name}.",
                 category=category,
-                is_approved=True
+                is_approved=False,
+                is_flagged=False
             )
             articles.append(article)
 
@@ -147,28 +148,72 @@ with app.app_context():
 
     # 3. MUMS
     mums = [
-        ("amina@mama.africa", "Amina Mohamed", "Mombasa", "First-time mum, excited and curious!", "https://i.pinimg.com/736x/6e/c7/aa/6ec7aa67461bec0c0c9c73287d6187b1.jpg"),
-        ("lucy@mama.africa", "Lucy Kamau", "Nakuru", "Expecting my second baby, managing toddlers too!", "https://i.pinimg.com/736x/9e/7e/de/9e7edeee91c24eaab1354ba5b4af110d.jpg"),
-        ("fatma@mama.africa", "Fatma Hussein", "Garissa", "Navigating traditional practices with modern care.", "https://i.pinimg.com/736x/47/01/58/47015880ed8125bae343548574dbf7a6.jpg"),
-        ("janet@mama.africa", "Janet Wanjiru", "Nairobi", "Career mum balancing office and motherhood.", "https://i.pinimg.com/736x/bf/c3/98/bfc398f8e8269342bda0e18dd2707283.jpg"),
-        ("mary@mama.africa", "Mary Atieno", "Kisumu", "22 years old, first pregnancy.", "https://i.pinimg.com/736x/c1/e4/72/c1e4724cb114074ab925ddab8f9ea73f.jpg"),
-        ("beatrice@mama.africa", "Beatrice Nyambura", "Eldoret", "Third pregnancy, previous high-risk case.", "https://i.pinimg.com/736x/69/05/0f/69050f9c018e5cf0aabf06c4367c9069.jpg"),
+        {
+            "email": "amina@mama.africa",
+            "full_name": "Amina Mohamed",
+            "region": "Mombasa",
+            "bio": "First-time mum, excited and curious!",
+            "profile_picture": "https://i.pinimg.com/736x/fc/55/bc/fc55bc7eda962deaa9e657fff39311d8.jpg"
+        },
+        {
+            "email": "lucy@mama.africa",
+            "full_name": "Lucy Kamau",
+            "region": "Nakuru",
+            "bio": "Expecting my second baby, managing toddlers too!",
+            "profile_picture": "https://i.pinimg.com/736x/9e/7e/de/9e7edeee91c24eaab1354ba5b4af110d.jpg"
+        },
+        {
+            "email": "fatma@mama.africa",
+            "full_name": "Fatma Hussein",
+            "region": "Garissa",
+            "bio": "Navigating traditional practices with modern care.",
+            "profile_picture": "https://i.pinimg.com/736x/47/01/58/47015880ed8125bae343548574dbf7a6.jpg"
+        },
+        {
+            "email": "janet@mama.africa",
+            "full_name": "Janet Wanjiru",
+            "region": "Nairobi",
+            "bio": "Career mum balancing office and motherhood.",
+            "profile_picture": "https://i.pinimg.com/736x/bf/c3/98/bfc398f8e8269342bda0e18dd2707283.jpg"
+        },
+        {
+            "email": "mary@mama.africa",
+            "full_name": "Mary Atieno",
+            "region": "Kisumu",
+            "bio": "22 years old, first pregnancy.",
+            "profile_picture": "https://i.pinimg.com/736x/c1/e4/72/c1e4724cb114074ab925ddab8f9ea73f.jpg"
+        },
+        {
+            "email": "beatrice@mama.africa",
+            "full_name": "Beatrice Nyambura",
+            "region": "Eldoret",
+            "bio": "Third pregnancy, previous high-risk case.",
+            "profile_picture": "https://i.pinimg.com/736x/69/05/0f/69050f9c018e5cf0aabf06c4367c9069.jpg"
+        }
     ]
 
     mum_users = []
-    mum_profiles = []
+    
 
-    for email, name, region, bio, pic in mums:
-        user = User(email=email, password_hash="hashed_mum", role="mum")
+    for mom in mums:
+        # Create User
+        user = User(email=mom["email"], password_hash="hashed_mum", role="mum")
         db.session.add(user)
-        db.session.flush()
-        mum_users.append(user)
-        profile = Profile(user_id=user.id, full_name=name, region=region, bio=bio, profile_picture=pic)
-        mum_profiles.append(profile)
+        db.session.flush()  # To get user.id immediately
 
-    db.session.add_all(mum_profiles)
-    db.session.commit()
-    print(f"✅ Seeded {len(mum_profiles)} mum profiles.")
+        # Create Profile
+        profile = Profile(
+            user_id=user.id,
+            full_name=mom["full_name"],
+            region=mom["region"],
+            bio=mom["bio"],
+            profile_picture=mom["profile_picture"]
+        )
+        db.session.add(profile)
+
+        mum_users.append(user)
+    
+    print(f"✅ Seeded {len(mum_users)} mum profiles.")
     
     # 4. PREGNANCY DETAILS
     pregnancy_records = [

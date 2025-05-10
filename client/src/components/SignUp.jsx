@@ -107,7 +107,7 @@ const Signup = () => {
         <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base h-24 bg-cyan-400" />
 
         <select name="role" onChange={handleChange} value={formData.role} className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400">
-          <option value="">Select Role</option>
+          <option value="" required>Select Role</option>
           <option value="Mom">Mom</option>
           <option value="Health Professional">Health Professional</option>
           {/* <option value="Admin">Admin</option> */}
