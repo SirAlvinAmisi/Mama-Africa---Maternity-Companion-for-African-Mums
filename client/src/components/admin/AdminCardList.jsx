@@ -1,3 +1,4 @@
+// client/src/components/admin/AdminCardList.jsx
 import AdminCard from './AdminCard';
 import axios from 'axios';
 
@@ -51,10 +52,12 @@ export default function AdminCardList({ users, refreshUsers }) {
       const confirmed = window.confirm("Have you confirmed the license number is valid?");
       if (!confirmed) return;
 
+      // ✅ Send POST request to approve a health professional
       await axios.post(`http://localhost:5000/admin/approve_healthpro/${userId}`, {}, authHeaders);
       alert("Health pro verified.");
       refreshUsers();
     } catch (error) {
+      console.error("Error approving health professional:", error);
       alert(error.response?.data?.error || "Verification failed");
     }
   };
@@ -69,7 +72,7 @@ export default function AdminCardList({ users, refreshUsers }) {
           onDelete={() => handleDelete(user.id)}
           onViewActivity={() => handleViewActivity(user.id)}
           onResetPassword={() => handleResetPassword(user.id)}
-          onApproveHealthPro={() => handleApproveHealthPro(user.id)}
+          onApproveHealthPro={() => handleApproveHealthPro(user.id)} // ✅ Approve button visible for health pros
         />
       ))}
     </div>

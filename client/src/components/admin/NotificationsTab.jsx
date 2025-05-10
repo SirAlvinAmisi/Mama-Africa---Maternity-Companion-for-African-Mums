@@ -24,13 +24,14 @@ const NotificationsTab = () => {
   const handleApprove = async (userId) => {
     try {
       const token = localStorage.getItem('access_token');
+      // ✅ Send approval request to backend for this health professional
       await axios.post(
         `http://localhost:5000/admin/approve_healthpro/${userId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchNotifications();
       alert('Health professional approved!');
+      fetchNotifications(); // Refresh notifications
     } catch (error) {
       console.error('Approval error:', error);
       alert('Failed to approve');
@@ -40,13 +41,14 @@ const NotificationsTab = () => {
   const handleReject = async (userId) => {
     try {
       const token = localStorage.getItem('access_token');
+      // ❌ Optional: Add a /reject_healthpro endpoint if needed
       await axios.post(
         `http://localhost:5000/admin/reject_healthpro/${userId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchNotifications();
       alert('Health professional rejected!');
+      fetchNotifications();
     } catch (error) {
       console.error('Rejection error:', error);
       alert('Failed to reject');
@@ -69,7 +71,7 @@ const NotificationsTab = () => {
         <div className="space-y-3">
           {notifications.map(notification => (
             <div
-              key={notification.id}
+              key={notification.id || `${notification.user_id}-${notification.type}`}
               className="p-3 border rounded-lg bg-gray-50 shadow-sm hover:shadow-md transition"
             >
               <div className="flex items-start gap-3">
@@ -81,7 +83,6 @@ const NotificationsTab = () => {
                   )}
                 </div>
                 <div className="flex-1">
-                  {/* Updated text color for better visibility */}
                   <p className="font-medium text-blue-800">{notification.message}</p>
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <Clock size={14} className="mr-1" />
@@ -94,21 +95,24 @@ const NotificationsTab = () => {
                   )}
                 </div>
               </div>
-              {/* Buttons Section */}
-              <div className="flex justify-end gap-2 mt-3">
-                <button
-                  onClick={() => handleApprove(notification.user_id)}
-                  className="bg-cyan-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleReject(notification.user_id)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm"
-                >
-                  Reject
-                </button>
-              </div>
+
+              {/* Approve / Reject Actions */}
+              {notification.type === 'health_pro_request' && (
+                <div className="flex justify-end gap-2 mt-3">
+                  <button
+                    onClick={() => handleApprove(notification.user_id)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(notification.user_id)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

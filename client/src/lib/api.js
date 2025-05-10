@@ -19,6 +19,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// 🔒 Authentication
 export const signup = async (userData) => {
   const response = await api.post('/signup', userData);
   return response.data;
@@ -34,6 +35,7 @@ export const getMe = async () => {
   return response.data;
 };
 
+// 📄 Profiles
 export const getProfiles = async () => {
   const response = await api.get('/profile');
   return response.data;
@@ -56,6 +58,18 @@ export const registerHealthPro = async (userData) => {
 
 export const getHealthProMe = async () => {
   const response = await api.get('/healthpros/me');
+  return response.data;
+};
+
+// ✅ NEW: Submit request for verification from health professional
+export const requestVerification = async () => {
+  const response = await api.post('/healthpro/request-verification');
+  return response.data;
+};
+
+// ✅ NEW: Admin approves health professional verification
+export const approveHealthPro = async (userId) => {
+  const response = await api.post(`/admin/approve_healthpro/${userId}`);
   return response.data;
 };
 
