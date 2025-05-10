@@ -103,6 +103,7 @@ function App() {
               {/* Communities */}
               <Route path="/communities" element={<Communities />} />
               <Route path="/communities/:id" element={<CommunityDetail />} />
+              
 
               {/* Topics */}
               <Route path="/topics" element={<Topics />} />
