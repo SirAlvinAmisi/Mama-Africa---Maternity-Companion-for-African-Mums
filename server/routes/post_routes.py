@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from models.models import db, Post, User, Comment
 import os
+from routes.flag_routes import detect_violation
 
 post_bp = Blueprint('post', __name__)
 
@@ -32,17 +33,30 @@ def create_post(community_id):
             media_file.save(filepath)
             media_url = f"/uploads/{filename}"
             media_type = 'video' if filename.lower().endswith(('mp4', 'mov')) else 'image'
-
+    violation_reason = detect_violation(f"{title} {content}")
     new_post = Post(
         title=title,
         content=content,
         media_url=media_url,
         media_type=media_type,
         author_id=user_id,
-        community_id=community_id
+        community_id=community_id,
+        is_flagged=bool(violation_reason),
+        violation_reason=violation_reason
     )
 
     db.session.add(new_post)
+    # db.session.flush()  
+
+    # if violation_reason:
+    #     flag_report = FlagReport(
+    #     reporter_id=user_id,
+    #     content_type='post',
+    #     content_id=new_post.id,
+    #     reason=violation_reason
+    # )
+    # db.session.add(flag_report)
+
     db.session.commit()
 
     return jsonify({
