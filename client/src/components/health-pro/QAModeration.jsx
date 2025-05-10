@@ -4,8 +4,10 @@ import axios from 'axios';
 export default function QAModeration({ questions, setQuestions }) {
   const [activeTab, setActiveTab] = useState('unanswered');
   const [loading, setLoading] = useState(true);
-
+  const [currentUser, setCurrentUser] = useState(null);
+  
   useEffect(() => {
+    // Fetch questions
     axios.get('http://localhost:5000/api/questions')
       .then(response => {
         setQuestions(response.data.questions);
@@ -15,16 +17,30 @@ export default function QAModeration({ questions, setQuestions }) {
         console.error("Failed to fetch questions", error);
         setLoading(false);
       });
+      
+    // Get current user info
+    axios.get('http://localhost:5000/api/users/current')
+      .then(response => {
+        setCurrentUser(response.data);
+      })
+      .catch(error => {
+        console.error("Failed to fetch current user", error);
+      });
   }, []);
 
   const handleAnswer = (id, answer) => {
-    axios.patch(`http://localhost:5000/api/questions/${id}/answer`, { answer })
-      .then(() => {
-        setQuestions(prev =>
-          prev.map(q => q.id === id ? { ...q, answered: true, answer } : q)
-        );
-      })
-      .catch(error => console.error("Error submitting answer", error));
+    axios.patch(`http://localhost:5000/api/questions/${id}/answer`, { 
+      answer,
+      answeredBy: currentUser?.name || 'Health Professional' // Include who answered
+    })
+    .then((response) => {
+      // Assuming the server returns the updated question
+      const updatedQuestion = response.data;
+      setQuestions(prev =>
+        prev.map(q => q.id === id ? updatedQuestion : q)
+      );
+    })
+    .catch(error => console.error("Error submitting answer", error));
   };
 
   const filteredQuestions = questions.filter(q =>
@@ -36,7 +52,7 @@ export default function QAModeration({ questions, setQuestions }) {
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl mt-6 max-w-4xl mx-auto">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Q&A Moderation</h2>
-
+      
       <div className="flex justify-center gap-6 mb-6 border-b pb-2">
         {['unanswered', 'answered'].map(tab => (
           <button
@@ -53,20 +69,28 @@ export default function QAModeration({ questions, setQuestions }) {
           </button>
         ))}
       </div>
-
+      
       {filteredQuestions.length > 0 ? (
         <ul className="space-y-6">
           {filteredQuestions.map(q => (
             <li key={q.id} className="p-6 bg-blue-50 rounded-xl shadow">
               <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
-                <span className="font-medium">{q.user}</span>
+                <span className="font-medium">
+                  <span className="text-blue-700">Question by:</span> {q.user}
+                </span>
                 <span>{q.date}</span>
               </div>
+              
               <p className="text-lg text-gray-800 mb-4">{q.question}</p>
-
+              
               {q.answered ? (
                 <div className="bg-green-100 p-4 rounded-md border border-green-300">
-                  <p className="font-medium text-green-700 mb-1">Your Answer:</p>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-medium text-green-700">Answer:</p>
+                    <span className="text-sm text-gray-600">
+                      <span className="font-medium text-green-700">Answered by:</span> {q.answeredBy || 'Health Professional'}
+                    </span>
+                  </div>
                   <p className="text-gray-800">{q.answer}</p>
                 </div>
               ) : (
