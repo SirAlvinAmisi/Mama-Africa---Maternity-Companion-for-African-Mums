@@ -11,6 +11,10 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     try:
+        print("⚙️ Signup Request Received")
+        print("Request form data:", request.form.to_dict())
+        print("Request files:", request.files)
+
         email = request.form['email']
         password = request.form['password']
         raw_role = request.form['role'].strip().lower()
@@ -24,7 +28,6 @@ def signup():
             "health professional": "health_pro",
             "health_pro": "health_pro"
         }
-        # role = role_map.get(raw_role, raw_role)
         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
         
         if role == "admin":
@@ -45,7 +48,7 @@ def signup():
             "region": request.form.get('county')
         }
 
-        if role == 'health_pro': # and 'license_number' in request.form:
+        if role == 'health_pro' and 'license_number' in request.form:
             profile_data["license_number"] = request.form['license_number']
 
         user.profile = Profile(**profile_data)
@@ -55,20 +58,25 @@ def signup():
             avatar = request.files['avatar']
             if avatar.filename:
                 filename = secure_filename(avatar.filename)
-                avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+                os.makedirs(upload_folder, exist_ok=True)
+                avatar_path = os.path.join(upload_folder, filename)
                 avatar.save(avatar_path)
-                user.profile.profile_picture = f"/{avatar_path}"
+                user.profile.profile_picture = f"/uploads/{filename}"
 
         db.session.add(user)
         db.session.commit()
 
+        print("✅ Signup successful for:", email)
         return jsonify({"message": "User registered. Please check email to verify."}), 201
 
     except SQLAlchemyError as e:
         db.session.rollback()
+        print("❌ Database error during signup:", e)
         return jsonify({"error": "Database error.", "details": str(e)}), 500
 
     except Exception as e:
+        print("❌ Exception during signup:", e)
         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
 
 
@@ -76,7 +84,12 @@ def signup():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     try:
+        print("⚙️ Login Request Received")
+        print("Raw request data:", request.data)
+
         data = request.get_json()
+        print("Parsed JSON:", data)
+
         email = data.get('email')
         password = data.get('password')
 
@@ -89,15 +102,19 @@ def login():
                 identity=str(user.id),
                 additional_claims={"role": user.role}
             )
+            print("✅ Login successful for:", email)
             return jsonify(access_token=access_token), 200
 
+        print("❌ Invalid credentials for:", email)
         return jsonify({"error": "Invalid credentials"}), 401
 
     except SQLAlchemyError as e:
         db.session.rollback()
+        print("❌ Database error during login:", e)
         return jsonify({"error": "Database error during login", "details": str(e)}), 500
 
     except Exception as e:
+        print("❌ Exception during login:", e)
         return jsonify({"error": "Login failed", "details": str(e)}), 500
 
 
