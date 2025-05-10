@@ -43,7 +43,8 @@ class User(db.Model):
     uploads = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.user_id', back_populates="uploader")
     sent_scans = db.relationship("MedicalUpload", foreign_keys='MedicalUpload.doctor_id', back_populates="doctor")
     certifications = db.relationship("Certification", backref="user", cascade="all, delete-orphan")
-    posts = db.relationship("Post", backref="author", cascade="all, delete-orphan")
+    posts = db.relationship("Post", back_populates="author", foreign_keys='Post.author_id')
+    # posts = db.relationship("Post", back_populates="author", foreign_keys='Post.author_id', cascade="all, delete-orphan")
     articles = db.relationship("Article", backref="author", cascade="all, delete-orphan")
     comments = db.relationship("Comment", backref="user", cascade="all, delete-orphan")
     reminders = db.relationship("Reminder", backref="user", cascade="all, delete-orphan")
@@ -89,15 +90,6 @@ class PregnancyDetail(db.Model):
 
 # --- Content ---
 class Post(db.Model):
-    # id = db.Column(db.Integer, primary_key=True)
-    # author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
-    # title = db.Column(db.String(255))  # Optional for caption
-    # content = db.Column(db.Text)       # Body or additional text
-    # media_url = db.Column(db.String(255))  # Image or video path
-    # media_type = db.Column(db.String(50))  # 'image', 'video', etc.
-    # created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # is_approved = db.Column(db.Boolean, default=True)  # Instant publish for now
     id = db.Column(Integer, primary_key=True)
     author_id = db.Column(Integer, ForeignKey('user.id'))
     community_id = db.Column(Integer, db.ForeignKey('community.id'), nullable=True)
@@ -108,8 +100,15 @@ class Post(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
     is_flagged = db.Column(db.Boolean, default=False)
+    
+    # author = db.relationship("User", backref="posts", foreign_keys=[author_id])
+    author = db.relationship("User", back_populates="posts", foreign_keys=[author_id])
+
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
     likers = db.relationship("User", secondary="post_likes", backref="liked_posts", passive_deletes=True)
+   
+
+      
 
 class Article(db.Model):
     id = db.Column(Integer, primary_key=True)

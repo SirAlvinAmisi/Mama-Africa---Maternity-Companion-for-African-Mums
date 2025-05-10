@@ -67,7 +67,7 @@ def get_community(id):
 
     if not is_member:
         return jsonify({"community": response, "message": "Join this community to see more."}), 200
-
+    
     return jsonify({"community": response}), 200
 
 

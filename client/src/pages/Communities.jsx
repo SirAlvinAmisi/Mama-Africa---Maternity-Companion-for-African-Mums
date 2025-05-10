@@ -6,6 +6,7 @@ import Welcome from '../components/WelcomeCard';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
 import PostList from '../components/posts/PostList';
+import PopularGroups from '../components/PopularGroups';
 import Nutrition from '../components/Nutrition';
 import CommunityDetail from './CommunityDetail';
 import PostForm from '../components/posts/PostForm';
@@ -182,7 +183,8 @@ const Communities = () => {
           </div>
         </section>
 
-        <CommunityDetail posts={posts} />
+        {/* <CommunityDetail posts={posts} /> */}
+        <PopularGroups groups={groups}/>
       </div>
 
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
