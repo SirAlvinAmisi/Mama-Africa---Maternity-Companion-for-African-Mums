@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager, decode_token
 from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_socketio import join_room, leave_room
+from flask import send_from_directory
 
 import os
 
@@ -83,6 +84,10 @@ def handle_join_room(data):
 @socketio.on('disconnect')
 def handle_disconnect():
     print(f"Socket disconnected: {request.sid}")
+
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    return send_from_directory('static/community_media', filename)
 
 # ========== RUN ==========
 

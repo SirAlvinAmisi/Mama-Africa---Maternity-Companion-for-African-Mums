@@ -4,7 +4,8 @@ from flask_cors import cross_origin
 from flask_jwt_extended import jwt_required, get_jwt_identity 
 from datetime import datetime, timedelta
 from middleware.auth import role_required
-from routes.flag_routes import detect_violation  
+from routes.flag_routes import detect_violation 
+
 
 community_bp = Blueprint('community', __name__)
 
@@ -18,7 +19,7 @@ def serialize_comment(comment):
         "parent_id": comment.parent_comment_id,
         "reply_to_user_id": comment.parent.user_id if comment.parent else None,
         "reply_to_user_name": comment.parent.user.profile.full_name if comment.parent and comment.parent.user and comment.parent.user.profile else "Anonymous",
-        "created_at": comment.created_at.isoformat(),
+        "created_at": comment.created_at.isoformat() + "Z",
         "replies": [serialize_comment(reply) for reply in sorted(comment.replies, key=lambda x: x.created_at)]
     }
 
@@ -26,6 +27,9 @@ def serialize_comment(comment):
 @community_bp.route('/communities', methods=['GET'])
 @jwt_required(optional=True)
 def get_communities():
+    identity = get_jwt_identity()
+    user_id = int(identity) if identity else None
+
     approved_communities = Community.query.filter_by(status="approved").all()
 
     return jsonify({
@@ -34,7 +38,8 @@ def get_communities():
             "name": c.name,
             "description": c.description,
             "image": c.image,
-            "member_count": len(c.members)
+            "member_count": len(c.members),
+            "is_member": user_id in {u.id for u in c.members} if user_id else False
         } for c in approved_communities]
     }), 200
 
@@ -96,7 +101,7 @@ def get_community_posts(id):
                 ),
                 "media_url": p.media_url,
                 "media_type": p.media_type,
-                "created_at": p.created_at.isoformat(),
+                "created_at": p.created_at.isoformat() + "Z",
                 "like_count": len(p.likers),
                 "liked_by_user": user_id in {u.id for u in p.likers} if user_id else False,
                 "comment_count": len(p.comments),
@@ -206,8 +211,8 @@ def create_community_post(id):
     if media:
         # Save media and set `media_url` and `media_type`
         # (Assuming you have a save_media_file utility or equivalent)
-        from utils.media_utils import save_media_file
-        media_url, media_type = save_media_file(media)
+        from utilities.community_media_utils import save_community_media
+        media_url, media_type = save_community_media(media)
 
     new_post = Post(
         content=content,
