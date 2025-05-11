@@ -425,7 +425,7 @@ const CommunityDetail = () => {
               </div>
             )}
             <div className="hidden lg:block mt-6">
-              <h2 className="text-lg font-semibold mb-1">Write a Post 📝</h2>
+              <h2 className="text-lg font-semibold mb-1">Write New Post</h2>
               <textarea
                 className="w-full border p-2 text-sm"
                 placeholder="What's on your mind?"
