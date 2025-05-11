@@ -6,7 +6,7 @@ export default function CommunityGuidelines() {
         <main className="flex-1">
           {/* Community Guidelines Section */}
           <section className="container mx-auto px-6 pt-16 pb-8">
-            <h1 className="font-montserrat font-bold text-black text-5xl text-center mb-12">
+            <h1 className="font-montserrat font-bold text-cyan-900 text-3xl text-center mb-12">
               Community Guidelines
             </h1>
   
@@ -35,10 +35,10 @@ export default function CommunityGuidelines() {
                 }
               ].map((rule, idx) => (
                 <div key={idx} className="bg-cards-color rounded-[20px] p-8">
-                  <h2 className="font-montserrat font-bold text-black text-2xl mb-4">
+                  <h2 className="font-montserrat font-bold text-black text-1xl mb-4">
                     {rule.title}
                   </h2>
-                  <p className="font-montserrat font-light text-black text-xl">{rule.text}</p>
+                  <p className="font-montserrat font-light text-black text-sm">{rule.text}</p>
                 </div>
               ))}
             </div>

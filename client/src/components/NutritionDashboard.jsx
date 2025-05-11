@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-function Nutrition() {
+function NutritionDashboard() {
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
@@ -39,4 +39,4 @@ function Nutrition() {
   );
 }
 
-export default Nutrition;
+export default NutritionDashboard;
