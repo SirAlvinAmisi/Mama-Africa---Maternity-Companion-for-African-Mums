@@ -76,7 +76,7 @@ class Profile(db.Model):
     region = db.Column(String(100))  # County
     role = db.Column(String(50))     # 'health_pro', 'mum'
     profile_picture = db.Column(String(200))
-    license_number = db.Column(String(100))  # For health professionals
+    license_number = db.Column(db.String(100))  # For health professionals
     is_verified = db.Column(Boolean, default=False)
 
 # --- Pregnancy Tracking ---
@@ -104,6 +104,8 @@ class Post(db.Model):
     
     # author = db.relationship("User", backref="posts", foreign_keys=[author_id])
     author = db.relationship("User", back_populates="posts", foreign_keys=[author_id])
+    # community = db.relationship("Community", backref="posts")
+    community = db.relationship("Community", back_populates="posts")
 
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
     likers = db.relationship("User", secondary="post_likes", backref="liked_posts", passive_deletes=True)
@@ -123,6 +125,8 @@ class Article(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
     comments = db.relationship("Comment", backref="article", cascade="all, delete-orphan")
+    category = db.Column(String(100))  # Keep this for backwards compatibility
+    category_id = db.Column(Integer, db.ForeignKey('category.id'), nullable=True)
 
 class Comment(db.Model):
     id = db.Column(Integer, primary_key=True)
@@ -209,8 +213,8 @@ class Community(db.Model):
     trimester = db.Column(Integer, nullable=True)
     member_count = db.Column(Integer, default=0)
     status = db.Column(db.String(50), default="pending")
-
-    posts = db.relationship('Post', backref='community', cascade="all, delete-orphan")
+    posts = db.relationship("Post", back_populates="community", cascade="all, delete-orphan")
+    # posts = db.relationship('Post', backref='community', cascade="all, delete-orphan")
     members = db.relationship('User', secondary=community_members, back_populates="communities")
 
 class Topic(db.Model):
@@ -299,5 +303,16 @@ class Reminder(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     reminder_text = db.Column(db.String(255), nullable=False)
     reminder_date = db.Column(db.Date, nullable=False)
+    reminder_time = db.Column(db.Time, nullable=True)
     type = db.Column(db.String(50), default='custom')  # e.g., test, checkup, support, etc.
 
+class Category(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), unique=True, nullable=False)
+    description = db.Column(String(255))
+    created_at = db.Column(DateTime, default=datetime.utcnow)
+
+    # Optional: relationship to articles
+    articles = db.relationship("Article", backref="category_obj", lazy=True)
+
+    

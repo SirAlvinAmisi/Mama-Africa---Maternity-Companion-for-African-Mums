@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from models import db, Community, Post, User
 from flask_cors import cross_origin
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity 
 from datetime import datetime, timedelta
+from middleware.auth import role_required
 
 community_bp = Blueprint('community', __name__)
 
@@ -21,26 +22,40 @@ def serialize_comment(comment):
     }
 
 # Get all communities
+# @community_bp.route('/communities', methods=['GET'])
+# @jwt_required(optional=True)
+# def get_communities():
+#     identity = get_jwt_identity()
+#     print("JWT identity in /communities:", identity)
+#     user_id = int(identity) if identity else None
+
+#     communities = Community.query.all()
+#     return jsonify({
+#         "communities": [
+#             {
+#                 "id": c.id,
+#                 "name": c.name,
+#                 "description": c.description,
+#                 "image": c.image,
+#                 "member_count": len(c.members),
+#                 "is_member": user_id in {u.id for u in c.members} if user_id else False
+#             } for c in communities
+#         ]
+#     })
 @community_bp.route('/communities', methods=['GET'])
 @jwt_required(optional=True)
 def get_communities():
-    identity = get_jwt_identity()
-    print("JWT identity in /communities:", identity)
-    user_id = int(identity) if identity else None
+    approved_communities = Community.query.filter_by(status="approved").all()
 
-    communities = Community.query.all()
     return jsonify({
-        "communities": [
-            {
-                "id": c.id,
-                "name": c.name,
-                "description": c.description,
-                "image": c.image,
-                "member_count": len(c.members),
-                "is_member": user_id in {u.id for u in c.members} if user_id else False
-            } for c in communities
-        ]
-    })
+        "communities": [{
+            "id": c.id,
+            "name": c.name,
+            "description": c.description,
+            "image": c.image,
+            "member_count": len(c.members)
+        } for c in approved_communities]
+    }), 200
 
 
 # Get community details
@@ -168,3 +183,26 @@ def leave_community(community_id):
         "member_count": len(community.members),
         "is_member": False
     }), 200
+
+@community_bp.route('/communities/<int:id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def update_community_status(id):
+    try:
+        community = Community.query.get(id)
+        if not community:
+            return jsonify({"error": "Community not found"}), 404
+
+        data = request.get_json()
+        status = data.get("status")
+
+        if status not in ["approved", "rejected"]:
+            return jsonify({"error": "Invalid status value"}), 400
+
+        community.status = status
+        db.session.commit()
+
+        return jsonify({"message": f"Community '{community.name}' marked as {status}."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

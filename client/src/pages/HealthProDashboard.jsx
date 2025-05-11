@@ -87,6 +87,30 @@ const HealthProDashboard = () => {
         }
       });
   };
+  const updateProfileDetails = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    await axios.post(
+      "http://localhost:5000/healthpros/profile",
+      {
+        bio: profile.bio || "Default bio",
+        region: profile.region || "Nairobi",
+        profile_picture: profile.profile_picture || "",
+        full_name: profile.profile?.full_name || "Dr. Jane Doe",
+        license_number: profile.profile?.license_number || "MOH123456",
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    console.log("✅ Profile updated");
+  } catch (err) {
+    console.error("❌ Error updating profile", err.response?.data || err.message);
+  }
+};
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white rounded-1g shadow">
       <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 mb-6 text-center">

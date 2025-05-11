@@ -26,23 +26,65 @@ export default function ArticlesReview() {
   }, []);
 
   // Handle actions: approve, delete, or flag
-  const handleAction = (id, action) => {
+  const handleAction = async (id, action) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    let endpoint = "";
+    let method = "PATCH";
+
+    if (action === "approved") {
+      endpoint = `/admin/approve_article/${id}`;
+    } else if (action === "flagged") {
+      endpoint = `/admin/flag_article/${id}`;
+    } else if (action === "deleted") {
+      endpoint = `/admin/delete_article/${id}`;
+      method = "DELETE";
+    }
+
+    await axios({
+      method,
+      url: `http://localhost:5000${endpoint}`,
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // Frontend state update after server success
     setArticles((prev) =>
-      prev.map((article) => {
-        if (article.id === id) {
-          if (action === "flagged") {
-            return { ...article, is_flagged: true };
-          } else if (action === "approved") {
-            return { ...article, is_approved: true };
-          } else if (action === "deleted") {
-            return null; // Mark for deletion
+      prev
+        .map((article) => {
+          if (article.id === id) {
+            if (action === "flagged") return { ...article, is_flagged: true };
+            if (action === "approved") return { ...article, is_approved: true };
+            if (action === "deleted") return null;
           }
-        }
-        return article;
-      }).filter(Boolean) // Remove deleted articles
+          return article;
+        })
+        .filter(Boolean)
     );
+
     alert(`Article ${action} successfully`);
-  };
+  } catch (error) {
+    console.error(`Failed to ${action} article ${id}:`, error);
+    alert(`Failed to ${action} article`);
+  }
+};
+
+  // const handleAction = (id, action) => {
+  //   setArticles((prev) =>
+  //     prev.map((article) => {
+  //       if (article.id === id) {
+  //         if (action === "flagged") {
+  //           return { ...article, is_flagged: true };
+  //         } else if (action === "approved") {
+  //           return { ...article, is_approved: true };
+  //         } else if (action === "deleted") {
+  //           return null; // Mark for deletion
+  //         }
+  //       }
+  //       return article;
+  //     }).filter(Boolean) // Remove deleted articles
+  //   );
+  //   alert(`Article ${action} successfully`);
+  // };
 
   if (loading) return <p>Loading Articles...</p>;
   if (articles.length === 0) return <p>No articles available for review.</p>;
