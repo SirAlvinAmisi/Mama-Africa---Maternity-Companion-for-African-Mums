@@ -116,6 +116,8 @@ dist_folder = os.path.join(frontend_folder, "dist")
 def create_app():
     app = Flask(__name__, static_folder=dist_folder, static_url_path="/")
     app.config.from_object('config.Config')
+    print("🔗 Connected to database:", app.config["SQLALCHEMY_DATABASE_URI"])
+
 
     # Initialize extensions
     db.init_app(app)
@@ -128,6 +130,8 @@ def create_app():
     CORS(app, supports_credentials=True, resources={
         r"/*": {
             "origins": [
+                "http://localhost:5000",
+                "http://127.0.0.1:5000",
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
                 "http://localhost:5174",
