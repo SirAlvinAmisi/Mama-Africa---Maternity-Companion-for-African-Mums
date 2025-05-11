@@ -244,6 +244,68 @@ def get_admin_notifications():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# ---------------------------- FLAGGED POSTS REVIEW ----------------------------
+@admin_bp.route('/admin/posts', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_flagged_posts():
+    try:
+        flagged_posts = Post.query.filter_by(is_flagged=True).order_by(Post.created_at.desc()).all()
+
+        return jsonify({
+            "posts": [{
+                "id": p.id,
+                "title": p.title,
+                "content": p.content,
+                "media_url": p.media_url,
+                "media_type": p.media_type,
+                "created_at": p.created_at.isoformat(),
+                "violation_reason": p.violation_reason,
+                "community": {
+                    "id": p.community.id if p.community else None,
+                    "name": p.community.name if p.community else "Unknown"
+                },
+                "user": {
+                    "id": p.author.id if p.author else None,
+                    "full_name": p.author.profile.full_name if p.author and p.author.profile else "Anonymous"
+                }
+            } for p in flagged_posts]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch flagged posts: {str(e)}"}), 500
+
+@admin_bp.route('/admin/posts/<int:post_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def update_post_status(post_id):
+    try:
+        post = Post.query.get_or_404(post_id)
+        data = request.get_json()
+        status = data.get("status")
+
+        if status == "approved":
+            post.is_flagged = False
+            post.is_approved = True
+            post.violation_reason = None
+        elif status == "rejected":
+            db.session.add(Notification(
+                user_id=post.author_id,
+                message=f"Your post titled '{post.title[:40]}' was removed due to: {post.violation_reason or 'policy violation'}",
+                link="/my-posts" 
+        ))
+            db.session.delete(post)
+        else:
+            return jsonify({"error": "Invalid status. Use 'approved' or 'rejected'."}), 400
+
+        db.session.commit()
+        return jsonify({"message": f"Post {status} successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to update post: {str(e)}"}), 500
+
+
 # ----------------------------Create Category----------------------------
 @admin_bp.route('/admin/create_category', methods=['POST'])
 @jwt_required()
@@ -442,3 +504,4 @@ def get_pending_communities():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+

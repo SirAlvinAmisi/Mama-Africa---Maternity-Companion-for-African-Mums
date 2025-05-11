@@ -100,6 +100,7 @@ class Post(db.Model):
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_approved = db.Column(Boolean, default=False)
     is_flagged = db.Column(db.Boolean, default=False)
+    violation_reason = db.Column(db.String(255), nullable=True)
     
     # author = db.relationship("User", backref="posts", foreign_keys=[author_id])
     author = db.relationship("User", back_populates="posts", foreign_keys=[author_id])
