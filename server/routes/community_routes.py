@@ -1,13 +1,27 @@
 from flask import Blueprint, jsonify, request
 from models import db, Community, Post, User, FlagReport
 from flask_cors import cross_origin
-from flask_jwt_extended import jwt_required, get_jwt_identity 
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
 from datetime import datetime, timedelta
 from middleware.auth import role_required
 from routes.flag_routes import detect_violation 
+from functools import wraps
 
 
 community_bp = Blueprint('community', __name__)
+
+def allow_roles_for_posting(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            role = claims.get("role", "").strip().lower()
+            if role not in [r.lower() for r in allowed_roles]:
+                return jsonify({"error": f"Posting not allowed for role: {role}"}), 403
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 # Recursive comment serializer
 def serialize_comment(comment):
@@ -194,7 +208,7 @@ def update_community_status(id):
 
 @community_bp.route('/communities/<int:id>/posts', methods=['POST'])
 @jwt_required()
-@role_required("mum")
+@allow_roles_for_posting("mum", "admin", "health_pro")
 def create_community_post(id):
     user_id = get_jwt_identity()
     user = User.query.get_or_404(user_id)
