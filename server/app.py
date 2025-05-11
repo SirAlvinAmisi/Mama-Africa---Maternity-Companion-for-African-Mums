@@ -130,13 +130,14 @@ def create_app():
     CORS(app, supports_credentials=True, resources={
         r"/*": {
             "origins": [
-                "http://localhost:5000",
                 "http://127.0.0.1:5000",
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
                 "http://localhost:5174",
                 "http://127.0.0.1:5174",
-                "https://mama-africa.onrender.com/"
+                "http://localhost:5000",
+                "https://mama-africa.onrender.com",
+                "https://mama-africa-api.onrender.com"
             ],
             "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
             "allow_headers": ["Authorization", "Content-Type"]
