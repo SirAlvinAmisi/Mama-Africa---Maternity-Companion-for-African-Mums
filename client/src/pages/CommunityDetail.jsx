@@ -1,6 +1,4 @@
-
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
@@ -177,18 +175,7 @@ const CommunityDetail = () => {
     fetchCommunityData();
   };
 
-  // const handlePostSubmit = async () => {
-  //   if (!newPostContent.trim() && !newPostMedia) return;
-  //   const form = new FormData();
-  //   form.append('content', newPostContent);
-  //   if (newPostMedia) form.append('media', newPostMedia);
-  //   await axios.post(`http://localhost:5000/communities/${id}/posts`, form, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  //   });
-  //   setNewPostContent('');
-  //   setNewPostMedia(null);
-  //   fetchCommunityData();
-  // };
+  
   const handlePostSubmit = async () => {
     if (!newPostContent.trim() && !newPostMedia) return;
 

@@ -5,11 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Welcome from '../components/WelcomeCard';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
-import PostList from '../components/posts/PostList';
-import PopularGroups from '../components/PopularGroups';
 import Nutrition from '../components/Nutrition';
+import NutritionDashboard from '../components/NutritionDashboard';
 import CommunityDetail from './CommunityDetail';
-import PostForm from '../components/posts/PostForm';
+
 
 const Communities = () => {
   const queryClient = useQueryClient();
@@ -192,13 +191,13 @@ const Communities = () => {
         </section>
 
         <CommunityDetail posts={posts} />
-        {/* <PopularGroups groups={groups}/> */}
       </div>
 
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
         <ParentingDevelopment />
         <BabyCorner />
         <Nutrition />
+        {/* <NutritionDashboard /> */}
       </div>
     </div>
   );

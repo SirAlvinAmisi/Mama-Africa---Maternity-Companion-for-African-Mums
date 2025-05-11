@@ -38,6 +38,7 @@ import BabyCornerPage from './components/BabyCornerPage';
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
 import Nutrition from './components/Nutrition';
+import NutritionDashboard from './components/NutritionDashboard';
 
 // Mum Layout & Pages
 import MomLandingPage from './pages/MomLandingPage';
@@ -136,6 +137,7 @@ function App() {
               <Route path="/questions" element={<Questions />} />
               <Route path="/notification" element={<Notification />} />
               <Route path="/nutrition" element={<Nutrition />} />
+              <Route path="/nutrition-dashboard" element={<NutritionDashboard />} />
               <Route path="/chat" element={<ChatList />} />
               <Route path="/topics" element={<Topics />} />
               {/* <Route path="/chat/:specialistId" element={<ChatList />} /> */}
