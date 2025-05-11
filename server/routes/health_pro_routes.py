@@ -148,17 +148,32 @@ def update_or_delete_article(article_id):
 @health_bp.route('/healthpros/questions', methods=['GET'])
 @role_required("health_pro")
 def get_healthpro_questions():
-    questions = Question.query.filter_by(doctor_id=None).all()
+    doctor_id = get_jwt_identity()
+    questions = Question.query.filter_by(doctor_id=doctor_id).all()
+
     return jsonify({
         "questions": [
             {
                 "id": q.id,
                 "question_text": q.question_text,
                 "user_id": q.user_id,
-                "is_anonymous": q.is_anonymous
-            } for q in questions
+                "is_anonymous": q.is_anonymous,
+                "answer_text": q.answer_text,
+                "is_answered": q.is_answered,
+                "date": q.created_at.strftime('%Y-%m-%d'),
+                "question": q.question_text,
+                "answered": bool(q.answer_text),
+                "answer": q.answer_text or "",
+                "user": "Anonymous" if q.is_anonymous else (
+                    User.query.get(q.user_id).profile.full_name if User.query.get(q.user_id) else "Unknown"
+                ),
+                "answeredBy": User.query.get(q.doctor_id).profile.full_name if q.doctor_id else None
+            }
+            for q in questions
         ]
     })
+
+
 
 # 8. POST answer question
 @health_bp.route('/healthpros/answers', methods=['POST'])
@@ -166,10 +181,35 @@ def get_healthpro_questions():
 def health_pro_answer():
     data = request.get_json()
     question = Question.query.get_or_404(data['question_id'])
+    
+    # Update answer info
     question.answer_text = data['answer_text']
     question.answered_by = get_jwt_identity()
+    question.is_answered = True
+
     db.session.commit()
-    return jsonify({"message": "Answer submitted"})
+
+    # Optional: send notification to mum
+    from utils.notification_utils import create_and_emit_notification
+
+    if question.user_id:
+        create_and_emit_notification(
+            user_id=question.user_id,
+            message="Your question has been answered by a doctor!",
+            link="/mum/questions",
+            room=f"user_{question.user_id}"
+        )
+
+    return jsonify({
+        "message": "Answer submitted",
+        "question": {
+            "id": question.id,
+            "question_text": question.question_text,
+            "answer": question.answer_text,
+            "answered": True
+        }
+    })
+
 
 # 9. GET answered questions by me
 @health_bp.route('/healthpros/my-answers', methods=['GET'])
@@ -217,16 +257,14 @@ def request_verification():
     try:
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
-       
+
         if not user or not user.profile:
             return jsonify({"error": "Incomplete profile"}), 422
 
         profile = user.profile
-        print("DEBUG PROFILE:", profile.full_name, profile.region)
-        print(f"🔍 Request from: {user.email}, Role: {user.role}, FullName: '{profile.full_name}', Region: '{profile.region}'")
 
-        if not profile.full_name or not profile.region:
-            return jsonify({"error": "Full name and region are required in profile"}), 422
+        if not profile.full_name or not profile.region or not profile.license_number:
+            return jsonify({"error": "Full name, region, and license number required"}), 422
 
         existing = VerificationRequest.query.filter_by(user_id=current_user_id, is_resolved=False).first()
         if existing:
@@ -235,29 +273,28 @@ def request_verification():
         # Save verification request
         vr = VerificationRequest(user_id=current_user_id)
         db.session.add(vr)
-        db.session.flush()  # To access vr.id before commit
+        db.session.flush()
 
-        # Notify all admins
-        for admin in User.query.filter_by(role="admin").all():
-            db.session.add(Notification(
+        # ✅ Create DB notifications & emit socket event
+        from utils.notification_utils import create_and_emit_notification
+        from utils.email_utils import send_email
+
+        admins = User.query.filter_by(role="admin").all()
+        for admin in admins:
+            create_and_emit_notification(
                 user_id=admin.id,
-                message=f"{profile.full_name} requested verification.",
-                link="/admin/verification-requests"
-            ))
+                message=f"Verification request from {profile.full_name} ({profile.license_number}) in {profile.region}",
+                link="/admin/verification-requests",
+                room="admin"
+            )
             try:
-                send_email(admin.email, "Verification Request", f"{profile.full_name} has requested verification.")
+                send_email(
+                    admin.email,
+                    "Verification Request",
+                    f"{profile.full_name} ({profile.license_number}) in {profile.region} has requested verification."
+                )
             except Exception as e:
                 print("Email send failed:", e)
-
-        # Emit via SocketIO
-        from extensions import socketio
-        socketio.emit('verification_request', {
-            "user_id": current_user_id,
-            "full_name": profile.full_name,
-            "region": profile.region,
-            "license_number": profile.license_number or "N/A",
-            "request_id": vr.id
-        })
 
         db.session.commit()
         return jsonify({"message": "Verification requested successfully"}), 201
@@ -265,6 +302,7 @@ def request_verification():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
 
 
 # 13. GET verification status

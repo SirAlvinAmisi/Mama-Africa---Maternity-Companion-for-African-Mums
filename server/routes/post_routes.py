@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app as app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
-from models.models import db, Post, User, Comment
+from models.models import db, Post, User, Comment, FlagReport
 import os
 from routes.flag_routes import detect_violation
 
@@ -14,62 +14,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
-# Create a post in a community
-@post_bp.route('/communities/<int:community_id>/posts', methods=['POST'])
-@jwt_required()
-def create_post(community_id):
-    user_id = int(get_jwt_identity())
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
-    media_url = media_type = None
-
-    if 'media' in request.files:
-        media_file = request.files['media']
-        if media_file and allowed_file(media_file.filename):
-            filename = secure_filename(f"{datetime.utcnow().timestamp()}_{media_file.filename}")
-            upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            filepath = os.path.join(upload_folder, filename)
-            media_file.save(filepath)
-            media_url = f"/uploads/{filename}"
-            media_type = 'video' if filename.lower().endswith(('mp4', 'mov')) else 'image'
-    violation_reason = detect_violation(f"{title} {content}")
-    new_post = Post(
-        title=title,
-        content=content,
-        media_url=media_url,
-        media_type=media_type,
-        author_id=user_id,
-        community_id=community_id,
-        is_flagged=bool(violation_reason),
-        violation_reason=violation_reason
-    )
-
-    db.session.add(new_post)
-    # db.session.flush()  
-
-    # if violation_reason:
-    #     flag_report = FlagReport(
-    #     reporter_id=user_id,
-    #     content_type='post',
-    #     content_id=new_post.id,
-    #     reason=violation_reason
-    # )
-    # db.session.add(flag_report)
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Post created successfully",
-        "post": {
-            "id": new_post.id,
-            "title": new_post.title,
-            "content": new_post.content,
-            "media_url": new_post.media_url,
-            "media_type": new_post.media_type,
-            "created_at": new_post.created_at.isoformat()
-        }
-    }), 201
 
 
 # Like or unlike a post
@@ -91,21 +35,49 @@ def toggle_post_like(post_id):
     return jsonify({"liked": liked, "like_count": len(post.likers)})
 
 
-# Comment on a post (or reply)
+
+
 @post_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
 @jwt_required()
 def comment_on_post(post_id):
+    from models import FlagReport  # Safe to import here
+
     user_id = int(get_jwt_identity())
     data = request.get_json()
+    content = data.get('content', '').strip()
+    parent_id = data.get('parent_comment_id')
 
+    # Log incoming comment
+    print("🧪 Incoming comment content:", content)
+
+    # Detect banned words
+    violation_reason = detect_violation(content)
+    print("🚨 Violation Reason:", violation_reason)
+
+    # Create comment object
     comment = Comment(
         user_id=user_id,
         post_id=post_id,
-        content=data.get('content'),
-        parent_comment_id=data.get('parent_comment_id')
+        content=content,
+        parent_comment_id=parent_id,
+        is_flagged=bool(violation_reason)
     )
 
     db.session.add(comment)
+    db.session.flush()  # Needed to get comment.id before commit
+    print("📝 Saving comment with ID:", comment.id)
+
+    # If violation found, create flag
+    if violation_reason:
+        print("📌 Creating FlagReport for comment:", comment.id)
+        flag = FlagReport(
+            reporter_id=user_id,
+            content_type='comment',
+            content_id=comment.id,
+            reason=violation_reason
+        )
+        db.session.add(flag)
+
     db.session.commit()
 
     return jsonify({"message": "Comment added", "comment_id": comment.id}), 201
@@ -259,3 +231,61 @@ def get_my_posts():
         })
 
     return jsonify(post_list), 200
+
+@post_bp.route('/communities/<int:community_id>/posts', methods=['POST'])
+@jwt_required()
+def create_post(community_id):
+    user_id = int(get_jwt_identity())
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    media_url = media_type = None
+
+    if 'media' in request.files:
+        media_file = request.files['media']
+        if media_file and allowed_file(media_file.filename):
+            filename = secure_filename(f"{datetime.utcnow().timestamp()}_{media_file.filename}")
+            upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            filepath = os.path.join(upload_folder, filename)
+            media_file.save(filepath)
+            media_url = f"/uploads/{filename}"
+            media_type = 'video' if filename.lower().endswith(('mp4', 'mov')) else 'image'
+
+    violation_reason = detect_violation(f"{title} {content}")
+
+    new_post = Post(
+        title=title,
+        content=content,
+        media_url=media_url,
+        media_type=media_type,
+        author_id=user_id,
+        community_id=community_id,
+        is_flagged=bool(violation_reason),
+        violation_reason=violation_reason
+    )
+
+    db.session.add(new_post)
+    db.session.flush()  # Allows us to get new_post.id before commit
+
+    if violation_reason:
+        flag_report = FlagReport(
+            reporter_id=user_id,
+            content_type='post',
+            content_id=new_post.id,
+            reason=violation_reason
+        )
+        db.session.add(flag_report)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Post created successfully",
+        "post": {
+            "id": new_post.id,
+            "title": new_post.title,
+            "content": new_post.content,
+            "media_url": new_post.media_url,
+            "media_type": new_post.media_type,
+            "created_at": new_post.created_at.isoformat()
+        }
+    }), 201

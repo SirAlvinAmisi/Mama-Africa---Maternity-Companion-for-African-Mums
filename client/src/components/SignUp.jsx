@@ -37,10 +37,31 @@ const Signup = () => {
       setAvatarPreview(null);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    //  1. Role must be selected
+    if (!formData.role) {
+      alert("Please select a role.");
+      return;
+    }
+
+    // 2. License format check if role is Health Professional
+    if (formData.role === "Health Professional") {
+      const licenseRegex = /^[a-zA-Z]{2,}\/\d{4}\/\d{3,10}$/;
+      if (!licenseRegex.test(formData.licenseNumber)) {
+        alert("License number format must be like ABC/2025/1234567");
+        return;
+      }
+
+      const yearMatch = formData.licenseNumber.split("/")[1];
+      const currentYear = new Date().getFullYear().toString();
+      if (yearMatch !== currentYear) {
+        alert(`Your license year (${yearMatch}) may be expired. Please provide a valid license.`);
+        return;
+      }
+    }
+    //3. Password format check
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
@@ -85,6 +106,7 @@ const Signup = () => {
       alert(error.response?.data?.error || "Signup failed. Try again.");
     }
   };
+
 
   return (
     <div className="container max-w-3xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 py-8 bg-white rounded-2xl shadow-lg">
@@ -135,12 +157,6 @@ const Signup = () => {
 
         <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-400" value={formData.password} onChange={handleChange} />
 
-        {/* <div className="text-xs sm:text-sm mt-1 bg-gray-200">
-          <p className={`${formData.password.length >= 6 ? 'text-black-600' : 'text-red-600'}`}>At least 6 characters</p>
-          <p className={`${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>At least one uppercase letter</p>
-          <p className={`${/[a-z]/.test(formData.password) ? 'text-black-600' : 'text-red-600'}`}>At least one lowercase letter</p>
-          <p className={`${/[0-9]/.test(formData.password) ? 'text-black-600' : 'text-red-600'}`}>At least one number</p>
-        </div> */}
         <div className="text-xs sm:text-sm mt-1 bg-white dark:bg-gray-100 p-2 rounded">
           <p className={`${formData.password.length >= 6 ? 'text-gray-800 dark:text-green-400' : 'text-red-600'}`}>
             At least 6 characters

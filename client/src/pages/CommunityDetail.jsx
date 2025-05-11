@@ -175,18 +175,42 @@ const CommunityDetail = () => {
     fetchCommunityData();
   };
 
+  // const handlePostSubmit = async () => {
+  //   if (!newPostContent.trim() && !newPostMedia) return;
+  //   const form = new FormData();
+  //   form.append('content', newPostContent);
+  //   if (newPostMedia) form.append('media', newPostMedia);
+  //   await axios.post(`http://localhost:5000/communities/${id}/posts`, form, {
+  //     headers: { Authorization: `Bearer ${token}` },
+  //   });
+  //   setNewPostContent('');
+  //   setNewPostMedia(null);
+  //   fetchCommunityData();
+  // };
   const handlePostSubmit = async () => {
     if (!newPostContent.trim() && !newPostMedia) return;
-    const form = new FormData();
-    form.append('content', newPostContent);
-    if (newPostMedia) form.append('media', newPostMedia);
-    await axios.post(`http://localhost:5000/communities/${id}/posts`, form, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setNewPostContent('');
-    setNewPostMedia(null);
-    fetchCommunityData();
-  };
+
+    try {
+      const form = new FormData();
+      form.append('content', newPostContent);
+      if (newPostMedia) form.append('media', newPostMedia);
+
+      await axios.post(`http://localhost:5000/communities/${id}/posts`, form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setNewPostContent('');
+      setNewPostMedia(null);
+      fetchCommunityData();
+    } catch (err) {
+      if (err.response && err.response.status === 400) {
+        alert("🚫 Post rejected: " + err.response.data.error);
+      } else {
+        console.error("Error posting:", err);
+        alert("Something went wrong while posting.");
+      }
+    }
+};
 
   const renderPostCard = (post, showDelete = false) => (
     <div key={post.id} className="bg-cyan-400 p-4 rounded shadow">

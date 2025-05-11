@@ -61,6 +61,20 @@ export default function AdminCardList({ users, refreshUsers }) {
       alert(error.response?.data?.error || "Verification failed");
     }
   };
+  const handlePromote = async (userId) => {
+    try {
+      const confirmed = window.confirm("Promote this user to admin?");
+      if (!confirmed) return;
+
+      await axios.patch(`http://localhost:5000/admin/promote/${userId}`, {}, authHeaders);
+      alert("User promoted to admin.");
+      refreshUsers();
+    } catch (error) {
+      console.error("Error promoting user:", error);
+      alert(error?.response?.data?.error || "Promotion failed");
+    }
+  };
+
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 text-black bg-cyan-100 font-semibold p-4 rounded-lg shadow-md">
@@ -73,6 +87,7 @@ export default function AdminCardList({ users, refreshUsers }) {
           onViewActivity={() => handleViewActivity(user.id)}
           onResetPassword={() => handleResetPassword(user.id)}
           onApproveHealthPro={() => handleApproveHealthPro(user.id)} // ✅ Approve button visible for health pros
+          onPromote={() => handlePromote(user.id)}
         />
       ))}
     </div>

@@ -183,8 +183,8 @@ const Communities = () => {
           </div>
         </section>
 
-        {/* <CommunityDetail posts={posts} /> */}
-        <PopularGroups groups={groups}/>
+        <CommunityDetail posts={posts} />
+        {/* <PopularGroups groups={groups}/> */}
       </div>
 
       <div className="w-full lg:w-1/3 flex flex-col gap-6">

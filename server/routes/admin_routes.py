@@ -1,11 +1,12 @@
 # server/routes/admin_routes.py
 from flask import Blueprint, request, jsonify
-from models import db, User, Post, Article, Community, VerificationRequest, Notification, Profile
+from models import db, User, Post, Article, Community, VerificationRequest, Notification, Profile, Comment, FlagReport
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, jwt_required
 from flask_cors import cross_origin, CORS
 from jwt.exceptions import ExpiredSignatureError
 from jwt.exceptions import DecodeError as JWTDecodeError
 from flask_jwt_extended.exceptions import NoAuthorizationError
+from utils.notification_utils import create_and_emit_notification
 from werkzeug.exceptions import Unauthorized
 from middleware.auth import role_required
 from utils.email_utils import send_email
@@ -125,39 +126,25 @@ def verify_user(user_id):
 
     VerificationRequest.query.filter_by(user_id=user_id, is_resolved=False).update({'is_resolved': True})
 
+    # Real-time notification via SocketIO
+    create_and_emit_notification(
+        user_id=user.id,
+        message="✅ You have been verified as a Health Professional.",
+        link="/healthpro/dashboard",
+        room=f"user_{user.id}"
+    )
+
+    # Fallback notification
     db.session.add(Notification(
         user_id=user.id,
         message="Your account has been verified by an administrator.",
-        link="/profile"
+        link="/healthpro/dashboard"
     ))
 
     db.session.commit()
     return jsonify({"message": "User verified successfully"})
 
 # ----------------------------Approve USERS ----------------------------
-# @admin_bp.route('/admin/approve_healthpro/<int:user_id>', methods=['POST'])
-# @jwt_required()
-# @role_required("admin")
-# def approve_healthpro(user_id):
-#     user = User.query.get(user_id)
-#     if not user or user.role != 'health_pro':
-#         return jsonify({"error": "Invalid health professional"}), 404
-
-#     if not user.profile:
-#         return jsonify({"error": "User profile not found"}), 404
-
-#     user.profile.is_verified = True
-
-#     VerificationRequest.query.filter_by(user_id=user.id, is_resolved=False).update({"is_resolved": True})
-
-#     db.session.add(Notification(
-#         user_id=user.id,
-#         message="Your verification request has been approved by admin.",
-#         link="/profile"
-#     ))
-
-#     db.session.commit()
-#     return jsonify({"message": "Health professional verified successfully"})
 @admin_bp.route('/admin/approve_healthpro/<int:user_id>', methods=['POST'])
 @jwt_required()
 @role_required('admin')
@@ -167,10 +154,27 @@ def approve_health_pro(user_id):
     if user.role != 'health_pro' or not user.profile:
         return jsonify({"error": "Invalid health professional"}), 400
 
-    user.profile.is_verified = True  # ✅ This must be here
-    db.session.commit()
+    user.profile.is_verified = True
 
+    # Real-time notification via SocketIO
+    create_and_emit_notification(
+        user_id=user.id,
+        message="✅ You have been verified as a Health Professional.",
+        link="/healthpro/dashboard",
+        room=f"user_{user.id}"
+    )
+
+    # Fallback notification
+    db.session.add(Notification(
+        user_id=user.id,
+        message="Your account has been verified by an administrator.",
+        link="/healthpro/dashboard"
+    ))
+
+    db.session.commit()
     return jsonify({"message": f"{user.profile.full_name} verified successfully"}), 200
+
+
 
 # ----------------------------Promote USERS to admin----------------------------
 @admin_bp.route('/admin/promote/<int:user_id>', methods=['PATCH'])
@@ -246,6 +250,35 @@ def get_admin_notifications():
 
 
 # ---------------------------- FLAGGED POSTS REVIEW ----------------------------
+@admin_bp.route('/admin/posts/<int:post_id>', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_single_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    if not post:
+        print(f"🚫 Post ID {post_id} not found in DB.")
+        return jsonify({"error": "Post not found"}), 404
+    return jsonify({
+        "post": {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "status": "flagged" if post.is_flagged else "approved" if post.is_approved else "pending",
+            "media_url": post.media_url,
+            "media_type": post.media_type,
+            "created_at": post.created_at.isoformat(),
+            "violation_reason": post.violation_reason,
+            "user": {
+                "id": post.author.id if post.author else None,
+                "full_name": post.author.profile.full_name if post.author and post.author.profile else "Anonymous"
+            },
+            "community": {
+                "id": post.community.id if post.community else None,
+                "name": post.community.name if post.community else "Unknown"
+            }
+        }
+    }), 200
+
 @admin_bp.route('/admin/posts', methods=['GET'])
 @jwt_required()
 @role_required("admin")
@@ -327,6 +360,16 @@ def create_category():
 
     return jsonify({"message": f"Category '{name}' created successfully"}), 201
 
+@admin_bp.route('/admin/categories', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_categories():
+    from models import Category
+    categories = Category.query.order_by(Category.id.desc()).all()
+    return jsonify({
+        "categories": [{"id": c.id, "name": c.name} for c in categories]
+    })
+
 # ----------------------------Get articles----------------------------
 @admin_bp.route('/admin/articles', methods=['GET'])
 @jwt_required()
@@ -391,32 +434,6 @@ def delete_article(article_id):
     return jsonify({"message": f"Article '{article.title}' deleted"}), 200
 
 # ----------------------------View and Delete Post----------------------------
-@admin_bp.route('/admin/posts', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=["http://127.0.0.1:5173", "http://localhost:5173"], supports_credentials=True)
-def get_admin_posts():
-    if request.method == 'OPTIONS':
-        return '', 200  # Preflight response
-
-    # Your actual logic
-    posts = Post.query.all()
-    return jsonify({
-        "posts": [
-            {
-                "id": p.id,
-                "title": p.title,
-                "content": p.content,
-                "status": p.status,
-                "user": {
-                    "full_name": p.author.profile.full_name if p.author and p.author.profile else "Unknown"
-                },
-                "community": {
-                    "name": p.community.name if p.community else "N/A"
-                }
-            }
-            for p in posts
-        ]
-    })
-    
 @admin_bp.route('/admin/delete_post/<int:post_id>', methods=['DELETE'])
 @jwt_required()
 @role_required("admin")
@@ -443,7 +460,7 @@ def create_community():
     if not name:
         return jsonify({"error": "Community name required"}), 400
 
-    new_community = Community(name=name, description=description, image=image)
+    new_community = Community(name=name, description=description, image=image, status="approved")
     db.session.add(new_community)
     db.session.commit()
 
@@ -505,3 +522,53 @@ def get_pending_communities():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@admin_bp.route('/admin/comments/<int:comment_id>', methods=['GET'])
+@jwt_required()
+@role_required("admin")
+def get_flagged_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    user = User.query.get(comment.user_id)
+
+    return jsonify({
+        "comment": {
+            "id": comment.id,
+            "content": comment.content,
+            "created_at": comment.created_at.isoformat(),
+            "user": {
+                "id": user.id,
+                "full_name": user.profile.full_name if user.profile else "Anonymous"
+            }
+        }
+    }), 200
+
+@admin_bp.route('/admin/comments/<int:comment_id>', methods=['PATCH'])
+@jwt_required()
+@role_required("admin")
+def update_comment_status(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    data = request.get_json()
+    status = data.get("status")
+
+    if status == "approved":
+        comment.is_flagged = False
+    elif status == "rejected":
+        db.session.delete(comment)
+    else:
+        return jsonify({"error": "Invalid status. Use 'approved' or 'rejected'."}), 400
+
+    db.session.commit()
+    return jsonify({"message": f"Comment {status} successfully"}), 200
+
+
+@admin_bp.route('/admin/cleanup-bad-flags', methods=['DELETE'])
+@jwt_required()
+@role_required("admin")
+def cleanup_bad_flag_reports():
+    bad_flags = FlagReport.query.filter(FlagReport.content_id == None).all()
+    count = len(bad_flags)
+
+    for flag in bad_flags:
+        db.session.delete(flag)
+
+    db.session.commit()
+    return jsonify({"message": f"Removed {count} invalid flag reports"}), 200

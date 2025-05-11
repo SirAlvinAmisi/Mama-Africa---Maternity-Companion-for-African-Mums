@@ -102,9 +102,7 @@ class Post(db.Model):
     is_flagged = db.Column(db.Boolean, default=False)
     violation_reason = db.Column(db.String(255), nullable=True)
     
-    # author = db.relationship("User", backref="posts", foreign_keys=[author_id])
     author = db.relationship("User", back_populates="posts", foreign_keys=[author_id])
-    # community = db.relationship("Community", backref="posts")
     community = db.relationship("Community", back_populates="posts")
 
     comments = db.relationship("Comment", backref="post", cascade="all, delete-orphan")
@@ -136,7 +134,7 @@ class Comment(db.Model):
     parent_comment_id = db.Column(Integer, db.ForeignKey('comment.id'))  # used for replies
     content = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
-
+    is_flagged = db.Column(db.Boolean, default=False)
     replies = db.relationship(
         "Comment",
         backref=db.backref('parent', remote_side=[id]),
@@ -159,13 +157,12 @@ class Question(db.Model):
     answer_text = db.Column(Text)
     created_at = db.Column(DateTime, default=datetime.utcnow)
     is_answered = db.Column(Boolean, default=False)  # Added this field
+    answered_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     # Relationships
     asker = db.relationship('User', foreign_keys=[user_id])
     responder = db.relationship('User', foreign_keys=[doctor_id])
     
-    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # user = db.relationship('User', back_populates='questions')
 
 
 # --- Supplementary ---
@@ -214,7 +211,6 @@ class Community(db.Model):
     member_count = db.Column(Integer, default=0)
     status = db.Column(db.String(50), default="pending")
     posts = db.relationship("Post", back_populates="community", cascade="all, delete-orphan")
-    # posts = db.relationship('Post', backref='community', cascade="all, delete-orphan")
     members = db.relationship('User', secondary=community_members, back_populates="communities")
 
 class Topic(db.Model):
@@ -229,7 +225,8 @@ class FlagReport(db.Model):
     id = db.Column(Integer, primary_key=True)
     reporter_id = db.Column(Integer, ForeignKey('user.id'))
     content_type = db.Column(String(50))  # 'post', 'article', etc.
-    content_id = db.Column(Integer)
+    content_id = db.Column(db.Integer, nullable=False)
+    # content_id = db.Column(Integer)
     reason = db.Column(Text)
     reviewed = db.Column(Boolean, default=False)
     created_at = db.Column(DateTime, default=datetime.utcnow)
@@ -287,7 +284,6 @@ class VerificationRequest(db.Model):
     is_resolved = db.Column(Boolean, default=False)
     created_at = db.Column(DateTime, default=datetime.utcnow)
 
-    # user = db.relationship('User')
 
 # --- Notifications ---
 class Notification(db.Model):
