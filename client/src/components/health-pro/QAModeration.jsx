@@ -1,47 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { FaFileMedical } from 'react-icons/fa'; 
 
 export default function QAModeration({ questions, setQuestions }) {
   const [activeTab, setActiveTab] = useState('unanswered');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   useEffect(() => {
-    // Fetch questions
-    axios.get('http://localhost:5000/api/questions')
+    const token = localStorage.getItem('access_token');
+
+    // Fetch questions for this doctor
+    axios.get('http://localhost:5000/healthpros/questions', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(response => {
-        setQuestions(response.data.questions);
+        setQuestions(response.data.questions); // ✅ FIXED: actually store the result
         setLoading(false);
       })
       .catch(error => {
         console.error("Failed to fetch questions", error);
         setLoading(false);
       });
-      
-    // Get current user info
-    axios.get('http://localhost:5000/api/users/current')
+
+    // Fetch current user info
+    axios.get('http://localhost:5000/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(response => {
         setCurrentUser(response.data);
       })
       .catch(error => {
         console.error("Failed to fetch current user", error);
       });
-  }, []);
+  }, [setQuestions]);
 
   const handleAnswer = (id, answer) => {
-    axios.patch(`http://localhost:5000/api/questions/${id}/answer`, { 
-      answer,
-      answeredBy: currentUser?.name || 'Health Professional' // Include who answered
+    const token = localStorage.getItem('access_token');
+    axios.post(`http://localhost:5000/healthpros/answers`, {
+      question_id: id,
+      answer_text: answer
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
     })
-    .then((response) => {
-      // Assuming the server returns the updated question
-      const updatedQuestion = response.data;
-      setQuestions(prev =>
-        prev.map(q => q.id === id ? updatedQuestion : q)
-      );
+    .then(() => {
+      // Refresh questions
+      axios.get(`http://localhost:5000/healthpros/questions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        setQuestions(res.data.questions);
+      });
     })
-    .catch(error => console.error("Error submitting answer", error));
+    .catch(error => {
+      console.error("Error submitting answer", error);
+      alert("Failed to submit answer.");
+    });
   };
+
 
   const filteredQuestions = questions.filter(q =>
     activeTab === 'unanswered' ? !q.answered : q.answered
@@ -52,7 +67,7 @@ export default function QAModeration({ questions, setQuestions }) {
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl mt-6 max-w-4xl mx-auto">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Q&A Moderation</h2>
-      
+
       <div className="flex justify-center gap-6 mb-6 border-b pb-2">
         {['unanswered', 'answered'].map(tab => (
           <button
@@ -69,24 +84,45 @@ export default function QAModeration({ questions, setQuestions }) {
           </button>
         ))}
       </div>
-      
+
       {filteredQuestions.length > 0 ? (
         <ul className="space-y-6">
           {filteredQuestions.map(q => (
-            <li key={q.id} className="p-6 bg-blue-50 rounded-xl shadow">
+            <li key={q.id} className="p-6 bg-cyan-200 rounded-xl shadow">
               <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
                 <span className="font-medium">
                   <span className="text-blue-700">Question by:</span> {q.user}
                 </span>
                 <span>{q.date}</span>
               </div>
-              
-              <p className="text-lg text-gray-800 mb-4">{q.question}</p>
-              
+
+              {/* <p className="text-lg text-gray-800 mb-4">{q.question}</p> */}
+              <p className="text-lg text-gray-800 mb-4 flex flex-col gap-1">
+                {q.question.startsWith("[Scan Upload]") && (
+                  <span className="inline-flex items-center gap-1 text-sm text-cyan-800 font-medium px-2 py-1 bg-cyan-100 border border-cyan-300 rounded w-max">
+                    <FaFileMedical /> Scan Upload
+                  </span>
+                )}
+                <span>{q.question.replace("[Scan Upload]", "").trim()}</span>
+
+                {/* Optional: show file link if available */}
+                {q.scan_file_url && (
+                  <a
+                    href={q.scan_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm underline mt-1"
+                  >
+                    🔗 View Uploaded Scan
+                  </a>
+                )}
+              </p>
+
+
               {q.answered ? (
-                <div className="bg-green-100 p-4 rounded-md border border-green-300">
+                <div className="bg-gray-300 p-4 rounded-md border border-green-300">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="font-medium text-green-700">Answer:</p>
+                    <p className="font-bold text-black">Answer:</p>
                     <span className="text-sm text-gray-600">
                       <span className="font-medium text-green-700">Answered by:</span> {q.answeredBy || 'Health Professional'}
                     </span>

@@ -6,6 +6,9 @@ import ArticlesReview from '../components/admin/ArticlesReview';
 import PostReview from '../components/admin/PostReview';
 import CommunityReview from '../components/admin/CommunityReview';
 import Notification from '../components/Notification';
+import CreateCategory from '../components/admin/CreateCategory';
+import CreateCommunity from '../components/admin/CreateCommunity';
+import ResetUserPassword from '../components/admin/ResetUserPassword';
 import NotificationsTab from '../components/admin/NotificationsTab';
 
 const Admin = () => {
@@ -69,7 +72,10 @@ const Admin = () => {
     { key: 'articles', label: 'Review Articles' },
     { key: 'posts', label: 'Review Posts' },
     { key: 'communities', label: 'Approve Communities' },
-    { key: 'notifications', label: 'Pending Notifications' }, // Updated label
+    { key: 'create_community', label: 'Create Community' },
+    { key: 'create_category', label: 'Create Category' },
+    { key: 'reset_password', label: 'Reset Password' },
+    { key: 'notifications', label: 'Notifications' }, // Updated label
   ];
 
   const handleAddUser = async (e) => {
@@ -178,7 +184,11 @@ const Admin = () => {
             {activeTab === 'articles' && <ArticlesReview />}
             {activeTab === 'posts' && <PostReview />}
             {activeTab === 'communities' && <CommunityReview />}
+            {activeTab === 'create_community' && <CreateCommunity />}
+            {activeTab === 'create_category' && <CreateCategory />}
+            {activeTab === 'reset_password' && <ResetUserPassword />}
             {activeTab === 'notifications' && <Notification />}
+            
             {/* {activeTab === 'notifications' && <NotificationsTab />} */}
           </>
         )}

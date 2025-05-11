@@ -1,4 +1,4 @@
-export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity, onResetPassword, onApproveHealthPro }) {
+export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity, onResetPassword, onApproveHealthPro, onPromote }) {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       {/* Card Header */}
@@ -77,6 +77,14 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
           >
             Delete
           </button>
+          <button
+            onClick={onPromote}
+            className="bg-cyan-900 text-black px-3 py-1 rounded mt-2 hover:bg-green-700"
+          >
+            Promote to Admin
+          </button>
+        
+
         </div>
 
         {/* Admin Tools */}

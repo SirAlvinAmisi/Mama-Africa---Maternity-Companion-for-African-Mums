@@ -1,9 +1,10 @@
 from flask import Blueprint, jsonify, request
-from models import db, Community, Post, User
+from models import db, Community, Post, User, FlagReport
 from flask_cors import cross_origin
 from flask_jwt_extended import jwt_required, get_jwt_identity 
 from datetime import datetime, timedelta
 from middleware.auth import role_required
+from routes.flag_routes import detect_violation  
 
 community_bp = Blueprint('community', __name__)
 
@@ -22,26 +23,6 @@ def serialize_comment(comment):
     }
 
 # Get all communities
-# @community_bp.route('/communities', methods=['GET'])
-# @jwt_required(optional=True)
-# def get_communities():
-#     identity = get_jwt_identity()
-#     print("JWT identity in /communities:", identity)
-#     user_id = int(identity) if identity else None
-
-#     communities = Community.query.all()
-#     return jsonify({
-#         "communities": [
-#             {
-#                 "id": c.id,
-#                 "name": c.name,
-#                 "description": c.description,
-#                 "image": c.image,
-#                 "member_count": len(c.members),
-#                 "is_member": user_id in {u.id for u in c.members} if user_id else False
-#             } for c in communities
-#         ]
-#     })
 @community_bp.route('/communities', methods=['GET'])
 @jwt_required(optional=True)
 def get_communities():
@@ -58,7 +39,7 @@ def get_communities():
     }), 200
 
 
-# Get community details
+# Get community by id
 @community_bp.route('/communities/<int:id>', methods=['GET'])
 @jwt_required(optional=True)
 def get_community(id):
@@ -131,7 +112,6 @@ def get_community_posts(id):
     })
 
 
-# Join community
 # Join community
 @community_bp.route('/communities/<int:community_id>/join', methods=['POST'])
 @jwt_required()
@@ -206,3 +186,53 @@ def update_community_status(id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@community_bp.route('/communities/<int:id>/posts', methods=['POST'])
+@jwt_required()
+@role_required("mum")
+def create_community_post(id):
+    user_id = get_jwt_identity()
+    user = User.query.get_or_404(user_id)
+    community = Community.query.get_or_404(id)
+
+    content = request.form.get("content", "").strip()
+    media = request.files.get("media")
+
+    if not content and not media:
+        return jsonify({"error": "Post must contain text or media."}), 400
+
+    # Handle file saving here (assume media_url, media_type are set accordingly)
+    media_url, media_type = None, None
+    if media:
+        # Save media and set `media_url` and `media_type`
+        # (Assuming you have a save_media_file utility or equivalent)
+        from utils.media_utils import save_media_file
+        media_url, media_type = save_media_file(media)
+
+    new_post = Post(
+        content=content,
+        media_url=media_url,
+        media_type=media_type,
+        community_id=community.id,
+        author_id=user_id
+    )
+
+    # ✅ Flag if banned word detected
+    violation_reason = detect_violation(content)
+    if violation_reason:
+        return jsonify({"error": violation_reason}), 400
+    if violation_reason:
+        new_post.is_flagged = True
+        new_post.violation_reason = violation_reason
+        flag = FlagReport(
+            reporter_id=user_id,
+            content_type='post',
+            content_id=new_post.id,  # will be set after flush
+            reason=violation_reason
+        )
+        db.session.add(flag)
+
+    db.session.add(new_post)
+    db.session.commit()
+
+    return jsonify({"message": "Post created successfully", "id": new_post.id}), 201
