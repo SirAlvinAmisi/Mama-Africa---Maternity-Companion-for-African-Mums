@@ -1,4 +1,4 @@
-// Full CommunityDetail.jsx with Delete Button in 'My Posts' Only, Sticky & Scrollable Sidebar, and Mobile Responsive Write Post
+
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -6,6 +6,8 @@ import axios from 'axios';
 import moment from 'moment';
 import { FiHeart } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const CommentThread = ({
   comment,
@@ -30,7 +32,7 @@ const CommentThread = ({
         )}
       </div>
       <p className="text-xs text-gray-500">
-        by {comment.user_id === currentUserId ? 'You' : comment.user_name} · {moment(comment.created_at).fromNow()}
+        by {comment.user_id === currentUserId ? 'You' : comment.user_name} · {moment(comment.created_at).local().fromNow()}
       </p>
       <button onClick={() => { handleReply(comment.id); setShowReplyBox(true); }} className="text-xs text-blue-500">Reply</button>
 
@@ -116,7 +118,7 @@ const CommunityDetail = () => {
 
       if (isLoggedIn) {
         const myPostsRes = await axios.get('http://localhost:5000/my-posts', { headers });
-        setMyPosts(myPostsRes.data || []);
+        setMyPosts((myPostsRes.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -200,8 +202,10 @@ const CommunityDetail = () => {
       });
 
       setNewPostContent('');
+      toast.success("✅ Posted successfully!");
       setNewPostMedia(null);
       fetchCommunityData();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       if (err.response && err.response.status === 400) {
         alert("🚫 Post rejected: " + err.response.data.error);
@@ -216,7 +220,7 @@ const CommunityDetail = () => {
     <div key={post.id} className="bg-cyan-400 p-4 rounded shadow">
       <p className="text-sm text-cyan-900">
         {post.group_name ? `${post.group_name} · ` : ''}
-        by <span className="font-semibold">{post.user_name || 'Anonymous'}</span> · {moment(post.created_at).fromNow()}
+        by <span className="font-semibold">{post.user_name || 'Anonymous'}</span> · {moment(post.created_at).local().fromNow()}
       </p>
       <p className="mt-2 break-words">{post.content}</p>
       {post.media_url && (
@@ -346,6 +350,7 @@ const CommunityDetail = () => {
         )}
         {posts.map(post => renderPostCard(post, false))}
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

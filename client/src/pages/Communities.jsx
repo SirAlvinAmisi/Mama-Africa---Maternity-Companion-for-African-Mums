@@ -80,26 +80,34 @@ const Communities = () => {
   });
 
   const joinMutation = useMutation({
-    mutationFn: async (communityId) => {
-      if (!validToken) {
-        alert("Please log in to join a community.");
-        navigate("/login");
-        return;
-      }
+  mutationFn: async (communityId) => {
+    if (!validToken) {
+      alert("Please log in to join a community.");
+      navigate("/login");
+      return;
+    }
 
-      const res = await fetch(`http://localhost:5000/communities/${communityId}/join`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+    const res = await fetch(`http://localhost:5000/communities/${communityId}/join`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-      if (!res.ok) throw new Error('Failed to join community');
-      return res.json();
-    },
-    onSuccess: () => queryClient.invalidateQueries(['communities']),
-  });
+    if (!res.ok) throw new Error('Failed to join community');
+    return res.json();
+  },
+  onSuccess: (data, communityId) => {
+  
+    queryClient.setQueryData(['communities', selectedTrimester], (oldData) => {
+      return oldData.map(group =>
+        group.id === communityId ? { ...group, is_member: true, member_count: data.member_count } : group
+      );
+    });
+  },
+});
+
 
   const filteredGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
