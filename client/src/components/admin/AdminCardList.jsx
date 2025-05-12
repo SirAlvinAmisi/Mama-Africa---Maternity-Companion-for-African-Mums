@@ -11,20 +11,7 @@ export default function AdminCardList({ users, refreshUsers }) {
     withCredentials: true
   };
 
-  // const handleDeactivate = async (userId) => {
-  //   try {
-  //     await axios.patch(`http://localhost:5000/admin/deactivate_user/${userId}`, {}, authHeaders);
-  //   //   await axios.patch(
-  //   //     `http://localhost:5000/admin/${user.is_active ? "deactivate" : "activate"}/${userId}`,
-  //   //     {},
-  //   //     authHeaders
-  //   // );
-  //     refreshUsers();
-  //   } catch (error) {
-  //     console.error('Error deactivating user:', error);
-  //     alert(error?.response?.data?.error || "Deactivation failed");
-  //   }
-  // };
+  
   const handleDeactivate = async (user) => {
     try {
       const endpoint = user.is_active

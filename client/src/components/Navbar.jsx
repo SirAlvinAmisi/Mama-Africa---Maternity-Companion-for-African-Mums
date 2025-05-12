@@ -25,15 +25,15 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="bg-cyan-200 dark:bg-cyan-500 text-gray-600 dark:text-white shadow">
+    <nav className="bg-cyan-200 dark:bg-cyan-400 text-gray-600 dark:text-white shadow">
       <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-4">
         
         {/* Logo */}
         <div className="text-3xl font-bold">
           <Link to="/" className="flex items-center space-x-1">
-            <span className="text-green font-bold">Mama</span>
-            <img src={africaIcon} alt="Africa icon" className="w-6 h-6" />
-            <span className="text-red-500 font-bold">frika</span>
+            <span className="text-green text-5xl font-bold">Mama</span>
+            <img src={africaIcon} alt="Africa icon text-5xl" className="w-11 h-11" />
+            <span className="text-red-600 text-5xl font-bold">frika</span>
           </Link>
         </div>
         <button
