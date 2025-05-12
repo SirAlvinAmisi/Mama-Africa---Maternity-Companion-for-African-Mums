@@ -18,7 +18,8 @@ CORS(admin_bp, origins=[
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5000",
-    "http://127.0.0.1:5000"
+    "http://127.0.0.1:5000",
+    "https://mama-africa.onrender.com"
 ], supports_credentials=True)
 
 
@@ -50,7 +51,8 @@ def preflight_ok():
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
     "http://localhost:5000",
-    "http://127.0.0.1:5000"
+    "http://127.0.0.1:5000",
+    "https://mama-africa.onrender.com"
     ], supports_credentials=True)
 def get_users():
     if request.method == 'OPTIONS':
