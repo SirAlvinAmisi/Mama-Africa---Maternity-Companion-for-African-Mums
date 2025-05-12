@@ -38,33 +38,33 @@ def create_app():
     socketio.init_app(app, cors_allowed_origins="*")  # Allow any frontend origin
 
     # CORS setup
+    CORS(app, supports_credentials=True, resources={
+        r"/*": {
+            "origins": [
+                "http://127.0.0.1:5000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5174",
+                "http://localhost:5000",
+                "https://mama-africa.onrender.com",
+                "https://mama-africa-api.onrender.com"
+            ],
+            "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
+            "allow_headers": ["Authorization", "Content-Type"]
+        }
+    })
     # CORS(app, supports_credentials=True, resources={
     #     r"/*": {
     #         "origins": [
-    #             "http://127.0.0.1:5000",
-    #             "http://localhost:5173",
-    #             "http://127.0.0.1:5173",
-    #             "http://localhost:5174",
-    #             "http://127.0.0.1:5174",
-    #             "http://localhost:5000",
     #             "https://mama-africa.onrender.com",
-    #             "https://mama-africa-api.onrender.com"
+    #             "http://localhost:5000", # your frontend
+    #             "http://localhost:5173"               # for local testing
     #         ],
     #         "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
     #         "allow_headers": ["Authorization", "Content-Type"]
     #     }
     # })
-    CORS(app, supports_credentials=True, resources={
-    r"/*": {
-        "origins": [
-            "https://mama-africa.onrender.com",
-            "http://localhost:5000", # your frontend
-            "http://localhost:5173"               # for local testing
-        ],
-        "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
-        "allow_headers": ["Authorization", "Content-Type"]
-    }
-})
     # Serve frontend static files
     @app.route("/", defaults={"filename": ""})
     @app.route("/<path:filename>")

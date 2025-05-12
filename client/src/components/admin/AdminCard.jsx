@@ -79,7 +79,7 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
           </button>
           <button
             onClick={onPromote}
-            className="bg-cyan-900 text-black px-3 py-1 rounded mt-2 hover:bg-green-700"
+            className="flex-1 py-2 px-3 bg-red-100  text-red-700 px-3 py-1 rounded mt-2 hover:bg-green-700"
           >
             Promote to Admin
           </button>
@@ -88,7 +88,7 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
         </div>
 
         {/* Admin Tools */}
-        {user.role === 'admin' && (
+        {/* {user.role === 'admin' && (
           <div className="mt-3 pt-3 border-t">
             <button 
               onClick={onViewActivity}
@@ -103,7 +103,7 @@ export default function AdminCard({ user, onDeactivate, onDelete, onViewActivity
               Reset Password
             </button>
           </div>
-        )}
+        )} */}
 
         {/* Health Pro Verification */}
         {user.role === 'health_pro' && !user.profile?.is_verified && (

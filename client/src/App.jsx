@@ -135,7 +135,7 @@ function App() {
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/help-center" element={<HelpCenter />} />
               <Route path="/questions" element={<Questions />} />
-              <Route path="/notification" element={<Notification />} />
+              {/* <Route path="/notification" element={<Notification />} /> */}
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/nutrition-dashboard" element={<NutritionDashboard />} />
               <Route path="/chat" element={<ChatList />} />

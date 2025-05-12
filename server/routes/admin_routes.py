@@ -218,6 +218,19 @@ def deactivate_user(user_id):
 
     return jsonify({"message": f"User {user.email} deactivated"}), 200
 
+@admin_bp.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+@role_required("admin")
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": f"User {user.email} deleted"}), 200
+
 
 @admin_bp.route('/admin/activate/<int:user_id>', methods=['PATCH'])
 @jwt_required()
