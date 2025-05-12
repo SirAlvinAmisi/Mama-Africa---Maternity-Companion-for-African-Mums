@@ -46,7 +46,12 @@ def preflight_ok():
 
 # ----------------------------View USERS ----------------------------
 @admin_bp.route('/admin/users', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"], supports_credentials=True)
+@cross_origin(origins=[
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000"
+    ], supports_credentials=True)
 def get_users():
     if request.method == 'OPTIONS':
         return preflight_ok()
