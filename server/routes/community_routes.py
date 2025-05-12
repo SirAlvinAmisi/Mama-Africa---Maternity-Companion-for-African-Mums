@@ -1,12 +1,27 @@
 from flask import Blueprint, jsonify, request
 from models import db, Community, Post, User, FlagReport
 from flask_cors import cross_origin
-from flask_jwt_extended import jwt_required, get_jwt_identity 
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
 from datetime import datetime, timedelta
 from middleware.auth import role_required
-from routes.flag_routes import detect_violation  
+from routes.flag_routes import detect_violation 
+from functools import wraps
+
 
 community_bp = Blueprint('community', __name__)
+
+def allow_roles_for_posting(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            role = claims.get("role", "").strip().lower()
+            if role not in [r.lower() for r in allowed_roles]:
+                return jsonify({"error": f"Posting not allowed for role: {role}"}), 403
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 # Recursive comment serializer
 def serialize_comment(comment):
@@ -18,7 +33,7 @@ def serialize_comment(comment):
         "parent_id": comment.parent_comment_id,
         "reply_to_user_id": comment.parent.user_id if comment.parent else None,
         "reply_to_user_name": comment.parent.user.profile.full_name if comment.parent and comment.parent.user and comment.parent.user.profile else "Anonymous",
-        "created_at": comment.created_at.isoformat(),
+        "created_at": comment.created_at.isoformat() + "Z",
         "replies": [serialize_comment(reply) for reply in sorted(comment.replies, key=lambda x: x.created_at)]
     }
 
@@ -26,6 +41,9 @@ def serialize_comment(comment):
 @community_bp.route('/communities', methods=['GET'])
 @jwt_required(optional=True)
 def get_communities():
+    identity = get_jwt_identity()
+    user_id = int(identity) if identity else None
+
     approved_communities = Community.query.filter_by(status="approved").all()
 
     return jsonify({
@@ -34,7 +52,8 @@ def get_communities():
             "name": c.name,
             "description": c.description,
             "image": c.image,
-            "member_count": len(c.members)
+            "member_count": len(c.members),
+            "is_member": user_id in {u.id for u in c.members} if user_id else False
         } for c in approved_communities]
     }), 200
 
@@ -96,7 +115,7 @@ def get_community_posts(id):
                 ),
                 "media_url": p.media_url,
                 "media_type": p.media_type,
-                "created_at": p.created_at.isoformat(),
+                "created_at": p.created_at.isoformat() + "Z",
                 "like_count": len(p.likers),
                 "liked_by_user": user_id in {u.id for u in p.likers} if user_id else False,
                 "comment_count": len(p.comments),
@@ -189,7 +208,7 @@ def update_community_status(id):
 
 @community_bp.route('/communities/<int:id>/posts', methods=['POST'])
 @jwt_required()
-@role_required("mum")
+@allow_roles_for_posting("mum", "admin", "health_pro")
 def create_community_post(id):
     user_id = get_jwt_identity()
     user = User.query.get_or_404(user_id)
@@ -206,8 +225,8 @@ def create_community_post(id):
     if media:
         # Save media and set `media_url` and `media_type`
         # (Assuming you have a save_media_file utility or equivalent)
-        from utils.media_utils import save_media_file
-        media_url, media_type = save_media_file(media)
+        from utilities.community_media_utils import save_community_media
+        media_url, media_type = save_community_media(media)
 
     new_post = Post(
         content=content,
