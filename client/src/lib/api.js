@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true
+  // withCredentials: true
 });
 
 
@@ -25,10 +25,26 @@ api.interceptors.request.use(
 );
 
 // 🔒 Authentication
+// export const signup = async (userData) => {
+//   const response = await api.post('/signup', userData);
+//   return response.data;
+// };
 export const signup = async (userData) => {
-  const response = await api.post('/signup', userData);
+  const formData = new FormData();
+
+  for (let key in userData) {
+    formData.append(key, userData[key]);
+  }
+
+  const response = await api.post('/signup', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
   return response.data;
 };
+
 
 export const login = async (credentials) => {
   const response = await api.post('/login', credentials);
