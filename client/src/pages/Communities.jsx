@@ -6,6 +6,7 @@ import Welcome from '../components/WelcomeCard';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
 import Nutrition from '../components/Nutrition';
+import NutritionDashboard from '../components/NutritionDashboard';
 import CommunityDetail from './CommunityDetail';
 
 

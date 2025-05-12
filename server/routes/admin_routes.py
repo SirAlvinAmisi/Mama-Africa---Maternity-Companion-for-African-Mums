@@ -84,33 +84,45 @@ def get_users():
 @jwt_required()
 @role_required("admin")
 def add_user():
-    data = request.get_json()
-    required_fields = ['email', 'role', 'full_name']
-    if not all(field in data for field in required_fields):
-        return jsonify({"error": f"Missing required fields: {', '.join(required_fields)}"}), 400
+    #  Handle both multipart/form-data and application/json
+    if request.content_type.startswith('multipart/form-data'):
+        data = request.form.to_dict()
+    else:
+        data = request.get_json()
 
+    #  Extract and validate required fields
+    required_fields = ['email', 'role', 'first_name', 'last_name', 'password']
+    missing = [f for f in required_fields if not data.get(f)]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
+
+    #  Check if user already exists
     if User.query.filter_by(email=data['email']).first():
         return jsonify({"error": "User with this email already exists"}), 400
 
     try:
+        #  Create user and set password
         new_user = User(
             email=data['email'],
             role=data['role'],
             is_active=True,
             created_at=datetime.utcnow()
         )
-        new_user.set_password("TempPassword123!")
+        new_user.set_password(data['password'])  # 🔐 Use actual password from form
         db.session.add(new_user)
 
+        #  Combine full name from name parts
+        full_name = f"{data.get('first_name', '')} {data.get('middle_name', '')} {data.get('last_name', '')}".strip()
+
+        #  Create profile
         profile = Profile(
             user=new_user,
-            full_name=data['full_name'],
-            region=data.get('region', ''),
+            full_name=full_name,
+            region=data.get('county', ''),
             license_number=data.get('license_number', ''),
             is_verified=data.get('is_verified', False)
         )
         db.session.add(profile)
-
         db.session.commit()
 
         return jsonify({
@@ -122,6 +134,7 @@ def add_user():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
 
 # ----------------------------Verify USERS ----------------------------
 @admin_bp.route('/admin/verify-user/<int:user_id>', methods=['POST'])
@@ -217,6 +230,19 @@ def deactivate_user(user_id):
     db.session.commit()
 
     return jsonify({"message": f"User {user.email} deactivated"}), 200
+
+@admin_bp.route('/admin/delete_user/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+@role_required("admin")
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": f"User {user.email} deleted"}), 200
 
 
 @admin_bp.route('/admin/activate/<int:user_id>', methods=['PATCH'])

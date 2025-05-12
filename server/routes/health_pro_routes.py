@@ -1,13 +1,13 @@
 # server/routes/health_pro_routes.py
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from models import db, User, Article, Clinic, Question, Profile, VerificationRequest, Reminder, Notification
+from models import db, User, Article, Clinic, Question, Profile, VerificationRequest, Reminder, Notification, Comment, Post
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from middleware.auth import role_required
 from utils.email_utils import send_email
 from extensions import socketio
 from dateutil.parser import isoparse
-
+from flask_cors import cross_origin
 health_bp = Blueprint('health_pro', __name__)
 
 # 1. GET all health professionals
@@ -434,4 +434,64 @@ def create_event():
             return jsonify({"error": str(e)}), 500
 
 
+@health_bp.route("/healthpro/group-posts-with-comments", methods=["GET"])
+@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+@jwt_required()
+@role_required("health_pro")
+def get_group_posts_with_comments():
+    from models import Post, Comment, User, Community
 
+    posts = Post.query \
+        .join(User, Post.author_id == User.id) \
+        .join(Profile, Profile.user_id == User.id) \
+        .add_columns(
+            Post.id.label("post_id"),
+            Post.content,
+            Post.media_url,
+            Post.media_type,
+            Post.created_at,
+            Profile.full_name.label("user_name"),  # ✅ Correct usage
+            Community.name.label("group_name"),
+        )\
+        .order_by(Post.created_at.desc()) \
+        .all()
+
+    post_map = {}
+    for row in posts:
+        post_id = row.post_id
+        if post_id not in post_map:
+            post_map[post_id] = {
+                "id": post_id,
+                "content": row.content,
+                "media_url": row.media_url,
+                "media_type": row.media_type,
+                "created_at": row.created_at,
+                "user_name": row.user_name,
+                "group_name": row.group_name,
+                "comments": [],
+            }
+
+    # Fetch comments (with user info)
+    comments = Comment.query \
+        .join(User, Comment.user_id == User.id) \
+        .add_columns(
+            Comment.id,
+            Comment.content,
+            Comment.created_at,
+            Comment.post_id,
+            User.name.label("user_name")
+        ) \
+        .order_by(Comment.created_at.asc()) \
+        .all()
+
+    for c in comments:
+        comment_data = {
+            "id": c.id,
+            "content": c.content,
+            "created_at": c.created_at,
+            "user_name": c.user_name,
+        }
+        if c.post_id in post_map:
+            post_map[c.post_id]["comments"].append(comment_data)
+
+    return jsonify({"posts": list(post_map.values())}), 200

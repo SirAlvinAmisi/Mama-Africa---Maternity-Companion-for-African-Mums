@@ -148,7 +148,7 @@ export default function MomLandingPage() {
       </h3>
 
       <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6">
-        {['profile', 'weekly', 'records', 'questions', 'topics', 'appointments', 'groups', 'notifications'].map(tab => (
+        {['profile', 'weekly', 'Scan records', 'questions', 'topics', 'appointments', 'groups'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -207,7 +207,7 @@ export default function MomLandingPage() {
         </section>
       )}
 
-      {activeTab === 'records' && (
+      {activeTab === 'Scan records' && (
         <section>
           <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Medical Records</h3>
           <MomUploadScan />
@@ -246,9 +246,9 @@ export default function MomLandingPage() {
         
       )}
 
-      {activeTab === 'notifications' && (
+      {/* {activeTab === 'notifications' && (
         <Notification />
-      )}
+      )} */}
     </div>
   );
 }

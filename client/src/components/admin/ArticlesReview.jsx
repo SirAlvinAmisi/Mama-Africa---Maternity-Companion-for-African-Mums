@@ -68,23 +68,6 @@ export default function ArticlesReview() {
   }
 };
 
-  // const handleAction = (id, action) => {
-  //   setArticles((prev) =>
-  //     prev.map((article) => {
-  //       if (article.id === id) {
-  //         if (action === "flagged") {
-  //           return { ...article, is_flagged: true };
-  //         } else if (action === "approved") {
-  //           return { ...article, is_approved: true };
-  //         } else if (action === "deleted") {
-  //           return null; // Mark for deletion
-  //         }
-  //       }
-  //       return article;
-  //     }).filter(Boolean) // Remove deleted articles
-  //   );
-  //   alert(`Article ${action} successfully`);
-  // };
 
   if (loading) return <p>Loading Articles...</p>;
   if (articles.length === 0) return <p>No articles available for review.</p>;

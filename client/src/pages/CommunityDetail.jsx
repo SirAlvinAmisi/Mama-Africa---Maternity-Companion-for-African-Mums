@@ -121,7 +121,7 @@ const CommentThread = ({
             onChange={(e) =>
               setNewComments({ ...newComments, [commentKey]: e.target.value })
             }
-            className="w-full border p-2 text-sm text-black bg-gray-100 rounded"
+            className="w-full border p-2 text-sm text-black bg-gray-300 rounded"
           />
           <div className="flex items-center space-x-2 mt-1">
             <button
@@ -315,14 +315,14 @@ const CommunityDetail = () => {
       {post.media_url && (
         post.media_type === 'video' ? (
           <video
-  controls
-  loop
-  autoPlay
-  muted
-  className="w-full mt-2 rounded"
->
-  <source src={`http://localhost:5000${post.media_url}`} />
-</video>
+            controls
+            loop
+            autoPlay
+            muted
+            className="w-full mt-2 rounded"
+          >
+            <source src={`http://localhost:5000${post.media_url}`} />
+          </video>
         ) : post.media_type === 'audio' ? (
           <audio controls className="w-full mt-2">
             <source src={`http://localhost:5000${post.media_url}`} />
@@ -367,7 +367,7 @@ const CommunityDetail = () => {
     onChange={(e) =>
       setNewComments({ ...newComments, [post.id]: e.target.value })
     }
-    className="w-full border p-2 text-sm text-black bg-gray-100 rounded"
+    className="w-full border p-2 text-sm text-black bg-gray-300 rounded"
   />
  <div className="flex items-center space-x-2 mt-1">
   <button
@@ -413,7 +413,7 @@ const CommunityDetail = () => {
         <h1 className="text-2xl font-bold text-cyan-900 mb-2">{community.name}</h1>
         <p className='text-black'>{community.description}</p>
         <p className="text-sm font-bold text-blue-900">{community.member_count} members</p>
-        <button onClick={handleJoinLeave} className="mt-2 px-3 py-1 bg-cyan-600 text-white text-sm rounded">
+        <button onClick={handleJoinLeave} className="mt-2 px-3 py-1 bg-cyan-600 text-black text-sm rounded">
           {community.is_member ? 'Leave Community' : 'Join Community'}
         </button>
         {community.is_member && (
@@ -427,9 +427,9 @@ const CommunityDetail = () => {
               </div>
             )}
             <div className="hidden lg:block mt-6">
-              <h2 className="text-lg font-semibold mb-1">Write New Post</h2>
+              <h2 className="text-lg font-bold text-cyan-900 mb-1">Write New Post</h2>
               <textarea
-                className="w-full border p-2 text-sm"
+                className="w-full border p-2 text-black text-sm bg-gray-200 rounded"
                 placeholder="What's on your mind?"
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
