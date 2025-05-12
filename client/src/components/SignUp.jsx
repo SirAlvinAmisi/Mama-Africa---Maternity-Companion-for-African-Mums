@@ -122,11 +122,11 @@ const Signup = () => {
           <option value="Dr">Dr</option>
         </select>
 
-        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400" />
-        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400" />
-        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400" />
+        <input name="firstName" onChange={handleChange} type="text" placeholder="First Name" className="p-2 sm:p-3 border rounded-md text-black font-bold text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
+        <input name="middleName" onChange={handleChange} type="text" placeholder="Middle Name (Optional)" className="p-2 sm:p-3 border rounded-md text-black font-bold text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
+        <input name="lastName" onChange={handleChange} type="text" placeholder="Last Name" className="p-2 sm:p-3 border rounded-md text-black font-bold text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
 
-        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base h-24 bg-cyan-400" />
+        <textarea name="bio" onChange={handleChange} placeholder="Short Bio" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base h-24 placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
 
         <select name="role" onChange={handleChange} value={formData.role} className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400">
           <option value="" required>Select Role</option>
@@ -136,7 +136,7 @@ const Signup = () => {
         </select>
 
         {formData.role === "Health Professional" && (
-          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400" />
+          <input name="licenseNumber" onChange={handleChange} type="text" placeholder="License Number (for Doctors)" className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
         )}
 
         <select name="county" onChange={handleChange} className="p-2 sm:p-3 border rounded-md text-black font-semibold text-sm sm:text-base bg-cyan-400">
@@ -153,9 +153,9 @@ const Signup = () => {
           ))}
         </select>
 
-        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-2 sm:p-3 border rounded-md font-semibold text-black text-sm sm:text-base bg-cyan-400" />
+        <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-2 sm:p-3 border rounded-md font-semibold text-black text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" />
 
-        <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-400" value={formData.password} onChange={handleChange} />
+        <input name="password" type="password" placeholder="Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base text-black placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" value={formData.password} onChange={handleChange} />
 
         <div className="text-xs sm:text-sm mt-1 bg-white dark:bg-gray-100 p-2 rounded">
           <p className={`${formData.password.length >= 6 ? 'text-gray-800 dark:text-green-400' : 'text-red-600'}`}>
@@ -176,7 +176,7 @@ const Signup = () => {
         </div>
 
 
-        <input name="confirmPassword" type="password" placeholder="Confirm Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base bg-cyan-400" value={formData.confirmPassword} onChange={handleChange} />
+        <input name="confirmPassword" type="password" placeholder="Confirm Password" className="p-2 sm:p-3 border rounded-md text-sm sm:text-base placeholder-black placeholder-opacity-80 placeholder:font-medium bg-cyan-400" value={formData.confirmPassword} onChange={handleChange} />
 
         <div className="flex flex-col">
           <label className="text-cyan-900 font-bold mb-1 text-sm sm:text-base">Upload Avatar</label>

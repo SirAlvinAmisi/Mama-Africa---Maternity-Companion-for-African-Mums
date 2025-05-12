@@ -8,7 +8,7 @@ import ArticleForm from "../components/health-pro/ArticleForm";
 import QAModeration from "../components/health-pro/QAModeration";
 import ScanUpload from "../components/health-pro/ScanUpload";
 import ClinicRecommendations from "../components/health-pro/ClinicRecommendations";
-import RequestVerificationPage from './RequestVerificationPage';
+import FlagMisinformation from '../components/health-pro/FlagMisinformation';
 const tabs = [
   // "Profile",
   "Post Article",
@@ -191,15 +191,30 @@ const HealthProDashboard = () => {
           </>
         )}
 
-        {activeTab === "Flag Misinformation" && (
+        {/* {activeTab === "Flag Misinformation" && (
           <>
             <h2 className="text-xl font-semibold mb-2">Flag Misinformation</h2>
             <p>Help maintain safety by flagging incorrect health information.</p>
             <button onClick={() => navigate('/healthpro/flag-misinformation')} className="mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
               Review & Flag Content
+              {activeTab === "Flag Misinformation" && <FlagMisinformation />}
+
             </button>
           </>
-        )}
+        )} */}
+        {activeTab === "Flag Misinformation" && (
+        <>
+          <h2 className="text-xl font-semibold text-black mb-2">Flag Misinformation</h2>
+          <p className="text-xl font-light text-black mb-2">Help maintain safety by flagging incorrect health information.</p>
+          <button
+            onClick={() => navigate('/healthpro/flag-misinformation')}
+            className="mt-4 bg-red-600 text-black font-bold py-2 px-4 rounded hover:bg-red-700"
+          >
+            Review & Flag Content
+          </button>
+        </>
+      )}
+
 
         {activeTab === "My Articles" && (
           <>
