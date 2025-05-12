@@ -1,17 +1,15 @@
 // src/lib/api.js
 import axios from 'axios';
 
-const baseURL =
-  import.meta.env.MODE === 'development'
-    ? 'http://localhost:5000'
-    : 'https://mama-africa.onrender.com'; // Replace with your actual Flask API URL
+
+const baseURL = 'https://mama-africa-api.onrender.com'; 
 
 const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true
+  // withCredentials: true
 });
 
 
@@ -27,10 +25,26 @@ api.interceptors.request.use(
 );
 
 // 🔒 Authentication
+// export const signup = async (userData) => {
+//   const response = await api.post('/signup', userData);
+//   return response.data;
+// };
 export const signup = async (userData) => {
-  const response = await api.post('/signup', userData);
+  const formData = new FormData();
+
+  for (let key in userData) {
+    formData.append(key, userData[key]);
+  }
+
+  const response = await api.post('/signup', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
   return response.data;
 };
+
 
 export const login = async (credentials) => {
   const response = await api.post('/login', credentials);

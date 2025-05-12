@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -6,7 +6,6 @@ import Welcome from '../components/WelcomeCard';
 import ParentingDevelopment from '../components/ParentingDevelopment';
 import BabyCorner from '../components/BabyCorner';
 import Nutrition from '../components/Nutrition';
-import NutritionDashboard from '../components/NutritionDashboard';
 import CommunityDetail from './CommunityDetail';
 
 
@@ -190,7 +189,8 @@ const Communities = () => {
           </div>
         </section>
 
-        <CommunityDetail posts={posts} />
+        {/* <CommunityDetail posts={posts} /> */}
+        <CommunityDetail />
       </div>
 
       <div className="w-full lg:w-1/3 flex flex-col gap-6">
