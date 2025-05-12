@@ -262,47 +262,6 @@ def upload_scan():
     db.session.commit()
     return jsonify({"message": "Scan uploaded successfully"}), 201
 
-# @mum_bp.route('/upload_scan', methods=['POST', 'OPTIONS'])
-# @role_required("mum")
-# def upload_scan():
-#     if request.method == 'OPTIONS':
-#         return '', 204
-#     user_id = get_jwt_identity()
-#     file = request.files.get('file')
-#     file_url = request.form.get('file_url')
-#     notes = request.form.get('notes', '')
-#     doctor_id = request.form.get('doctor_id')
-#     if not file_url and not file:
-#         return jsonify({"error": "Either file or file URL is required"}), 400
-#     if file:
-#         filename = secure_filename(file.filename)
-#         save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-#         file.save(save_path)
-#         file_url = f"/static/avatars/{filename}"
-#     scan = MedicalUpload(
-#         user_id=user_id,
-#         file_url=file_url,
-#         notes=notes,
-#         uploaded_at=datetime.utcnow(),
-#         doctor_id=doctor_id
-#     )
-#     db.session.add(scan)
-
-#     # Notify the doctor
-#     from utils.notification_utils import create_and_emit_notification
-
-#     doctor = User.query.get(doctor_id)
-#     if doctor and doctor.role == "health_pro":
-#         create_and_emit_notification(
-#             user_id=doctor.id,
-#             message="You received a new scan upload.",
-#             link="/healthpro/scans",
-#             room=f"user_{doctor.id}"
-#         )
-
-#     db.session.commit()
-#     return jsonify({"message": "Scan uploaded successfully"}), 201
-
 
 @mum_bp.route('/scans', methods=['GET', 'OPTIONS'])
 @role_required("mum")
