@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import moment from 'moment';
@@ -273,12 +273,14 @@ const CommunityDetail = () => {
     fetchCommunityData();
   };
 
+
   const addEmojiToPost = (emoji) => {
     setNewPostContent(prev => prev + emoji.native);
   };
   const addEmojiToComment = (emoji, postId) => {
     setNewComments(prev => ({ ...prev, [postId]: (prev[postId] || '') + emoji.native }));
   };
+
 
   const handlePostSubmit = async () => {
     if (!newPostContent.trim() && !newPostMedia) return;
