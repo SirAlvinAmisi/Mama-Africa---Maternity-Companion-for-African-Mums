@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 const mockScans = [
   { id: 1, trimester: 'first', description: 'Normal 8-week scan' },
   { id: 2, trimester: 'second', description: '20-week anatomy scan' }
@@ -13,6 +13,50 @@ export default function ScanUpload() {
     file: null
   });
   const [editingId, setEditingId] = useState(null);
+  useEffect(() => {
+      fetchScans();
+    }, []);
+
+    const fetchScans = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get("http://localhost:5000/scans", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setScans(response.data.scans || []);
+      } catch (err) {
+        console.error("Error fetching scans:", err);
+      }
+    };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const formData = new FormData();
+  //   formData.append("trimester", newScan.trimester);
+  //   formData.append("description", newScan.description);
+  //   formData.append("file", newScan.file);
+
+  //   try {
+  //     const token = localStorage.getItem("access_token");
+  //     await axios.post("http://localhost:5000/upload_scan", formData, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
+
+  //     // After upload, fetch latest scans
+  //     fetchScans();
+  //     setNewScan({ trimester: 'first', description: '', file: null });
+  //     setEditingId(null);
+  //   } catch (err) {
+  //     console.error("Upload failed:", err);
+  //     alert("Scan upload failed.");
+  //   }
+  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -11,15 +11,33 @@ export default function AdminCardList({ users, refreshUsers }) {
     withCredentials: true
   };
 
-  const handleDeactivate = async (userId) => {
+  // const handleDeactivate = async (userId) => {
+  //   try {
+  //     await axios.patch(`http://localhost:5000/admin/deactivate_user/${userId}`, {}, authHeaders);
+  //   //   await axios.patch(
+  //   //     `http://localhost:5000/admin/${user.is_active ? "deactivate" : "activate"}/${userId}`,
+  //   //     {},
+  //   //     authHeaders
+  //   // );
+  //     refreshUsers();
+  //   } catch (error) {
+  //     console.error('Error deactivating user:', error);
+  //     alert(error?.response?.data?.error || "Deactivation failed");
+  //   }
+  // };
+  const handleDeactivate = async (user) => {
     try {
-      await axios.patch(`http://localhost:5000/admin/deactivate_user/${userId}`, {}, authHeaders);
+      const endpoint = user.is_active
+        ? `/admin/deactivate/${user.id}`
+        : `/admin/activate/${user.id}`;
+      await axios.patch(`http://localhost:5000${endpoint}`, {}, authHeaders);
       refreshUsers();
     } catch (error) {
       console.error('Error deactivating user:', error);
       alert(error?.response?.data?.error || "Deactivation failed");
     }
   };
+
 
   const handleDelete = async (userId) => {
     try {
@@ -82,7 +100,7 @@ export default function AdminCardList({ users, refreshUsers }) {
         <AdminCard
           key={user.id}
           user={user}
-          onDeactivate={() => handleDeactivate(user.id)}
+          onDeactivate={() => handleDeactivate(user)}
           onDelete={() => handleDelete(user.id)}
           onViewActivity={() => handleViewActivity(user.id)}
           onResetPassword={() => handleResetPassword(user.id)}

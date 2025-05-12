@@ -17,8 +17,8 @@ const tabs = [
   "Recommend Clinics",
   "Flag Misinformation",
   "My Articles",
-  "Calendar",
-  "Notifications"
+  "Calendar"
+  // "Notifications"
 ];
 
 const HealthProDashboard = () => {
@@ -136,41 +136,7 @@ const HealthProDashboard = () => {
         ))}
       </div>
 
-      {/* Content */}
-      {/* <div className="bg-cyan-500 rounded-xl shadow p-6">
-        {activeTab === "Profile" && (
-          <>
-            <h2 className="text-xl sm:text-2xl font-bold text-black mb-4">Profile Details</h2>
-            <p><strong>Name:</strong> {profile.profile?.full_name || 'N/A'}</p>
-            <p><strong>Region:</strong> {profile.profile?.region || 'N/A'}</p>
-            <p><strong>License Number:</strong> {profile.profile?.license_number || 'N/A'}</p>
-            <p><strong>Bio:</strong> {profile.bio || 'N/A'}</p> */}
-            {/* <p><strong>Profile Picture:</strong> {profile.profile_picture || 'N/A'}</p> */}
-            
-            {/* {profile.profile?.is_verified ? (
-              <p><strong>Status:</strong> <span className="text-green-600 font-bold">Verified</span></p>
-            ) : (
-              <div className="text-red-500 mt-2">
-                <p><strong>Status:</strong> Not Verified</p>
-
-                {requestSent ? (
-                  <p className="text-green-700 mt-2 font-semibold">✅ Request sent!</p>
-                ) : (
-                  <button
-                    onClick={handleRequestVerification}
-                    className="mt-2 bg-red-600 text-white py-1 px-3 rounded hover:bg-red-700 text-sm"
-                  >
-                    Request Verification
-                  </button>
-                )}
-
-                {requestError && (
-                  <p className="text-yellow-600 mt-2 text-sm">{requestError}</p>
-                )}
-              </div> */}
-            {/* )} */}
-          {/* </>
-        )} */}
+      
 
         {/* {activeTab === "Post Article" && (...) } */}
         {activeTab === "Post Article" && (
@@ -261,7 +227,7 @@ const HealthProDashboard = () => {
           </>
         )}
 
-        {activeTab === "Notifications" && <Notification />}
+        {/* {activeTab === "Notifications" && <Notification />} */}
       </div>
     
   );
