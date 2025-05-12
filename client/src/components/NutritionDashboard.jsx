@@ -1,5 +1,3 @@
-// NutritionDashboard.jsx
-
 import React from 'react';
 
 const nutritionArticles = [
@@ -29,19 +27,18 @@ const nutritionArticles = [
   }
 ];
 
-
 const NutritionDashboard = () => {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Nutrition Hub for African Mums</h1>
+    <div className="p-6 max-w-6xl mx-auto font-sans">
+      <h1 className="text-3xl font-bold text-cyan-900 mb-6">Nutrition Hub for African Mums</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {nutritionArticles.map(article => (
-          <div key={article.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div key={article.id} className="bg-cyan-100 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
             <div className="p-4">
-              <h2 className="text-xl font-semibold mb-2">{article.title}</h2>
-              <p className="text-gray-600 text-sm mb-3">{article.summary}</p>
-              <div className="text-xs text-gray-500">
+              <h2 className="text-xl font-semibold text-cyan-900 mb-2">{article.title}</h2>
+              <p className="text-gray-700 text-sm mb-3">{article.summary}</p>
+              <div className="text-xs text-gray-600">
                 By {article.author} • {article.publishedAt}
               </div>
             </div>

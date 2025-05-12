@@ -48,20 +48,19 @@ const babyGrowthData = [
   },
 ];
 
-
 const BabyCornerPage = () => {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Baby Corner</h1>
-      <p className="mb-6 text-gray-600">
+    <div className="p-6 max-w-6xl mx-auto font-sans">
+      <h1 className="text-3xl font-bold text-cyan-900 mb-6">Baby Corner</h1>
+      <p className="mb-6 text-gray-700">
         Track your baby's growth week by week with familiar African analogies.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {babyGrowthData.map((item, index) => (
-          <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div key={index} className="bg-cyan-100 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <img src={item.image} alt={item.size} className="w-full h-48 object-cover" />
             <div className="p-4">
-              <h2 className="text-xl font-semibold mb-2">Week {item.week}</h2>
+              <h2 className="text-xl font-semibold text-cyan-900 mb-2">Week {item.week}</h2>
               <p className="text-gray-700">{item.size}</p>
             </div>
           </div>
