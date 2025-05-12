@@ -1,42 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// NutritionDashboard.jsx
 
-function NutritionDashboard() {
-  const [blogs, setBlogs] = useState([]);
+import React from 'react';
 
-  useEffect(() => {
-    axios.get('/api/nutrition-blogs')
-      .then(response => {
-        setBlogs(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching nutrition blogs:', error);
-      });
-  }, []);
+const nutritionArticles = [
+  {
+    id: 1,
+    title: 'First Trimester Superfoods for African Mums',
+    summary: 'Explore nutrient-rich foods like sukuma wiki, millet porridge, and indigenous greens that support early fetal development.',
+    image: 'https://www.istockphoto.com/photo/african-pregnant-woman-eating-healthy-salad-gm1309328442-398275456',
+    author: 'Dr. Achieng Odongo',
+    publishedAt: 'May 10, 2025'
+  },
+  {
+    id: 2,
+    title: 'Iron-Rich African Diet for Expecting Mothers',
+    summary: 'Learn how to incorporate beans, liver, and leafy greens into your diet to combat anemia during pregnancy.',
+    image: 'https://www.istockphoto.com/photo/pregnant-african-woman-holding-bowl-of-vegetables-gm1279328442-398275456',
+    author: 'Dr. Wanjiru Kamau',
+    publishedAt: 'April 28, 2025'
+  },
+  {
+    id: 3,
+    title: 'Healthy Traditional Kenyan Meals for Pregnant Women',
+    summary: 'Discover safe and nourishing ways to enjoy traditional dishes like ugali, fish stew, and arrowroots for maternal wellness.',
+    image: 'https://www.istockphoto.com/photo/pregnant-woman-preparing-traditional-kenyan-meal-gm1279328442-398275456',
+    author: 'Mama Grace (Community Health Volunteer)',
+    publishedAt: 'April 15, 2025'
+  }
+];
 
+
+const NutritionDashboard = () => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4 text-cyan-700 text-center">
-        Nutrition <span className="text-cyan-500">Corner</span>
-      </h2>
-      
-      <p className="text-gray-600 text-center mb-6">
-        Tips and advice on nutrition during pregnancy and postpartum!
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {blogs.map(blog => (
-          <div key={blog.id} className="border rounded-lg p-4 shadow-md hover:shadow-lg transition">
-            <img src={blog.image_url} alt={blog.title} className="w-full h-48 object-cover rounded-md mb-4" />
-            <h3 className="text-lg font-semibold text-cyan-700 mb-2">{blog.title}</h3>
-            <p className="text-sm text-gray-600 mb-2">By {blog.author} | {blog.category}</p>
-            <p className="text-gray-700 text-sm mb-4">{blog.content.slice(0, 100)}...</p>
-            {/* You can link to a detailed view if needed */}
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Nutrition Hub for African Mums</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {nutritionArticles.map(article => (
+          <div key={article.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+            <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
+            <div className="p-4">
+              <h2 className="text-xl font-semibold mb-2">{article.title}</h2>
+              <p className="text-gray-600 text-sm mb-3">{article.summary}</p>
+              <div className="text-xs text-gray-500">
+                By {article.author} • {article.publishedAt}
+              </div>
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
-}
+};
 
 export default NutritionDashboard;
