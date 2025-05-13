@@ -197,223 +197,220 @@ const Admin = () => {
   // };
   
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-cyan-100 rounded-lg shadow-md">
-      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 text-center sm:text-left mb-6">
-        Admin Dashboard
-      </h1>
+  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-6 mb-6 bg-cyan-100 rounded-lg shadow-md">
+    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 text-center sm:text-left mb-6">
+      Admin Dashboard
+    </h1>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
-              ${
-                activeTab === tab.key
-                  ? 'bg-cyan-600 text-white shadow-sm'
-                  : 'bg-cyan-600 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+    {/* Tabs */}
+    <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          onClick={() => setActiveTab(tab.key)}
+          className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
+            ${
+              activeTab === tab.key
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'bg-cyan-600 text-gray-100 hover:bg-cyan-700'
+            }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
 
-      {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-md p-6 min-h-[300px]">
-        {loading ? (
-          <div className="text-center text-gray-500">Loading...</div>
-        ) : (
-          <>
-            {activeTab === 'users' && (
-              <div>
-                {/* Buttons and Dropdown */}
-                <div className="flex justify-between items-center mb-4">
-                  {/* Dropdown Filter */}
-                  <select
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="p-2 border rounded text-gray-800"
-                  >
-                    <option value="all">All</option>
-                    <option value="mum">Mums</option>
-                    <option value="health_pro">Health Professionals</option>
-                    
-                  </select>
-
-                  {/* Add User Button */}
-                  <button
-                    onClick={() => setShowAddUserModal(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    Add User
-                  </button>
-                </div>
-
-                {/* Filtered Users */}
-                <AdminCardList
-                  users={users.filter(
-                    (u) => filter === 'all' || u.role === filter
-                  )}
-                  refreshUsers={fetchUsers}
-                />
-              </div>
-            )}
-            {activeTab === 'articles' && <ArticlesReview />}
-            {activeTab === 'posts' && <PostReview />}
-            {activeTab === 'communities' && <CommunityReview />}
-            {activeTab === 'create_community' && <CreateCommunity />}
-            {/* {activeTab === 'create_category' && <CreateCategory />} */}
-            {activeTab === 'reset_password' && <ResetUserPassword />}
-            {/* {activeTab === 'notifications' && <Notification />} */}
-            
-            {/* {activeTab === 'notifications' && <NotificationsTab />} */}
-          </>
-        )}
-      </div>
-
-      {showAddUserModal && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded shadow-md w-96">
-            <h2 className="text-xl font-bold mb-4">Add New User</h2>
-            <form onSubmit={handleAddUser}>
-                <input
-                  name="firstName"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-                <input
-                  name="middleName"
-                  placeholder="Middle Name"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-                <input
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
+    {/* Tab Content */}
+    <div className="bg-white rounded-xl shadow-md p-6 min-h-[300px]">
+      {loading ? (
+        <div className="text-center text-gray-700">Loading...</div>
+      ) : (
+        <>
+          {activeTab === 'users' && (
+            <div>
+              {/* Buttons and Dropdown */}
+              <div className="flex justify-between items-center mb-4">
+                {/* Dropdown Filter */}
                 <select
-                  value={newUserRole}
-                  onChange={(e) => setNewUserRole(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="p-2 border rounded text-gray-700"
                 >
-                  <option value="" disabled>Select Role</option>
-                  <option value="mum">Mum</option>
-                  <option value="health_pro">Health Professional</option>
+                  <option value="all">All</option>
+                  <option value="mum">Mums</option>
+                  <option value="health_pro">Health Professionals</option>
                 </select>
 
-                <input
-                  type="text"
-                  placeholder="Region"
-                  value={newUserRegion}
-                  onChange={(e) => setNewUserRegion(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-                {newUserRole === "health_pro" && (
-                  <input
-                    type="text"
-                    placeholder="License Number"
-                    value={newUserLicenseNumber}
-                    onChange={(e) => setNewUserLicenseNumber(e.target.value)}
-                    className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-                )}
-
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="p-3 bg-cyan-100 text-gray-800 border border-cyan-300 rounded-md w-full mb-3 font-semibold"
-                />
-
-
-              {/* <input
-                type="text"
-                placeholder="Name"
-                className="border p-2 rounded w-full mb-4 text-gray-800"
-                value={newUserName}
-                onChange={(e) => setNewUserName(e.target.value)}
-              /> */}
-              {/* <input
-                type="email"
-                placeholder="Email"
-                className="border p-2 rounded w-full mb-4 text-gray-800"
-                value={newUserEmail}
-                onChange={(e) => setNewUserEmail(e.target.value)}
-              />
-              <select
-                className="border p-2 rounded w-full mb-4 text-gray-800"
-                value={newUserRole}
-                onChange={(e) => setNewUserRole(e.target.value)}
-              >
-                <option value="" disabled>
-                  Category
-                </option>
-                <option value="mum">Mum</option> */}
-                {/* <option value="health_pro">Health Professional</option> */}
-                {/* <option value="admin">Admin</option> */}
-              {/* </select>
-              <input
-                type="text"
-                placeholder="Region"
-                className="border p-2 rounded w-full mb-4 text-gray-800"
-                value={newUserRegion}
-                onChange={(e) => setNewUserRegion(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="License Number"
-                className="border p-2 rounded w-full mb-4 text-gray-800"
-                value={newUserLicenseNumber}
-                onChange={(e) => setNewUserLicenseNumber(e.target.value)}
-              /> */}
-              <div className="flex justify-end gap-4">
+                {/* Add User Button */}
                 <button
-                  type="submit"
+                  onClick={() => setShowAddUserModal(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
                   Add User
                 </button>
-                <button
-                  onClick={() => setShowAddUserModal(false)}
-                  className="bg-gray-400 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
               </div>
-            </form>
-          </div>
-        </div>
+
+              {/* Filtered Users */}
+              <AdminCardList
+                users={users.filter(
+                  (u) => filter === 'all' || u.role === filter
+                )}
+                refreshUsers={fetchUsers}
+              />
+            </div>
+          )}
+          {activeTab === 'articles' && <ArticlesReview />}
+          {activeTab === 'posts' && <PostReview />}
+          {activeTab === 'communities' && <CommunityReview />}
+          {activeTab === 'create_community' && <CreateCommunity />}
+          {/* {activeTab === 'create_category' && <CreateCategory />} */}
+          {activeTab === 'reset_password' && <ResetUserPassword />}
+          {/* {activeTab === 'notifications' && <Notification />} */}
+          {/* {activeTab === 'notifications' && <NotificationsTab />} */}
+        </>
       )}
     </div>
-  );
+
+    {showAddUserModal && (
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white p-6 rounded shadow-md w-96">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Add New User</h2>
+          <form onSubmit={handleAddUser}>
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            <input
+              name="middleName"
+              placeholder="Middle Name"
+              value={middleName}
+              onChange={(e) => setMiddleName(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            <input
+              type="email"
+              placeholder="Email"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            <select
+              value={newUserRole}
+              onChange={(e) => setNewUserRole(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            >
+              <option value="" disabled>Select Role</option>
+              <option value="mum">Mum</option>
+              <option value="health_pro">Health Professional</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Region"
+              value={newUserRegion}
+              onChange={(e) => setNewUserRegion(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            {newUserRole === "health_pro" && (
+              <input
+                type="text"
+                placeholder="License Number"
+                value={newUserLicenseNumber}
+                onChange={(e) => setNewUserLicenseNumber(e.target.value)}
+                className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+              />
+            )}
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+            />
+
+            {/* <input
+              type="text"
+              placeholder="Name"
+              className="border p-2 rounded w-full mb-4 text-gray-800"
+              value={newUserName}
+              onChange={(e) => setNewUserName(e.target.value)}
+            /> */}
+            {/* <input
+              type="email"
+              placeholder="Email"
+              className="border p-2 rounded w-full mb-4 text-gray-800"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+            />
+            <select
+              className="border p-2 rounded w-full mb-4 text-gray-800"
+              value={newUserRole}
+              onChange={(e) => setNewUserRole(e.target.value)}
+            >
+              <option value="" disabled>
+                Category
+              </option>
+              <option value="mum">Mum</option> */}
+              {/* <option value="health_pro">Health Professional</option> */}
+              {/* <option value="admin">Admin</option> */}
+            {/* </select>
+            <input
+              type="text"
+              placeholder="Region"
+              className="border p-2 rounded w-full mb-4 text-gray-800"
+              value={newUserRegion}
+              onChange={(e) => setNewUserRegion(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="License Number"
+              className="border p-2 rounded w-full mb-4 text-gray-800"
+              value={newUserLicenseNumber}
+              onChange={(e) => setNewUserLicenseNumber(e.target.value)}
+            /> */}
+            <div className="flex justify-end gap-4">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Add User
+              </button>
+              <button
+                onClick={() => setShowAddUserModal(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default Admin;
