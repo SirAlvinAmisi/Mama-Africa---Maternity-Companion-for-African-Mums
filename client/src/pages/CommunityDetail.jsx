@@ -403,7 +403,7 @@ const CommunityDetail = () => {
 
 // Main Community Page Layout
 if (loading) return <div className="text-center py-10">Loading...</div>;
-if (error || !community) return <div className="text-center text-red-500">An error occurred.</div>;
+if (error || !community) return <div className="text-center text-red-500"></div>;
 
 return (
   <div className="container mx-auto p-4 overflow-x-hidden flex flex-col lg:flex-row gap-6">

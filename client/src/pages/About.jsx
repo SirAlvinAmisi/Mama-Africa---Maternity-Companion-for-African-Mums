@@ -1,35 +1,39 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const Divider = () => (
+  <div className="h-1 bg-gradient-to-r from-cyan-700 via-cyan-400 to-cyan-700 rounded-full my-8 animate-pulse"></div>
+);
+
 const About = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-5xl mx-auto p-8 leading-relaxed bg-cyan-500">
+    <div className="max-w-5xl mx-auto p-8 leading-relaxed bg-cyan-300 rounded-lg shadow-md border-l-4 border-cyan-800">
       
       {/* About Section */}
-      <section className="mb-12">
-        <h1 className="text-cyan-900 text-3xl font-bold mb-4">About Mama Afrika</h1>
-        <p>
+      <section className="mb-12 bg-cyan-100 p-6 rounded-md shadow-inner">
+        <h1 className="text-cyan-900 text-3xl font-bold mb-4 flex items-center gap-2">🌍 About Mama Afrika</h1>
+        <p className="text-black text-lg font-semibold mb-4">
           Mama Afrika is a community-driven platform dedicated to supporting women during pregnancy and motherhood, 
           with a particular focus on African mothers and their unique needs.
         </p>
-        
-        <div className="mt-6 mb-6 p-4 border-l-4 border-cyan-900 bg-cyan italic text-lg">
+        <div className="mt-6 mb-6 p-4 border-l-4 border-cyan-900 bg-cyan-50 italic text-black text-lg rounded-lg shadow-md">
           Our mission is to empower every mother with knowledge, support, and community throughout their 
           maternal journey, ensuring healthier outcomes for both mothers and babies.
         </div>
-        
-        <p>
+        <p className="text-black text-lg font-semibold mb-4">
           Founded in 2023, Mama Afrika bridges the gap in maternal healthcare access by connecting mothers 
           with specialists, resources, and fellow mothers who understand their experiences.
         </p>
       </section>
 
+      <Divider />
+
       {/* What We Offer */}
-      <section className="mb-12">
-        <h2 className="text-cyan-900 text-2xl font-bold mb-4">What We Offer</h2>
-        <ul className="list-disc list-inside space-y-2">
+      <section className="mb-12 bg-cyan-200 p-6 rounded-md shadow-inner">
+        <h2 className="text-cyan-900 text-3xl font-bold mb-4 flex items-center gap-2">🎁 What We Offer</h2>
+        <ul className="list-disc list-inside space-y-2 text-black text-lg bg-cyan-100 p-4 rounded-lg shadow-md">
           <li>Expert advice from healthcare professionals specialized in maternal care</li>
           <li>Community forums for sharing experiences and seeking support</li>
           <li>Educational resources on pregnancy, childbirth, and early childcare</li>
@@ -38,89 +42,43 @@ const About = () => {
         </ul>
       </section>
 
+      <Divider />
+
       {/* Our Team */}
+      <section className="mb-12 bg-cyan-100 p-6 rounded-md shadow-inner">
+        <h2 className="text-cyan-900 text-3xl font-bold mb-4 flex items-center gap-2">🤝 Our Team</h2>
+        <p className="text-black text-lg font-semibold mb-6">
+          Mama Afrika is built by a visionary team of founders and developers, each bringing unique leadership, creativity, and passion to empower mothers through technology and community.
+        </p>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 bg-cyan-200 p-4 rounded-lg shadow-md">
+          {[
+            { name: 'Alvin Amisi', role: 'Chief Executive Officer (CEO)', img: '/images/Alvin.jpeg' },
+            { name: 'Sayfudin Sheikh', role: 'Chief Financial Officer (CFO)', img: '/images/Seif.jpeg' },
+            { name: 'Mwangi Martha', role: 'Chief Operations Officer (COO)', img: '/images/Martha.jpg' },
+            { name: 'Margaret Gathoni', role: 'Head of Innovation & Creativity', img: '/images/margret.jpg' },
+            { name: 'Damaris Ngari', role: 'Director of Community Engagement (DCE)', img: '/images/damah.jpeg' },
+            { name: 'Dennis Kipsang', role: 'Chief Technology Officer (CTO)', img: '/images/kipsang.jpeg' }
+          ].map((person, index) => (
+            <div key={index} className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
+              <img
+                src={person.img}
+                alt={person.name}
+                className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
+              />
+              <h3 className="font-bold text-lg text-cyan-900">{person.name}</h3>
+              <p className="text-sm text-gray-600 font-bold">{person.role}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-<section className="mb-12">
-  <h2 className="text-cyan-900 text-2xl font-bold mb-4">Our Team</h2>
-  <p>
-    Mama Afrika is built by a visionary team of founders and developers, each bringing unique leadership, creativity, and passion to empower mothers through technology and community.
-  </p>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
-    {/* Alvin Amisi */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/Alvin.jpeg"
-        alt="Alvin Amisi"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Alvin Amisi</h3>
-      <p className="text-sm text-gray-600 font-bold">Chief Executive Officer (CEO)</p>
-    </div>
-
-    {/* Sayfudin Sheikh */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/Seif.jpeg"
-        alt="Sayfudin Sheikh"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Sayfudin Sheikh</h3>
-      <p className="text-sm text-gray-600 font-bold">Chief Financial Officer (CFO)</p>
-    </div>
-
-    {/* Martha */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/Martha.jpg"
-        alt="Mwangi Martha"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Mwangi Martha</h3>
-      <p className="text-sm text-gray-600 font-bold">Chief Operations Officer (COO)</p>
-    </div>
-
-    {/* Margret */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/margret.jpg"
-        alt="Margaret Gathoni"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Margaret Gathoni</h3>
-      <p className="text-sm text-gray-600 font-bold">Head of Innovation & Creativity</p>
-    </div>
-
-    {/* Damaris */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/damah.jpeg"
-        alt="Damaris Ngari"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Damaris Ngari</h3>
-      <p className="text-sm text-gray-600 font-bold">Director of Community Engagement (DCE)</p>
-    </div>
-
-    {/* Dennis Kipsang */}
-    <div className="text-center rounded-xl shadow-md p-6 hover:shadow-xl hover:bg-cyan-100 transition">
-      <img
-        src="/images/kipsang.jpeg"
-        alt="Dennis Kipsang"
-        className="w-36 h-36 rounded-full object-cover mx-auto mb-4"
-      />
-      <h3 className="font-bold text-lg text-cyan-900">Dennis Kipsang</h3>
-      <p className="text-sm text-gray-600 font-bold">Chief Technology Officer (CTO)</p>
-    </div>
-  </div>
-</section>
-
+      <Divider />
 
       {/* Join Community */}
-      <section className="mb-12">
-        <h2 className="text-cyan-900 text-2xl font-bold mb-4">Join Our Community</h2>
-        <p>
+      <section className="mb-12 bg-cyan-200 p-6 rounded-md shadow-inner">
+        <h2 className="text-cyan-900 text-3xl font-bold mb-4 flex items-center gap-2">👩🏾‍🤝‍👩🏽 Join Our Community</h2>
+        <p className="text-black text-lg mb-6 bg-cyan-100 p-4 rounded-lg shadow-md">
           Whether you're expecting, a new mother, or an experienced parent willing to share your wisdom, 
           Mama Afrika welcomes you. Together, we can support each other through the beautiful and 
           challenging journey of motherhood.
@@ -128,12 +86,11 @@ const About = () => {
 
         <button 
           onClick={() => navigate('/signup')}
-          className="mt-6 px-6 py-3 bg-cyan-700 text-white rounded-md text-base hover:bg-cyan-800 transition"
+          className="px-6 py-3 bg-cyan-700 text-white font-bold rounded-md text-base hover:bg-cyan-800 transition"
         >
           Sign Up Today
         </button>
       </section>
-
     </div>
   );
 };
