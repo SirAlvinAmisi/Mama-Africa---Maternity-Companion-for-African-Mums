@@ -1,15 +1,13 @@
 import os
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, jsonify, request, send_from_directory
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, decode_token
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room
 from dotenv import load_dotenv
-from flask_socketio import join_room, leave_room
-from flask import send_from_directory
-
-
-
 from models import db
 from routes import register_routes
 from extensions import socketio, mail
@@ -29,26 +27,35 @@ def create_app():
     app.config.from_object('config.Config')
     print("🔗 Connected to database:", app.config["SQLALCHEMY_DATABASE_URI"])
 
-
     # Initialize extensions
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
     mail.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*")  # Allow any frontend origin
 
-    # CORS setup
+    # CORS setup - aligned for frontend
     CORS(app, supports_credentials=True, resources={
         r"/*": {
             "origins": [
                 "https://mama-africa.onrender.com",
-                "http://localhost:5000", # your frontend
-                "http://localhost:5173"               # for local testing
+                "http://localhost:5173"
             ],
             "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
-            "allow_headers": ["Authorization", "Content-Type"]
+            "allow_headers": [
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Access-Control-Allow-Credentials"
+            ]
         }
     })
+
+    # Socket.IO setup with matching CORS
+    socketio.init_app(app, cors_allowed_origins=[
+        "https://mama-africa.onrender.com",
+        "http://localhost:5173"
+    ])
+
     # Serve frontend static files
     @app.route("/", defaults={"filename": ""})
     @app.route("/<path:filename>")
@@ -57,12 +64,12 @@ def create_app():
             filename = "index.html"
         return send_from_directory(dist_folder, filename)
 
-    # Optional: support frontend routing (SPA)
+    # Fallback for React router
     @app.errorhandler(404)
     def not_found(e):
         return send_from_directory(dist_folder, "index.html")
 
-    # Register all route blueprints
+    # Register blueprints
     register_routes(app)
 
     # JWT error handling
@@ -89,15 +96,11 @@ def handle_connect():
 
 @socketio.on('join_room')
 def handle_join_room(data):
-    """
-    Client must send: { "token": "<JWT>" }
-    """
     try:
         token = data.get("token")
         decoded = decode_token(token)
         user_id = decoded["sub"]
         role = decoded.get("role", "user")
-
         room = f"user_{user_id}" if role != "admin" else "admin"
         join_room(room)
         print(f"User {user_id} with role '{role}' joined room: {room}")
@@ -108,7 +111,6 @@ def handle_join_room(data):
 def handle_disconnect():
     print(f"Socket disconnected: {request.sid}")
 
-
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory('static/community_media', filename)
@@ -116,4 +118,4 @@ def serve_media(filename):
 
 # ========== RUN APP ==========
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
