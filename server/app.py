@@ -54,7 +54,7 @@ def create_app():
     # Socket.IO setup with matching CORS
     socketio.init_app(app, cors_allowed_origins=[
         "https://mama-africa.onrender.com",
-        "http://localhost:5173"
+        # "http://localhost:5173"
     ])
 
     # Serve frontend static files
