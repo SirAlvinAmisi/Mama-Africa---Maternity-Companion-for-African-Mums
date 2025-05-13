@@ -156,7 +156,7 @@ const Signup = () => {
       <input name="email" onChange={handleChange} type="email" placeholder="Email Address" className="p-3 border border-cyan-200 rounded-md bg-white text-gray-600 font-medium placeholder-gray-500" />
       <input name="password" type="password" placeholder="Password" className="p-3 border border-cyan-200 rounded-md bg-white text-gray-600 font-medium placeholder-gray-500" value={formData.password} onChange={handleChange} />
 
-      <div className="text-xs sm:text-sm mt-1 bg-cyan-50 p-2 rounded-md space-y-1">
+      <div className="text-1xl sm:text-sm mt-1 bg-cyan-400 p-2 rounded-md space-y-1">
         <p className={`${formData.password.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>At least 6 characters</p>
         <p className={`${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>At least one uppercase letter</p>
         <p className={`${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-red-600'}`}>At least one lowercase letter</p>
