@@ -9,5 +9,5 @@ socketio = SocketIO(cors_allowed_origins=[
     "http://127.0.0.1:5173",
     "https://mama-africa.onrender.com", 
     "http://localhost:5173"
-    ], async_mode='threading')
+    ], async_mode="eventlet")
 migrate = Migrate()
