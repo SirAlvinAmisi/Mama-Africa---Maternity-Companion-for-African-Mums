@@ -112,48 +112,45 @@ const HealthProDashboard = () => {
 };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-white rounded-1g shadow">
-      <h1 className="text-2xl sm:text-3xl font-bold text-cyan-700 mb-6 text-center">
-       Health Professional Dashboard
-      </h1>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-cyan-50 rounded-1g shadow">
+    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-6 text-center">
+      Health Professional Dashboard
+    </h1>
 
+    {/* Tabs */}
+    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-12">
+      {tabs.map(tab => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200 ${
+            activeTab === tab
+              ? "bg-cyan-300 text-black shadow"
+              : "bg-cyan-600 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
-              ${
-                activeTab === tab
-                  ? "bg-cyan-400 text-black shadow"
-                  : "bg-cyan-600 text-gray-700 hover:bg-gray-200"
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+    {/* {activeTab === "Post Article" && (...) } */}
+    {activeTab === "Post Article" && (
+      <>
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Post New Article</h2>
+        <p className="text-xl text-gray-700 mb-2">Share medical articles or videos with Mums.</p>
+        <ArticleForm
+          onSubmit={(articleData) => {
+            const token = localStorage.getItem("access_token");
 
-      
-
-        {/* {activeTab === "Post Article" && (...) } */}
-        {activeTab === "Post Article" && (
-          <>
-            <h2 className="text-xl font-bold text-black mb-2">Post New Article</h2>
-            <p className="text-xl text-black mb-2">Share medical articles or videos with Mums.</p>
-            <ArticleForm onSubmit={(articleData) => {
-              const token = localStorage.getItem("access_token");
-
-              // axios.post('http://127.0.0.1:5000/api/articles', articleData, {
-              axios.post('http://127.0.0.1:5000/healthpros/articles', articleData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json"
-                },
-                withCredentials: true
-              })
+            // axios.post('http://127.0.0.1:5000/api/articles', articleData, {
+            axios.post('http://127.0.0.1:5000/healthpros/articles', articleData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+              },
+              withCredentials: true
+            })
               .then(() => {
                 alert("Article posted!");
                 // navigate('/healthpro/my-articles');
@@ -163,89 +160,96 @@ const HealthProDashboard = () => {
                 console.error("Submission error:", err);
                 alert("Failed to post article");
               });
-            }} />
-          </>
-        )}
+          }}
+        />
+      </>
+    )}
 
-        {/* {activeTab === "Answer Questions" && (...) } */}
-        {activeTab === "Answer Questions" && (
-          <>
-            {/* <h2 className="text-xl font-semibold mb-2">Answer Questions</h2>
-            <p>Help guide Mums by answering their questions.</p> */}
-            <QAModeration questions={questions} setQuestions={setQuestions} />
-          </>
-        )}
+    {/* {activeTab === "Answer Questions" && (...) } */}
+    {activeTab === "Answer Questions" && (
+      <>
+        {/* <h2 className="text-xl font-semibold mb-2">Answer Questions</h2>
+        <p>Help guide Mums by answering their questions.</p> */}
+        <QAModeration questions={questions} setQuestions={setQuestions} />
+      </>
+    )}
 
-        {activeTab === "Upload Scans" && (
-          <>
-            <h2 className="text-xl font-bold text-black mb-2">Upload example scans for educational awareness.</h2>
-            <ScanUpload />
-          </>
-        )}
+    {activeTab === "Upload Scans" && (
+      <>
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          Upload example scans for educational awareness.
+        </h2>
+        <ScanUpload />
+      </>
+    )}
 
-        {activeTab === "Recommend Clinics" && (
-          <>
-            {/* <h2 className="text-xl font-semibold mb-2">Recommend Clinics</h2>
-            <p>Recommend local clinics for prenatal and postnatal care.</p> */}
-            <ClinicRecommendations />
-          </>
-        )}
+    {activeTab === "Recommend Clinics" && (
+      <>
+        {/* <h2 className="text-xl font-semibold mb-2">Recommend Clinics</h2>
+        <p>Recommend local clinics for prenatal and postnatal care.</p> */}
+        <ClinicRecommendations />
+      </>
+    )}
 
-        {/* {activeTab === "Flag Misinformation" && (
-          <>
-            <h2 className="text-xl font-semibold mb-2">Flag Misinformation</h2>
-            <p>Help maintain safety by flagging incorrect health information.</p>
-            <button onClick={() => navigate('/healthpro/flag-misinformation')} className="mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
-              Review & Flag Content
-              {activeTab === "Flag Misinformation" && <FlagMisinformation />}
+    {/* {activeTab === "Flag Misinformation" && (
+      <>
+        <h2 className="text-xl font-semibold mb-2">Flag Misinformation</h2>
+        <p>Help maintain safety by flagging incorrect health information.</p>
+        <button
+          onClick={() => navigate('/healthpro/flag-misinformation')}
+          className="mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+        >
+          Review & Flag Content
+          {activeTab === "Flag Misinformation" && <FlagMisinformation />}
+        </button>
+      </>
+    )} */}
+    {/* {activeTab === "Flag Misinformation" && (
+      <>
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Flag Misinformation</h2>
+        <p className="text-xl font-light text-gray-700 mb-2">
+          Help maintain safety by flagging incorrect health information.
+        </p>
+        <button
+          onClick={() => navigate('/healthpro/flag-misinformation')}
+          className="mt-4 bg-red-600 text-black font-bold py-2 px-4 rounded hover:bg-red-700"
+        >
+          Review & Flag Content
+        </button>
+      </>
+    )} */}
 
-            </button>
-          </>
-        )} */}
-        {/* {activeTab === "Flag Misinformation" && (
-        <>
-          <h2 className="text-xl font-semibold text-black mb-2">Flag Misinformation</h2>
-          <p className="text-xl font-light text-black mb-2">Help maintain safety by flagging incorrect health information.</p>
-          <button
-            onClick={() => navigate('/healthpro/flag-misinformation')}
-            className="mt-4 bg-red-600 text-black font-bold py-2 px-4 rounded hover:bg-red-700"
-          >
-            Review & Flag Content
-          </button>
-        </>
-      )} */}
+    {activeTab === "My Articles" && (
+      <>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4">My Articles</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {articles.length > 0 ? (
+            articles.map(article => (
+              <div key={article.id} className="bg-cyan-200 p-4 rounded shadow hover:shadow-md">
+                <h3 className="font-semibold text-cyan-900 text-lg mb-2">{article.title}</h3>
+                <p className="text-gray-700 line-clamp-3">{article.content.slice(0, 100)}...</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-700">No articles posted yet.</p>
+          )}
+        </div>
+      </>
+    )}
+
+    {activeTab === "Calendar" && (
+      <>
+        {/* <h2 className="text-xl sm:text-2xl font-semibold mb-4">My Availability & Appointments</h2> */}
+        <HealthProfCalendar userId={profile.id} />
+        {/* <HealthProfessionalScheduler /> */}
+      </>
+    )}
+
+    {/* {activeTab === "Notifications" && <Notification />} */}
+  </div>
+);
 
 
-        {activeTab === "My Articles" && (
-          <>
-            <h2 className="text-xl sm:text-2xl font-bold text-black mb-4">My Articles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.length > 0 ? (
-                articles.map(article => (
-                  <div key={article.id} className="bg-cyan-200 p-4 rounded shadow hover:shadow-md">
-                    <h3 className="font-bold text-cyan-900 text-lg mb-2">{article.title}</h3>
-                    <p className="text-gray-600 line-clamp-3">{article.content.slice(0, 100)}...</p>
-                  </div>
-                ))
-              ) : (
-                <p>No articles posted yet.</p>
-              )}
-            </div>
-          </>
-        )}
-
-        {activeTab === "Calendar" && (
-          <>
-            {/* <h2 className="text-xl sm:text-2xl font-semibold mb-4">My Availability & Appointments</h2> */}
-            <HealthProfCalendar userId={profile.id} />
-            {/* <HealthProfessionalScheduler /> */}
-          </>
-        )}
-
-        {/* {activeTab === "Notifications" && <Notification />} */}
-      </div>
-    
-  );
 };
 
 export default HealthProDashboard;

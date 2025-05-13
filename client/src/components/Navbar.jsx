@@ -29,17 +29,18 @@ const Navbar = () => {
       <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-4">
         
         {/* Logo */}
-        <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
+        <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold">
   <Link to="/" className="flex items-center space-x-1">
-    <span className="text-green text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">Mama</span>
+    <span className="text-green text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold">Mama</span>
     <img
       src={africaIcon}
       alt="Africa icon"
-      className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14"
+      className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12"
     />
-    <span className="text-red-600 text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">frika</span>
+    <span className="text-red-600 text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold">frika</span>
   </Link>
 </div>
+
 
         <button
           className="text-black dark:text-white sm:hidden text-3xl"
