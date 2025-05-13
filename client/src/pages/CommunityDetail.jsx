@@ -57,123 +57,123 @@ const CommentThread = ({
   };
 
   return (
-    <div className="pl-4 border-l-2 border-cyan-200 bg-cyan-300 p-2 rounded mt-2">
-      <div className="flex justify-between items-start">
-        <p className="text-sm w-full break-words text-black">{comment.content}</p>
-        {comment.user_id === currentUserId && (
-          <button
-            onClick={() => handleDeleteComment(comment.id)}
-            className="text-red-500 font-bold text-xs ml-2"
-          >
-            Delete
-          </button>
-        )}
-      </div>
-
-      <p className="text-xs text-gray-600">
-        by {comment.user_id === currentUserId ? 'You' : comment.user_name} ·{' '}
-        {moment(comment.created_at).local().fromNow()}
-      </p>
-
-      <button
-        onClick={() => {
-          handleReply(comment.id);
-          setShowReplyBox(!showReplyBox);
-        }}
-        className="text-xs text-blue-500"
-      >
-        {showReplyBox ? 'Cancel' : 'Reply'}
-      </button>
-
-      {activeReplyBox === comment.id && showReplyBox && (
-        <div className="mt-2">
-          <textarea
-            value={newComments[replyKey] || ''}
-            onChange={(e) =>
-              setNewComments({ ...newComments, [replyKey]: e.target.value })
-            }
-            className="w-full border p-1 text-sm text-black bg-gray-100 rounded"
-            placeholder={`Reply to ${comment.user_name}`}
-          />
-          <div className="flex items-center space-x-2 mt-1">
-            <button
-              onClick={() => setShowEmojiPickerReply(!showEmojiPickerReply)}
-              className="text-sm"
-            >
-              😀
-            </button>
-            <button
-              onClick={handleSubmitReply}
-              className="bg-cyan-600 text-white px-2 py-1 rounded text-xs"
-            >
-              Submit Reply
-            </button>
-          </div>
-          {showEmojiPickerReply && <Picker onEmojiSelect={addEmojiToReply} theme="light" />}
-        </div>
-      )}
-
-      {isTopLevel && (
-        <div className="mt-2">
-          <textarea
-            placeholder="Write a comment..."
-            value={newComments[commentKey] || ''}
-            onChange={(e) =>
-              setNewComments({ ...newComments, [commentKey]: e.target.value })
-            }
-            className="w-full border p-2 text-sm text-black bg-gray-100 rounded"
-          />
-          <div className="flex items-center space-x-2 mt-1">
-            <button
-              onClick={() => setShowEmojiPickerComment(!showEmojiPickerComment)}
-              className="text-sm"
-            >
-              😀
-            </button>
-            <button
-              onClick={handleSubmitComment}
-              className="bg-cyan-600 font-bold text-black px-4 py-1 rounded text-sm"
-            >
-              Add Comment
-            </button>
-          </div>
-          {showEmojiPickerComment && (
-            <Picker onEmojiSelect={addEmojiToComment} theme="light" />
-          )}
-        </div>
-      )}
-
-      {Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div className="ml-2 mt-2">
-          <button
-            onClick={() => setShowReplies((prev) => !prev)}
-            className="text-xs text-cyan-700 underline"
-          >
-            {showReplies ? 'Hide Replies' : `View Replies (${comment.replies.length})`}
-          </button>
-
-          {showReplies && (
-            <div className="mt-2 space-y-2">
-              {comment.replies.map((reply) => (
-                <CommentThread
-                  key={reply.id}
-                  comment={reply}
-                  postId={postId}
-                  currentUserId={currentUserId}
-                  handleReply={handleReply}
-                  handleDeleteComment={handleDeleteComment}
-                  activeReplyBox={activeReplyBox}
-                  newComments={newComments}
-                  setNewComments={setNewComments}
-                  handleComment={handleComment}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+  <div className="pl-4 border-l-2 border-cyan-200 bg-white p-2 rounded mt-2">
+    <div className="flex justify-between items-start">
+      <p className="text-sm w-full break-words text-gray-700">{comment.content}</p>
+      {comment.user_id === currentUserId && (
+        <button
+          onClick={() => handleDeleteComment(comment.id)}
+          className="text-red-600 font-medium text-xs ml-2"
+        >
+          Delete
+        </button>
       )}
     </div>
-  );
+
+    <p className="text-xs text-gray-600">
+      by {comment.user_id === currentUserId ? 'You' : comment.user_name} ·{' '}
+      {moment(comment.created_at).local().fromNow()}
+    </p>
+
+    <button
+      onClick={() => {
+        handleReply(comment.id);
+        setShowReplyBox(!showReplyBox);
+      }}
+      className="text-xs text-cyan-700 underline"
+    >
+      {showReplyBox ? 'Cancel' : 'Reply'}
+    </button>
+
+    {activeReplyBox === comment.id && showReplyBox && (
+      <div className="mt-2">
+        <textarea
+          value={newComments[replyKey] || ''}
+          onChange={(e) =>
+            setNewComments({ ...newComments, [replyKey]: e.target.value })
+          }
+          className="w-full border border-cyan-200 p-1 text-sm text-gray-700 bg-white rounded"
+          placeholder={`Reply to ${comment.user_name}`}
+        />
+        <div className="flex items-center space-x-2 mt-1">
+          <button
+            onClick={() => setShowEmojiPickerReply(!showEmojiPickerReply)}
+            className="text-sm"
+          >
+            😀
+          </button>
+          <button
+            onClick={handleSubmitReply}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-2 py-1 rounded text-xs font-medium"
+          >
+            Submit Reply
+          </button>
+        </div>
+        {showEmojiPickerReply && <Picker onEmojiSelect={addEmojiToReply} theme="light" />}
+      </div>
+    )}
+
+    {isTopLevel && (
+      <div className="mt-2">
+        <textarea
+          placeholder="Write a comment..."
+          value={newComments[commentKey] || ''}
+          onChange={(e) =>
+            setNewComments({ ...newComments, [commentKey]: e.target.value })
+          }
+          className="w-full border border-cyan-200 p-2 text-sm text-gray-700 bg-white rounded"
+        />
+        <div className="flex items-center space-x-2 mt-1">
+          <button
+            onClick={() => setShowEmojiPickerComment(!showEmojiPickerComment)}
+            className="text-sm"
+          >
+            😀
+          </button>
+          <button
+            onClick={handleSubmitComment}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-4 py-1 rounded text-sm"
+          >
+            Add Comment
+          </button>
+        </div>
+        {showEmojiPickerComment && (
+          <Picker onEmojiSelect={addEmojiToComment} theme="light" />
+        )}
+      </div>
+    )}
+
+    {Array.isArray(comment.replies) && comment.replies.length > 0 && (
+      <div className="ml-2 mt-2">
+        <button
+          onClick={() => setShowReplies((prev) => !prev)}
+          className="text-xs text-cyan-700 underline"
+        >
+          {showReplies ? 'Hide Replies' : `View Replies (${comment.replies.length})`}
+        </button>
+
+        {showReplies && (
+          <div className="mt-2 space-y-2">
+            {comment.replies.map((reply) => (
+              <CommentThread
+                key={reply.id}
+                comment={reply}
+                postId={postId}
+                currentUserId={currentUserId}
+                handleReply={handleReply}
+                handleDeleteComment={handleDeleteComment}
+                activeReplyBox={activeReplyBox}
+                newComments={newComments}
+                setNewComments={setNewComments}
+                handleComment={handleComment}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
 };
 
 
@@ -306,177 +306,198 @@ const CommunityDetail = () => {
   };
 
   const renderPostCard = (post, showDelete = false) => (
-    <div key={post.id} className="bg-cyan-400 p-4 rounded shadow">
-      <p className="text-sm text-cyan-900">
-        {post.group_name ? `${post.group_name} · ` : ''}
-        by <span className="font-semibold">{post.user_name || 'Anonymous'}</span> · {moment(post.created_at).local().fromNow()}
-      </p>
-      <p className="mt-2 break-words">{post.content}</p>
-      {post.media_url && (
-        post.media_type === 'video' ? (
-          <video
-  controls
-  loop
-  autoPlay
-  muted
-  className="w-full mt-2 rounded"
->
-  <source src={`http://localhost:5000${post.media_url}`} />
-</video>
-        ) : post.media_type === 'audio' ? (
-          <audio controls className="w-full mt-2">
-            <source src={`http://localhost:5000${post.media_url}`} />
-          </audio>
-        ) : (
-          <img src={`http://localhost:5000${post.media_url}`} alt="media" className="w-full mt-2 rounded" />
-        )
-      )}
-      <div className="flex justify-between items-center text-sm text-black mt-3">
-        <div className="flex items-center space-x-3">
-          <button onClick={() => handleLike(post.id)} className="flex items-center space-x-1">
-            {post.liked_by_user ? <FaHeart className="text-red-600 font-bold" /> : <FiHeart />} <span>{post.like_count}</span>
-          </button>
-          <button onClick={() => setActiveComments({ ...activeComments, [post.id]: !activeComments[post.id] })}>
-            💬 {post.comment_count || 0} Comments
-          </button>
-        </div>
-        {showDelete && (
-          <button onClick={() => handleDeletePost(post.id)} className="text-red-900 font-bold text-xs">Delete</button>
-        )}
-      </div>
-      {activeComments[post.id] && (
-        <div className="mt-4 space-y-3 bg-cyan-400">
-          {post.comments?.map((comment) => (
-            <CommentThread
-              key={comment.id}
-              comment={comment}
-              postId={post.id}
-              currentUserId={currentUserId}
-              handleReply={handleReply}
-              handleDeleteComment={handleDeleteComment}
-              activeReplyBox={activeReplyBox}
-              newComments={newComments}
-              setNewComments={setNewComments}
-              handleComment={handleComment}
-            />
-          ))}
-          <div className="mt-2">
-  <textarea
-    placeholder="Write a comment..."
-    value={newComments[post.id] || ''}
-    onChange={(e) =>
-      setNewComments({ ...newComments, [post.id]: e.target.value })
-    }
-    className="w-full border p-2 text-sm text-black bg-gray-100 rounded"
-  />
- <div className="flex items-center space-x-2 mt-1">
-  <button
-    onClick={() =>
-      setActiveEmojiCommentPicker(
-        activeEmojiCommentPicker === post.id ? null : post.id
+  <div key={post.id} className="bg-white p-4 rounded shadow-md w-full max-w-full overflow-hidden">
+    <p className="text-sm text-cyan-900">
+      {post.group_name ? `${post.group_name} · ` : ''}
+      by <span className="font-medium">{post.user_name || 'Anonymous'}</span> · {moment(post.created_at).local().fromNow()}
+    </p>
+
+    <p className="mt-2 break-words text-gray-700">{post.content}</p>
+
+    {post.media_url && (
+      post.media_type === 'video' ? (
+        <video controls loop autoPlay muted className="w-full max-w-full mt-2 rounded">
+          <source src={`http://localhost:5000${post.media_url}`} />
+        </video>
+      ) : post.media_type === 'audio' ? (
+        <audio controls className="w-full max-w-full mt-2">
+          <source src={`http://localhost:5000${post.media_url}`} />
+        </audio>
+      ) : (
+        <img src={`http://localhost:5000${post.media_url}`} alt="media" className="w-full max-w-full mt-2 rounded" />
       )
-    }
-    className="text-sm"
-  >
-    😀
-  </button>
-  <button
-    onClick={() => handleComment(post.id)}
-    className="bg-cyan-600 font-bold text-black px-4 py-1 rounded text-sm"
-  >
-    Add Comment
-  </button>
-</div>
+    )}
 
-{activeEmojiCommentPicker === post.id && (
-  <div className="mt-2">
-    <Picker
-      onEmojiSelect={(emoji) => addEmojiToComment(emoji, post.id)}
-      theme="light"
-    />
-  </div>
-)}
-
-</div>
-
-        </div>
+    <div className="flex flex-wrap justify-between items-center text-sm text-gray-700 mt-3 gap-2">
+      <div className="flex items-center space-x-3">
+        <button onClick={() => handleLike(post.id)} className="flex items-center space-x-1">
+          {post.liked_by_user ? <FaHeart className="text-red-600" /> : <FiHeart />} <span>{post.like_count}</span>
+        </button>
+        <button onClick={() => setActiveComments({ ...activeComments, [post.id]: !activeComments[post.id] })}>
+          💬 {post.comment_count || 0} Comments
+        </button>
+      </div>
+      {showDelete && (
+        <button onClick={() => handleDeletePost(post.id)} className="text-red-700 font-medium text-xs">Delete</button>
       )}
     </div>
-  );
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
-  if (error || !community) return <div className="text-center text-red-500"></div>;
+    {activeComments[post.id] && (
+      <div className="mt-4 space-y-3 bg-white">
+        {post.comments?.map((comment) => (
+          <CommentThread
+            key={comment.id}
+            comment={comment}
+            postId={post.id}
+            currentUserId={currentUserId}
+            handleReply={handleReply}
+            handleDeleteComment={handleDeleteComment}
+            activeReplyBox={activeReplyBox}
+            newComments={newComments}
+            setNewComments={setNewComments}
+            handleComment={handleComment}
+          />
+        ))}
 
-  return (
-    <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-6">
-      <div className="lg:w-1/3 w-full bg-cyan-400 p-4 rounded shadow lg:sticky lg:top-4 lg:h-[90vh] lg:overflow-y-auto">
-        <h1 className="text-2xl font-bold text-cyan-900 mb-2">{community.name}</h1>
-        <p className='text-black'>{community.description}</p>
-        <p className="text-sm font-bold text-blue-900">{community.member_count} members</p>
-        <button onClick={handleJoinLeave} className="mt-2 px-3 py-1 bg-cyan-600 text-white text-sm rounded">
-          {community.is_member ? 'Leave Community' : 'Join Community'}
-        </button>
-        {community.is_member && (
-          <>
-            <p onClick={() => setShowMyPosts(!showMyPosts)} className="mt-3 cursor-pointer text-cyan-700 underline text-sm">
-              {showMyPosts ? 'Hide My Posts' : 'View My Posts'}
-            </p>
-            {showMyPosts && (
-              <div className="mt-4 space-y-4">
-                {myPosts.map(post => renderPostCard(post, true))}
-              </div>
-            )}
-            <div className="hidden lg:block mt-6">
-              <h2 className="text-lg font-semibold mb-1">Write New Post</h2>
-              <textarea
-                className="w-full border p-2 text-sm"
-                placeholder="What's on your mind?"
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
+        <div className="mt-2">
+          <textarea
+            placeholder="Write a comment..."
+            value={newComments[post.id] || ''}
+            onChange={(e) =>
+              setNewComments({ ...newComments, [post.id]: e.target.value })
+            }
+            className="w-full border border-cyan-200 p-2 text-sm text-gray-700 bg-white rounded"
+          />
+          <div className="flex items-center flex-wrap gap-2 mt-1">
+            <button
+              onClick={() =>
+                setActiveEmojiCommentPicker(
+                  activeEmojiCommentPicker === post.id ? null : post.id
+                )
+              }
+              className="text-sm"
+            >
+              😀
+            </button>
+            <button
+              onClick={() => handleComment(post.id)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-4 py-1 rounded text-sm"
+            >
+              Add Comment
+            </button>
+          </div>
+
+          {activeEmojiCommentPicker === post.id && (
+            <div className="mt-2">
+              <Picker
+                onEmojiSelect={(emoji) => addEmojiToComment(emoji, post.id)}
+                theme="light"
               />
-              <button onClick={() => setShowEmojiPickerPost(!showEmojiPickerPost)} className="mt-1">😀</button>
-              {showEmojiPickerPost && <Picker onEmojiSelect={addEmojiToPost} theme="light" />}
-              <input
-                type="file"
-                accept="image/*,video/*,audio/*"
-                className="mt-2 bg-gray-100 p-2 rounded text-black"
-                onChange={(e) => setNewPostMedia(e.target.files[0])}
-              />
-              <button onClick={handlePostSubmit} className="bg-cyan-900 text-white px-4 py-1 mt-2 rounded text-sm">
-                Submit Post
-              </button>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
-      <div className="lg:w-2/3 w-full space-y-6">
-        {community.is_member && (
-          <div className="block lg:hidden bg-cyan-400 p-4 rounded shadow">
-            <h2 className="text-lg font-bold text-cyan-900 mb-1">Write a Post</h2>
+    )}
+  </div>
+);
+
+// Main Community Page Layout
+if (loading) return <div className="text-center py-10">Loading...</div>;
+if (error || !community) return <div className="text-center text-red-500"></div>;
+
+return (
+  <div className="container mx-auto p-4 overflow-x-hidden flex flex-col lg:flex-row gap-6">
+    {/* Sidebar */}
+    <div className="lg:w-1/3 w-full bg-white p-4 rounded shadow lg:sticky lg:top-4 lg:h-[90vh] lg:overflow-y-auto">~
+      <h1 className="text-2xl font-semibold text-cyan-900 mb-2">{community.name}</h1>
+      <p className="text-gray-700">{community.description}</p>
+      <p className="text-sm font-medium text-blue-900">{community.member_count} members</p>
+      <button onClick={handleJoinLeave} className="mt-2 px-3 py-1 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700">
+        {community.is_member ? 'Leave Community' : 'Join Community'}
+      </button>
+
+      {community.is_member && (
+        <>
+          <p onClick={() => setShowMyPosts(!showMyPosts)} className="mt-3 cursor-pointer text-cyan-700 underline text-sm">
+            {showMyPosts ? 'Hide My Posts' : 'View My Posts'}
+          </p>
+
+          {showMyPosts && (
+            <div className="mt-4 space-y-4">
+              {myPosts.map(post => renderPostCard(post, true))}
+            </div>
+          )}
+
+          <div className="hidden lg:block mt-6">
+            <h2 className="text-lg font-semibold text-cyan-900 mb-1">Write New Post</h2>
             <textarea
-              className="w-full border p-2 text-sm bg-gray-100 text-black"
+              className="w-full border border-cyan-200 p-2 text-gray-700 text-sm bg-white rounded"
               placeholder="What's on your mind?"
               value={newPostContent}
               onChange={(e) => setNewPostContent(e.target.value)}
             />
-            <button onClick={() => setShowEmojiPickerPost(!showEmojiPickerPost)} className="mt-1">😀</button>
+            <div className="flex items-center flex-wrap gap-2 mt-2">
+              <button onClick={() => setShowEmojiPickerPost(!showEmojiPickerPost)}>😀</button>
+              <input
+                type="file"
+                accept="image/*,video/*,audio/*"
+                className="flex-1 min-w-0 w-full bg-gray-100 p-2 rounded text-gray-700"
+                onChange={(e) => setNewPostMedia(e.target.files[0])}
+              />
+            </div>
             {showEmojiPickerPost && <Picker onEmojiSelect={addEmojiToPost} theme="light" />}
-            <input
-              type="file"
-              accept="image/*,video/*,audio/*"
-              className="mt-2"
-              onChange={(e) => setNewPostMedia(e.target.files[0])}
-            />
-            <button onClick={handlePostSubmit} className="bg-cyan-600 text-black px-4 py-1 mt-2 rounded text-sm">
+            <button onClick={handlePostSubmit} className="bg-cyan-900 hover:bg-cyan-700 text-white px-4 py-1 mt-2 rounded text-sm">
               Submit Post
             </button>
           </div>
-        )}
-        {posts.map(post => renderPostCard(post, false))}
-      </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+        </>
+      )}
     </div>
-  );
+
+    {/* Feed Area */}
+    <div className="lg:w-2/3 w-full space-y-6 overflow-y-auto max-h-[calc(100vh-120px)]">
+      {community.is_member && (
+        <div className="block lg:hidden bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold text-cyan-900 mb-1">Write a Post</h2>
+          <textarea
+            className="w-full border border-cyan-200 p-2 text-sm bg-white text-gray-700 rounded"
+            placeholder="What's on your mind?"
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+          />
+          <div className="flex items-center flex-wrap gap-2 mt-2">
+            <button onClick={() => setShowEmojiPickerPost(!showEmojiPickerPost)}>😀</button>
+            <input
+              type="file"
+              accept="image/*,video/*,audio/*"
+              className="flex-1 min-w-0 w-full bg-gray-100 p-2 rounded text-gray-700"
+              onChange={(e) => setNewPostMedia(e.target.files[0])}
+            />
+          </div>
+          {showEmojiPickerPost && <Picker onEmojiSelect={addEmojiToPost} theme="light" />}
+          <button onClick={handlePostSubmit} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-1 mt-2 rounded text-sm">
+            Submit Post
+          </button>
+        </div>
+      )}
+
+      {posts.map(post => renderPostCard(post, false))}
+
+      {/* Back to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="lg:hidden fixed bottom-4 right-4 bg-cyan-600 text-white rounded-full p-3 shadow-lg hover:bg-cyan-700"
+      >
+        ↑ Top
+      </button>
+    </div>
+
+    <ToastContainer position="top-right" autoClose={3000} />
+  </div>
+);
+
+
+
 };
 
 export default CommunityDetail;

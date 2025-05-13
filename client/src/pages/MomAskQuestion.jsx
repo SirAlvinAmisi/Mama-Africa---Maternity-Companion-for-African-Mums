@@ -272,72 +272,75 @@ export default function MomAskQuestion() {
   };
 
   return (
-    <div className="space-y-6 bg-cyan-200 p-6 rounded-lg shadow-md">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <h2 className="text-2xl font-bold text-cyan-900">
-          {editingId ? 'Edit Your Question' : 'Ask a Question'}
-        </h2>
+  <div className="space-y-8 bg-cyan-100 p-6 sm:p-8 md:p-10 rounded-lg shadow-md w-full max-w-3xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-600">
+        {editingId ? 'Edit Your Question' : 'Ask a Question'}
+      </h2>
 
-        <select
-          className="w-full px-4 py-2 border rounded bg-gray-200 text-black"
-          value={selectedDoctor}
-          onChange={(e) => setSelectedDoctor(e.target.value)}
-          required
-        >
-          <option value="">Select Doctor</option>
-          {doctors.map((doc) => (
-            <option key={doc.id} value={doc.id}>
-              {doc.full_name}
-            </option>
-          ))}
-        </select>
+      <select
+        className="w-full px-4 py-2 border border-cyan-200 rounded-md bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+        value={selectedDoctor}
+        onChange={(e) => setSelectedDoctor(e.target.value)}
+        required
+      >
+        <option value="">Select Doctor</option>
+        {doctors.map((doc) => (
+          <option key={doc.id} value={doc.id}>
+            {doc.full_name}
+          </option>
+        ))}
+      </select>
 
-        <textarea
-          required
-          placeholder="Your question..."
-          className="w-full p-3 border rounded text-black bg-gray-200"
-          value={questionText}
-          onChange={e => setQuestionText(e.target.value)}
-        />
+      <textarea
+        required
+        placeholder="Your question..."
+        className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-200"
+        value={questionText}
+        onChange={e => setQuestionText(e.target.value)}
+      />
 
-        {!editingId && (
-          <label className="flex items-center space-x-2 font-bold text-cyan-900">
-            <input
-              type="checkbox"
-              checked={anon}
-              onChange={e => setAnon(e.target.checked)}
-            />
-            <span>Post anonymously</span>
-          </label>
-        )}
+      {!editingId && (
+        <label className="flex items-center space-x-2 text-gray-600 font-medium">
+          <input
+            type="checkbox"
+            checked={anon}
+            onChange={e => setAnon(e.target.checked)}
+            className="accent-cyan-600"
+          />
+          <span>Post anonymously</span>
+        </label>
+      )}
 
-        <button className="bg-cyan-900 text-white px-6 py-2 rounded font-bold">
-          {editingId ? 'Update Question' : 'Submit Question'}
-        </button>
+      <button className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-md font-semibold transition">
+        {editingId ? 'Update Question' : 'Submit Question'}
+      </button>
 
-        {msg && <p className="text-cyan-900 font-bold mt-2">{msg}</p>}
-      </form>
+      {msg && <p className="text-gray-600 font-medium">{msg}</p>}
+    </form>
 
-      <div>
-        <h3 className="text-xl mt-6 font-bold text-cyan-900">Your Previous Questions</h3>
-        <ul className="mt-2 space-y-3 bg-gray-100 p-4 rounded-lg">
-          {questions.map(q => (
-            <li key={q.id} className="border p-3 rounded bg-cyan-500 text-black">
-              <p><strong>To:</strong> {q.doctor_name}</p>
-              <p><strong>Q:</strong> {q.question_text}</p>
-              <p><strong>A:</strong> {q.answer_text || "Not answered yet."}</p>
-              {!q.answer_text && (
-                <button
-                  onClick={() => handleEdit(q)}
-                  className="mt-2 text-blue-600 underline text-sm"
-                >
-                  Edit
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div>
+      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-600 mt-8">Your Previous Questions</h3>
+      <ul className="mt-4 space-y-4">
+        {questions.map(q => (
+          <li key={q.id} className="bg-cyan-200 border border-cyan-200 p-4 rounded-md shadow-sm">
+            <p className="text-gray-600"><strong>To:</strong> {q.doctor_name}</p>
+            <p className="text-gray-600"><strong>Q:</strong> {q.question_text}</p>
+            <p className="text-gray-600"><strong>A:</strong> {q.answer_text || "Not answered yet."}</p>
+            {!q.answer_text && (
+              <button
+                onClick={() => handleEdit(q)}
+                className="mt-2 text-cyan-600 underline text-sm hover:text-cyan-700"
+              >
+                Edit
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
-  );
+  </div>
+);
+
+
 }

@@ -22,27 +22,39 @@ export default function MomProfile() {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <h2 className="text-2xl font-semibold">Update Profile</h2>
-      <input
-        placeholder="Full Name"
-        className="w-full p-3 border rounded"
-        value={fullName} onChange={e => setFullName(e.target.value)}
-      />
-      <input
-        placeholder="Region"
-        className="w-full p-3 border rounded"
-        value={region} onChange={e => setRegion(e.target.value)}
-      />
-      <textarea
-        placeholder="Short bio"
-        className="w-full p-3 border rounded"
-        value={bio} onChange={e => setBio(e.target.value)}
-      />
-      <button className="bg-blue-button text-white px-6 py-2 rounded font-inria">
-        Save
-      </button>
-      {msg && <p className="text-green mt-2">{msg}</p>}
-    </form>
-  );
+  <form onSubmit={submit} className="space-y-4">
+    <h2 className="text-2xl font-semibold text-gray-600">Update Profile</h2>
+
+    <input
+      placeholder="Full Name"
+      className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+      value={fullName}
+      onChange={e => setFullName(e.target.value)}
+    />
+
+    <input
+      placeholder="Region"
+      className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+      value={region}
+      onChange={e => setRegion(e.target.value)}
+    />
+
+    <textarea
+      placeholder="Short bio"
+      className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+      value={bio}
+      onChange={e => setBio(e.target.value)}
+      rows={3}
+    />
+
+    <button
+      type="submit"
+      className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-md font-semibold"
+    >
+      Save
+    </button>
+
+    {msg && <p className="text-green-600 font-medium mt-2">{msg}</p>}
+  </form>
+);
 }

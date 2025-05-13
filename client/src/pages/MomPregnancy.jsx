@@ -58,38 +58,47 @@ export default function MomPregnancy() {
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Pregnancy Details</h2>
-      {trimesterGroup && (
-        <p className="text-gray-700">
-          You are in the <span className="font-semibold">{trimesterGroup}</span> group.
-        </p>
-      )}
-      <form onSubmit={submit} className="space-y-4">
-        <input
-          type="date"
-          className="w-full p-3 border rounded"
-          value={lastPeriod}
-          onChange={(e) => setLastPeriod(e.target.value)}
-        />
-        <input
-          type="date"
-          className="w-full p-3 border rounded"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="Current week"
-          className="w-full p-3 border rounded"
-          value={week}
-          onChange={(e) => setWeek(e.target.value)}
-        />
-        <button className="bg-blue-button text-white px-6 py-2 rounded font-inria">
-          Submit
-        </button>
-        {msg && <p className="text-green mt-2">{msg}</p>}
-      </form>
-    </div>
-  );
+  <div className="space-y-4">
+    <h2 className="text-2xl font-semibold text-gray-600">Pregnancy Details</h2>
+
+    {trimesterGroup && (
+      <p className="text-gray-600 font-medium">
+        You are in the <span className="font-semibold">{trimesterGroup}</span> group.
+      </p>
+    )}
+
+    <form onSubmit={submit} className="space-y-4">
+      <input
+        type="date"
+        className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+        value={lastPeriod}
+        onChange={(e) => setLastPeriod(e.target.value)}
+      />
+
+      <input
+        type="date"
+        className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+        value={dueDate}
+        onChange={(e) => setDueDate(e.target.value)}
+      />
+
+      <input
+        type="number"
+        placeholder="Current week"
+        className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+        value={week}
+        onChange={(e) => setWeek(e.target.value)}
+      />
+
+      <button
+        type="submit"
+        className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-md font-semibold"
+      >
+        Submit
+      </button>
+
+      {msg && <p className="text-green-600 font-medium mt-2">{msg}</p>}
+    </form>
+  </div>
+);
 }

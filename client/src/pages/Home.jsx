@@ -25,14 +25,7 @@ export default function Home() {
         );
         console.log("🔍 Filtered Mums:", mums);     
          
-        // if (mums.length > 0) {
-        //   const randomMums = [];
-        //   while (randomMums.length < 3 && mums.length > 0) {
-        //     const randomIndex = Math.floor(Math.random() * mums.length);
-        //     randomMums.push(mums.splice(randomIndex, 1)[0]);
-        //   }
-        //   setFeaturedMums(randomMums);
-        // }
+        
         if (mums.length > 0) {
           setFeaturedMums(mums); // use all mums
         }
@@ -62,18 +55,7 @@ export default function Home() {
               Meet Our Members and Their Stories
             </h2>
 
-            {/* <Swiper
-              modules={[Autoplay, Pagination]}
-              spaceBetween={30}
-              breakpoints={{
-                640: { slidesPerView: 1 },
-                768: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
-              }}
-              autoplay={{ delay: 2000, disableOnInteraction: false }}
-              loop
-              pagination={{ clickable: true }}
-            > */}
+            
             <Swiper
               modules={[Autoplay, Pagination]}
               spaceBetween={30}
@@ -87,11 +69,12 @@ export default function Home() {
               speed={800}
               grabCursor={true}
               pagination={{ clickable: true }}
+              className="pb-10"
             >
 
               {featuredMums.map((mum, index) => (
                 <SwiperSlide key={index}>
-                  <div className="flex flex-col items-center p-6 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
+                  <div className="flex flex-col items-center p-8 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
                     {/* Mum's Photo */}
                     <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 lg:w-48 lg:h-48 bg-cyan-200 rounded-full overflow-hidden shadow-lg mb-4">
                       <img

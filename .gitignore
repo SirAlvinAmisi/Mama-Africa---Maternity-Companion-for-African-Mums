@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 server/migrations/
+
+# Ignore Python cache
+__pycache__/

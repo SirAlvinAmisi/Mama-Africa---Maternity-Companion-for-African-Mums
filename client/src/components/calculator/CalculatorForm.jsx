@@ -40,29 +40,29 @@ export default function CalculatorForm({ onCalculated }) {
     }
   };
 
-  return (
-    <div className="bg-cyan-300 p-6 rounded-2xl shadow-lg w-full mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-4 text-cyan-900">
-        Pregnancy Due Date Calculator
-      </h2>
+ return (
+  <div className="bg-cyan-100 p-6 rounded-2xl shadow-md w-full mx-auto">
+    <h2 className="text-2xl font-semibold text-center mb-4 text-gray-600">
+      Pregnancy Due Date Calculator
+    </h2>
 
-      <div className="mb-4">
-        <label className="block text-purple-900 font-black mb-1">Last Menstrual Period (LMP):</label>
-        <input
-          type="date"
-          value={lmp}
-          onChange={(e) => setLmp(e.target.value)}
-          className="border border-gray-300 rounded-lg p-2 text-black w-full focus:ring-2 focus:ring-cyan-400"
-          placeholder="YYYY-MM-DD"
-        />
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        className="bg-cyan-600 text-white w-full py-2 rounded-lg hover:bg-cyan-700 transition-colors"
-      >
-        Submit
-      </button>
+    <div className="mb-4">
+      <label className="block text-purple-700 font-medium mb-1">Last Menstrual Period (LMP):</label>
+      <input
+        type="date"
+        value={lmp}
+        onChange={(e) => setLmp(e.target.value)}
+        className="border border-cyan-200 rounded-lg p-2 text-gray-600 w-full bg-white focus:ring-2 focus:ring-cyan-400"
+        placeholder="YYYY-MM-DD"
+      />
     </div>
-  );
+
+    <button
+      onClick={handleSubmit}
+      className="bg-cyan-600 hover:bg-cyan-700 text-white w-full py-2 rounded-lg font-semibold transition-colors"
+    >
+      Submit
+    </button>
+  </div>
+);
 }
