@@ -149,7 +149,7 @@ const socket = io(
     ? "https://mama-africa-api.onrender.com"
     : "http://localhost:5000",
   {
-    transports: ["websocket"],
+    transports: ["polling"],
     withCredentials: true
   }
 );
