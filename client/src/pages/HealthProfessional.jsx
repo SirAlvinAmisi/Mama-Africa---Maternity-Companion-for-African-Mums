@@ -39,7 +39,7 @@ export const HealthProfessional = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-center h-screen">
         <p className="text-gray-600 text-2xl">Loading...</p>
       </div>
     );
@@ -49,7 +49,7 @@ export const HealthProfessional = () => {
     <div className="bg-white flex flex-col min-h-screen w-full">
       <main className="flex-1">
         <section className="container mx-auto px-6 pt-16 pb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
+          <div className="flex flex-col grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:flex-row gap-8 items-start">
             <div className="w-[334px] h-[249px] rounded-[80px] overflow-hidden">
               <img
                 src={profile?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'Profile')}`}
@@ -58,7 +58,7 @@ export const HealthProfessional = () => {
               />
             </div>
             {profile && (
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="font-montserrat font-normal text-black text-[40px]">
                   Speciality: {profile.speciality || "Health Specialist"}
                 </div>
@@ -68,17 +68,7 @@ export const HealthProfessional = () => {
                 <div className="font-montserrat font-medium text-green text-[40px]">
                   Verified
                 </div>
-                {/* 
-                <button
-                  className="bg-cyan-600 text-white rounded-full px-4 py-2 mt-4 hover:bg-cyan-700"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/chat/${profile.id}`);
-                  }}
-                >
-                  Chat
-                </button>
-                */}
+                
               </div>
             )}
           </div>
@@ -92,7 +82,7 @@ export const HealthProfessional = () => {
         {/* Published Articles */}
         <section className="w-full bg-cards-color rounded-[20px] p-12">
           <h2 className="text-center text-[#665e5e] text-5xl mb-12">Published Articles</h2>
-          <div className="flex flex-wrap gap-8 justify-center">
+          <div className="flex flex-wrap gap-8 justify-center grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {articles.length > 0 ? articles.map((a) => (
               <div key={a.id} className="w-[300px] bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition">
                 <h3 className="text-2xl font-semibold text-gray-800 mb-3 line-clamp-2">{a.title}</h3>
@@ -117,7 +107,7 @@ export const HealthProfessional = () => {
         {/* Recommended Clinics */}
         <section className="w-full bg-blue-50 rounded-[20px] p-12 mt-8">
           <h2 className="text-center text-cyan-700 text-5xl mb-12">Recommended Clinics</h2>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-2 gap-6">
             {recommendedClinics.map((clinic) => (
               <div key={clinic.id} className="bg-white p-4 rounded shadow">
                 <h3 className="text-xl font-bold text-gray-800">{clinic.name}</h3>
@@ -131,7 +121,7 @@ export const HealthProfessional = () => {
         {/* Uploaded Scans */}
         <section className="w-full bg-gray-50 rounded-[20px] p-12 mt-8">
           <h2 className="text-center text-gray-800 text-5xl mb-12">Uploaded Scans</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {uploadedScans.map((scan) => (
               <div key={scan.id} className="bg-white p-4 rounded shadow text-center">
                 <p className="text-gray-700 text-sm">{scan.file_type}</p>
