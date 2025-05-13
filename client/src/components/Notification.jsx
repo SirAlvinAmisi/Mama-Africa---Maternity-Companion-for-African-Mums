@@ -3,15 +3,19 @@ import { Bell, Calendar, MessageCircle, UserPlus, X } from 'lucide-react';
 import { io } from "socket.io-client";
 
 
-const socket = io(
-  import.meta.env.PROD
-    ? "https://mama-africa-api.onrender.com"
-    : "http://localhost:5000",
-  {
-    transports: ["polling"],
-    withCredentials: true
-  }
-);
+// const socket = io(
+//   import.meta.env.PROD
+//     ? "https://mama-africa-api.onrender.com"
+//     : "http://localhost:5000",
+//   {
+//     transports: ["polling"],
+//     withCredentials: true
+//   }
+// );
+const socket = io("https://mama-africa-api.onrender.com", {
+  transports: ["websocket"],
+  withCredentials: true,
+});
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
