@@ -143,8 +143,16 @@ import { Bell, Calendar, MessageCircle, UserPlus, X } from 'lucide-react';
 import io from 'socket.io-client';
 
 // Initialize socket connection
-const socket = io('http://localhost:5000');
-
+// const socket = io('http://localhost:5000');
+const socket = io(
+  import.meta.env.PROD
+    ? "https://mama-africa-api.onrender.com"
+    : "http://localhost:5000",
+  {
+    transports: ["websocket"],
+    withCredentials: true
+  }
+);
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
