@@ -1,15 +1,12 @@
-// src/components/Chat.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { io } from 'socket.io-client';
-import { getChats, sendMessage, reportMessage } from './lib/api';
+import { getChats, sendMessage, reportMessage } from '../lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-const socket = io('http://localhost:5000', { autoConnect: false });
+import socket from '../lib/socket'; // ✅ shared socket instance
 
 const Chat = () => {
-  const { receiverId } = useParams(); // Get receiver ID from URL (e.g., /chat/:receiverId)
-  const userId = localStorage.getItem('userId'); // Assume userId is stored after login
+  const { receiverId } = useParams();
+  const userId = localStorage.getItem('userId');
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState(null);
@@ -19,20 +16,26 @@ const Chat = () => {
 
   // Connect to Socket.IO
   useEffect(() => {
-    socket.connect();
-    socket.emit('join', { user_id: userId });
+    if (!userId) return;
 
+    socket.connect();
+    const token = localStorage.getItem("access_token");
+    if (token) socket.emit('join_room', { token });
+
+    // Prevent duplicates
+    socket.off('new_message');
     socket.on('new_message', (newMessage) => {
       queryClient.setQueryData(['chats', userId, receiverId, page], (old) => ({
         ...old,
-        chats: [newMessage, ...(old?.chats || [])]
+        chats: [newMessage, ...(old?.chats || [])],
       }));
     });
 
+    socket.off('user_typing');
     socket.on('user_typing', ({ sender_id }) => {
       if (sender_id === receiverId) {
         setTypingUser(sender_id);
-        setTimeout(() => setTypingUser(null), 3000); // Clear after 3s
+        setTimeout(() => setTypingUser(null), 3000);
       }
     });
 
@@ -41,62 +44,65 @@ const Chat = () => {
     };
   }, [userId, receiverId, queryClient, page]);
 
-  // Handle typing indicator
+  // Emit typing indicator
   useEffect(() => {
-    if (message && !isTyping) {
-      setIsTyping(true);
-      socket.emit('typing', { sender_id: userId, receiver_id: receiverId, is_typing: true });
-    } else if (!message && isTyping) {
-      setIsTyping(false);
-      socket.emit('typing', { sender_id: userId, receiver_id: receiverId, is_typing: false });
-    }
-  }, [message, isTyping, userId, receiverId]);
+    if (!userId || !receiverId) return;
+
+    const payload = {
+      sender_id: userId,
+      receiver_id: receiverId,
+      is_typing: !!message,
+    };
+
+    socket.emit('typing', payload);
+  }, [message, userId, receiverId]);
 
   // Fetch chat history
   const { data, isLoading, error } = useQuery({
     queryKey: ['chats', userId, receiverId, page],
     queryFn: () => getChats(userId, receiverId, page),
-    keepPreviousData: true
+    keepPreviousData: true,
   });
 
-  // Send message mutation
+  // Send message
   const sendMessageMutation = useMutation({
     mutationFn: sendMessage,
     onSuccess: () => {
       setMessage('');
       setIsTyping(false);
-      socket.emit('typing', { sender_id: userId, receiver_id: receiverId, is_typing: false });
+      socket.emit('typing', {
+        sender_id: userId,
+        receiver_id: receiverId,
+        is_typing: false,
+      });
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     },
     onError: (error) => {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');
-    }
+    },
   });
 
-  // Report message mutation
+  // Report message
   const reportMessageMutation = useMutation({
     mutationFn: ({ messageId, reason }) => reportMessage(messageId, { reason }),
-    onSuccess: () => {
-      alert('Message reported successfully.');
-    },
+    onSuccess: () => alert('Message reported successfully.'),
     onError: (error) => {
       console.error('Error reporting message:', error);
       alert('Failed to report message. Please try again.');
-    }
+    },
   });
 
-  // Handle sending message
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
-    sendMessageMutation.mutate({
-      receiver_id: receiverId,
-      message: message.trim()
-    });
+    if (message.trim()) {
+      sendMessageMutation.mutate({
+        receiver_id: receiverId,
+        message: message.trim(),
+      });
+    }
   };
 
-  // Handle reporting a message
   const handleReportMessage = (messageId) => {
     const reason = prompt('Enter reason for reporting this message:');
     if (reason) {
@@ -104,14 +110,10 @@ const Chat = () => {
     }
   };
 
-  // Load more messages
   const handleLoadMore = () => {
-    if (data?.pages > page) {
-      setPage((prev) => prev + 1);
-    }
+    if (data?.pages > page) setPage((prev) => prev + 1);
   };
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [data?.chats]);
@@ -121,12 +123,12 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto bg-gray-100">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="p-4 bg-blue-600 text-white text-center">
         <h1 className="text-xl font-semibold">Chat with User {receiverId}</h1>
       </div>
 
-      {/* Chat Messages */}
+      {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto">
         {data?.pages > page && (
           <button
@@ -175,7 +177,7 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
+      {/* Input */}
       <form onSubmit={handleSendMessage} className="p-4 bg-white border-t">
         <div className="flex space-x-2">
           <input

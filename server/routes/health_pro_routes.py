@@ -92,7 +92,10 @@ def update_healthpro_profile():
     return jsonify({"message": "Profile updated"})
 
 # 5. GET/POST articles
-@health_bp.route('/healthpros/articles', methods=['GET', 'POST','OPTIONS'])
+# @health_bp.route('/healthpros/articles', methods=['GET', 'POST','OPTIONS'])
+# @role_required("health_pro")
+@health_bp.route('/healthpros/articles', methods=['GET', 'POST', 'OPTIONS'])
+@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5000", "http://127.0.0.1:5000"], supports_credentials=True)
 @role_required("health_pro")
 def health_pro_articles():
     if request.method == 'OPTIONS':
@@ -435,7 +438,7 @@ def create_event():
 
 
 @health_bp.route("/healthpro/group-posts-with-comments", methods=["GET"])
-@cross_origin(origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+@cross_origin(origins=["https://mama-africa.onrender.com", "http://localhost:5173", "http://127.0.0.1:5173"])
 @jwt_required()
 @role_required("health_pro")
 def get_group_posts_with_comments():

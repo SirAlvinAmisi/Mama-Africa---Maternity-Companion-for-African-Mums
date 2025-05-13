@@ -77,7 +77,7 @@ const Admin = () => {
     { key: 'posts', label: 'Review Posts' },
     { key: 'communities', label: 'Approve Communities' },
     { key: 'create_community', label: 'Create Community' },
-    { key: 'create_category', label: 'Create Category' },
+    // { key: 'create_category', label: 'Create Category' },
     { key: 'reset_password', label: 'Reset Password' }
     // { key: 'notifications', label: 'Notifications' }, // Updated label
   ];
@@ -263,7 +263,7 @@ const Admin = () => {
             {activeTab === 'posts' && <PostReview />}
             {activeTab === 'communities' && <CommunityReview />}
             {activeTab === 'create_community' && <CreateCommunity />}
-            {activeTab === 'create_category' && <CreateCategory />}
+            {/* {activeTab === 'create_category' && <CreateCategory />} */}
             {activeTab === 'reset_password' && <ResetUserPassword />}
             {/* {activeTab === 'notifications' && <Notification />} */}
             

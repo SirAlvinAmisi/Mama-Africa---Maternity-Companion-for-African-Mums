@@ -92,9 +92,9 @@ const BabyCornerPage = () => {
             <img
               src={item.image}
               alt={`Week ${item.week} - ${item.size}`}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 p-8 object-cover"
             />
-            <div className="p-4">
+            <div className="p-8">
               <h2 className="text-xl font-semibold text-cyan-900 mb-1">Week {item.week}</h2>
               <p className="text-cyan-800 font-medium mb-2">👶 Size: {item.size}</p>
               <p className="text-gray-700 text-sm mb-2">🧠 <strong>Development:</strong> {item.development}</p>
