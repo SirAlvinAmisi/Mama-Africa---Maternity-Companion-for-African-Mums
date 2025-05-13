@@ -164,81 +164,88 @@ const MomReminders = ({ userId }) => {
     : [];
 
   return (
-    <div className="max-w-5xl bg-white mx-auto p-6">
-      <h2 className="text-3xl font-bold text-purple-700 text-center mb-6">Mom Calendar</h2>
+  <div className="max-w-5xl bg-white mx-auto p-4 sm:p-6 md:p-8">
+    <h2 className="text-2xl sm:text-3xl font-semibold text-purple-700 text-center mb-6">Mom Calendar</h2>
 
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={prevMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">&lt;</button>
-        <h3 className="text-2xl font-bold text-cyan-900">{format(currentMonth, 'MMMM yyyy')}</h3>
-        <button onClick={nextMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded">&gt;</button>
-      </div>
+    <div className="flex justify-between items-center mb-6">
+      <button onClick={prevMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-md">‹</button>
+      <h3 className="text-xl sm:text-2xl font-semibold text-gray-600">{format(currentMonth, 'MMMM yyyy')}</h3>
+      <button onClick={nextMonth} className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-md">›</button>
+    </div>
 
-      <div className="grid grid-cols-7 text-center font-bold mb-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-purple-700 font-bold">{day}</div>
-        ))}
-      </div>
+    <div className="grid grid-cols-7 text-center text-gray-600 font-semibold mb-2">
+      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        <div key={day} className="text-purple-700">{day}</div>
+      ))}
+    </div>
 
-      <div className="space-y-2 text-black font-bold">{renderDays()}</div>
+    <div className="space-y-2 text-gray-600 font-medium">
+      {renderDays()}
+    </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-cyan-900 bg-opacity-40 flex justify-center items-center z-20">
-          <div className="bg-cyan-300 p-6 rounded-lg w-[90%] max-w-md relative shadow-lg">
-            <button onClick={() => setShowModal(false)} className="absolute top-2 right-2 text-xl font-bold text-cyan-900 hover:text-red-600">✕</button>
-            <h3 className="text-xl font-bold mb-4 text-cyan-900">Add Event for {format(selectedDate, 'PPP')}</h3>
-            <input type="text" placeholder="Title" className="w-full border p-2 rounded bg-gray-100 text-black mb-3" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} />
-            <input type="time" className="w-full border bg-gray-100 text-black p-2 rounded mb-3" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} />
-            <select className="w-full border p-2 bg-gray-100 text-black rounded mb-3" value={newEvent.type} onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}>
-              <option value="appointment">Appointment</option>
-              <option value="scan">Scan</option>
-              <option value="class">Class</option>
-            </select>
-            <div className="flex justify-between">
-              <button onClick={() => setShowModal(false)} className="w-[48%] bg-cyan-600 font-bold text-black hover:bg-red-600 p-2 rounded">Cancel</button>
-              <button onClick={handleSaveEvent} className="w-[48%] bg-cyan-600 font-bold text-black p-2 rounded hover:bg-purple-700">Save Event</button>
-            </div>
+    {showModal && (
+      <div className="fixed inset-0 bg-cyan-200 bg-opacity-40 flex justify-center items-center z-20">
+        <div className="bg-white p-6 rounded-lg w-[90%] max-w-md shadow-md relative">
+          <button onClick={() => setShowModal(false)} className="absolute top-2 right-2 text-xl font-semibold text-gray-600 hover:text-purple-700">✕</button>
+          <h3 className="text-xl font-semibold mb-4 text-gray-600">Add Event for {format(selectedDate, 'PPP')}</h3>
+
+          <input type="text" placeholder="Title" className="w-full border border-cyan-200 bg-white text-gray-600 p-2 rounded-md mb-3" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} />
+
+          <input type="time" className="w-full border border-cyan-200 bg-white text-gray-600 p-2 rounded-md mb-3" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} />
+
+          <select className="w-full border border-cyan-200 bg-white text-gray-600 p-2 rounded-md mb-3" value={newEvent.type} onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}>
+            <option value="appointment">Appointment</option>
+            <option value="scan">Scan</option>
+            <option value="class">Class</option>
+          </select>
+
+          <div className="flex justify-between space-x-2">
+            <button onClick={() => setShowModal(false)} className="w-1/2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold p-2 rounded-md">Cancel</button>
+            <button onClick={handleSaveEvent} className="w-1/2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold p-2 rounded-md">Save Event</button>
           </div>
         </div>
+      </div>
+    )}
+
+    <div className="mt-8">
+      <h3 className="text-xl font-semibold text-gray-600 mb-4">All Saved Events</h3>
+      {events.length === 0 ? (
+        <p className="text-gray-600">No saved events yet.</p>
+      ) : (
+        events
+          .sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+          .map((event, index) => (
+            <div key={index} className="bg-cyan-100 border border-cyan-200 p-4 rounded-md mb-3">
+              <h4 className="font-semibold text-purple-700">{event.title}</h4>
+              <p className="capitalize text-gray-600 font-medium">{event.type}</p>
+              <p className="text-gray-600">
+                {format(new Date(event.datetime), 'PPPP p')}
+              </p>
+            </div>
+          ))
       )}
+    </div>
+
+    {/* Uncomment if needed */}
+    {/* {selectedDate && (
       <div className="mt-8">
-        <h3 className="text-xl font-bold text-cyan-900 mb-4">
-          All Saved Events
-        </h3>
-        {events.length === 0 ? (
-          <p className="text-black">No saved events yet.</p>
+        <h3 className="text-xl font-semibold text-gray-600 mb-4">Events for {format(selectedDate, 'PPP')}</h3>
+        {eventsForSelectedDate.length === 0 ? (
+          <p className="text-gray-600">No events on this date.</p>
         ) : (
-          events
-            .sort((a, b) => new Date(a.datetime) - new Date(b.datetime)) // sort chronologically
-            .map((event, index) => (
-              <div key={index} className="bg-cyan-300 border p-4 rounded mb-2">
-                <h4 className="font-bold text-purple-700">{event.title}</h4>
-                <p className="capitalize font-black text-black">{event.type}</p>
-                <p className="text-black">
-                  {format(new Date(event.datetime), 'PPPP p')}
-                </p>
-              </div>
-            ))
+          eventsForSelectedDate.map((event, index) => (
+            <div key={index} className="bg-cyan-100 border border-cyan-200 p-4 rounded-md mb-3">
+              <h4 className="font-semibold text-purple-700">{event.title}</h4>
+              <p className="capitalize text-gray-600 font-medium">{event.type}</p>
+              <p className="text-gray-600">{format(event.datetime, 'hh:mm a')}</p>
+            </div>
+          ))
         )}
       </div>
+    )} */}
+  </div>
+);
 
-      {/* {selectedDate && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold text-cyan-900 mb-4">Events for {format(selectedDate, 'PPP')}</h3>
-          {eventsForSelectedDate.length === 0 ? (
-            <p className="text-black">No events on this date.</p>
-          ) : (
-            eventsForSelectedDate.map((event, index) => (
-              <div key={index} className="bg-cyan-300 border p-4 rounded mb-2">
-                <h4 className="font-bold text-purple-700">{event.title}</h4>
-                <p className="capitalize font-black text-black">{event.type}</p>
-                <p className='text-black'>{format(event.datetime, 'hh:mm a')}</p>
-              </div>
-            ))
-          )}
-        </div>
-      )} */}
-    </div>
-  );
 };
 
 export default MomReminders;

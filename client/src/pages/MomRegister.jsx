@@ -17,25 +17,35 @@ export default function MomRegister() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-semibold">Mum Registration</h2>
-      <input
-        type="email" required placeholder="Email"
-        className="w-full p-3 border rounded"
-        value={email} onChange={e => setEmail(e.target.value)}
-      />
-      <input
-        type="password" required placeholder="Password"
-        className="w-full p-3 border rounded"
-        value={password} onChange={e => setPassword(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="bg-blue-button text-white px-6 py-2 rounded font-inria"
-      >
-        Register
-      </button>
-      {msg && <p className="text-green mt-2">{msg}</p>}
-    </form>
-  );
+  <form onSubmit={handleSubmit} className="space-y-4">
+    <h2 className="text-2xl font-semibold text-gray-600">Mum Registration</h2>
+
+    <input
+      type="email"
+      required
+      placeholder="Email"
+      className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+      value={email}
+      onChange={e => setEmail(e.target.value)}
+    />
+
+    <input
+      type="password"
+      required
+      placeholder="Password"
+      className="w-full p-3 border border-cyan-200 rounded-md bg-white text-gray-600"
+      value={password}
+      onChange={e => setPassword(e.target.value)}
+    />
+
+    <button
+      type="submit"
+      className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-md font-semibold"
+    >
+      Register
+    </button>
+
+    {msg && <p className="text-green-600 font-medium mt-2">{msg}</p>}
+  </form>
+);
 }

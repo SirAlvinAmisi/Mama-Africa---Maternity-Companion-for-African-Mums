@@ -25,17 +25,22 @@ const Navbar = () => {
   }, [isDark]);
 
   return (
-    <nav className="bg-cyan-200 dark:bg-cyan-400 text-gray-600 dark:text-white shadow">
+    <nav className="bg-cyan-200 text-gray-600 dark:text-white shadow">
       <div className="max-w-screen-xl mx-auto flex items-center justify-between px-4 py-4">
         
         {/* Logo */}
-        <div className="text-3xl font-bold">
-          <Link to="/" className="flex items-center space-x-1">
-            <span className="text-green text-5xl font-bold">Mama</span>
-            <img src={africaIcon} alt="Africa icon text-5xl" className="w-11 h-11" />
-            <span className="text-red-600 text-5xl font-bold">frika</span>
-          </Link>
-        </div>
+        <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
+  <Link to="/" className="flex items-center space-x-1">
+    <span className="text-green text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">Mama</span>
+    <img
+      src={africaIcon}
+      alt="Africa icon"
+      className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14"
+    />
+    <span className="text-red-600 text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">frika</span>
+  </Link>
+</div>
+
         <button
           className="text-black dark:text-white sm:hidden text-3xl"
           onClick={() => setIsOpen(!isOpen)}
@@ -45,35 +50,26 @@ const Navbar = () => {
 
         {/* Navigation Links */}
         <div
-          className={`${
-            isOpen ? 'flex flex-col items-start gap-4 text-sm' : 'hidden'
-          } sm:flex sm:flex-row sm:items-center sm:gap-4 font-bold text-cyan-900 text-lg absolute sm:static  left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
-        >
-          <Link to="/" className="hover:underline">Home</Link>
-          <Link to="/specialists" className="hover:underline">Specialists</Link>
-          <Link to="/communities" className="hover:underline">Communities</Link>
-          {/* <Link to="/view" className='hover:underline'>ViewPage</Link> */}
-          {!isLoggedIn ? (
-            <>
-              <Link to="/login" className="hover:underline">Login</Link>
-              <Link to="/signup" className="hover:underline">Sign Up</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/profile" className="hover:underline">Profile</Link>
-              <button onClick={handleLogout} className="hover:underline">Logout</button>
-            </>
-          )}
+  className={`${
+    isOpen ? 'flex flex-col items-start gap-4 text-sm bg-cyan-200 text-gray-600' : 'hidden'
+  } sm:flex sm:flex-row sm:items-center sm:gap-4 font-bold sm:text-cyan-900 text-lg absolute sm:static left-0 w-full sm:w-auto transition-all duration-300 ease-in-out top-16 sm:top-auto p-4 sm:p-0 z-50`}
+>
+  <Link to="/" className="hover:underline">Home</Link>
+  <Link to="/specialists" className="hover:underline">Specialists</Link>
+  <Link to="/communities" className="hover:underline">Communities</Link>
+  {!isLoggedIn ? (
+    <>
+      <Link to="/login" className="hover:underline">Login</Link>
+      <Link to="/signup" className="hover:underline">Sign Up</Link>
+    </>
+  ) : (
+    <>
+      <Link to="/profile" className="hover:underline">Profile</Link>
+      <button onClick={handleLogout} className="hover:underline">Logout</button>
+    </>
+  )}
+</div>
 
-          {/* Theme Toggle Button */}
-          {/* <button
-            onClick={() => setIsDark(!isDark)}
-            className="ml-2 p-2 rounded-full bg-gray-300 dark:bg-gray-700 text-black dark:text-white"
-            title="Toggle theme"
-          >
-            {isDark ? '🌙' : '☀️'} */}
-          {/* </button> */}
-        </div>
       </div>
     </nav>
   );

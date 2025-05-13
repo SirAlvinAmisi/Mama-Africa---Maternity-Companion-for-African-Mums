@@ -50,36 +50,37 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 px-6 sm:px-10 py-10 bg-cyan-400 rounded-2xl shadow-lg">
-      <h2 className="text-cyan-900 text-2xl sm:text-3xl font-bold text-center mb-4">Login</h2>
-      <p className="text-sm text-center text-cyan-900 font-semibold mb-6">Welcome back to Mama Afrika</p>
+  <div className="max-w-md mx-auto mt-20 mb-20 px-6 sm:px-10 py-10 bg-cyan-100 rounded-md shadow-md">
+    <h2 className="text-gray-700 text-2xl sm:text-3xl font-semibold text-center mb-4">Login</h2>
+    <p className="text-sm text-center text-gray-700 font-medium mb-6">Welcome back to Mama Afrika</p>
 
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        <input 
-          type="email" 
-          placeholder="Email Address" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-300"
-          required
-        />
-        <input 
-          type="password" 
-          placeholder="Password" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="p-3 border rounded-md text-sm sm:text-base text-black bg-cyan-300"
-          required
-        />
-        <button 
-          type="submit" 
-          className="p-3 bg-cyan-600 text-white rounded-md text-base hover:bg-cyan-700 transition"
-        >
-          Login
-        </button>
-      </form>
-    </div>
-  );
+    <form onSubmit={handleLogin} className="flex flex-col gap-4">
+      <input 
+        type="email" 
+        placeholder="Email Address" 
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="p-3 border border-cyan-200 rounded-md text-sm sm:text-base text-gray-600 bg-white"
+        required
+      />
+      <input 
+        type="password" 
+        placeholder="Password" 
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="p-3 border border-cyan-200 rounded-md text-sm sm:text-base text-gray-600 bg-white"
+        required
+      />
+      <button 
+        type="submit" 
+        className="p-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md text-base font-semibold transition"
+      >
+        Login
+      </button>
+    </form>
+  </div>
+);
+
 };
 
 export default Login;
