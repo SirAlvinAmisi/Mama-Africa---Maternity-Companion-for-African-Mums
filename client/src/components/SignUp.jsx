@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import api, { baseURL } from '../lib/api'; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -93,7 +94,8 @@ const Signup = () => {
         payload.append("avatar", avatar);
       }
 
-      const response = await axios.post('http://localhost:5000/signup', payload, {
+      // const response = await axios.post('http://localhost:5000/signup', payload, {
+      const response = await api.post('/signup', payload, {  
         headers: {
           'Content-Type': 'multipart/form-data',
         },

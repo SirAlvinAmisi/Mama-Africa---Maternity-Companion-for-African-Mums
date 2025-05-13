@@ -3,7 +3,7 @@ import axios from 'axios';
 
 
 export const baseURL = import.meta.env.PROD
-  ? 'https://mama-africa-api.onrender.com'
+  ? 'https://mama-africa.onrender.com'
   : 'http://localhost:5000';
 
 const api = axios.create({
