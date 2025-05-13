@@ -13,7 +13,7 @@ import { io } from "socket.io-client";
 //   }
 // );
 const socket = io("https://mama-africa-api.onrender.com", {
-  transports: ["websocket"],
+  transports: ["websocket", "polling"],
   withCredentials: true,
 });
 const Notification = () => {
