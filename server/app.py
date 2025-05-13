@@ -35,28 +35,23 @@ def create_app():
     mail.init_app(app)
 
     # CORS setup - aligned for frontend
-    CORS(app, supports_credentials=True, resources={
-        r"/*": {
-            "origins": [
-                "https://mama-africa.onrender.com",
-                "http://localhost:5173",
-                "http://127.0.0.1:5173"
-            ],
-            "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
-            "allow_headers": [
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Access-Control-Allow-Credentials"
-            ]
-        }
-    })
+    CORS(app,
+        supports_credentials=True,
+        origins=[
+            "https://mama-africa.onrender.com",
+            "http://localhost:5173",
+            "http://localhost:5000",
+            "http://127.0.0.1:5173"
+        ],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "X-Requested-With"])
 
     # Socket.IO setup with matching CORS
     socketio.init_app(app, cors_allowed_origins=[
         "https://mama-africa.onrender.com",
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "http://localhost:5000"
     ])
 
 

@@ -12,6 +12,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/login', {
+      // const response = await api.post('/login',{  
         email,
         password
       });
@@ -21,6 +22,7 @@ const Login = () => {
 
       // Fetch user profile
       const userResponse = await axios.get('http://localhost:5000/me', {
+      // const userResponse = await api.post('/me',{  
         headers: {
           Authorization: `Bearer ${access_token}`
         }
