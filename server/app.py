@@ -1,5 +1,6 @@
 import os
 import eventlet
+import eventlet.wsgi
 eventlet.monkey_patch()
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -121,5 +122,7 @@ def serve_media(filename):
 #     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 if __name__ == "__main__":
     # socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False, server='eventlet')
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
+    # socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
+    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", int(os.environ.get("PORT", 5000)))), app)
+
 
