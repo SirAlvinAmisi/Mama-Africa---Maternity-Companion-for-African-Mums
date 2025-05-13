@@ -2,31 +2,26 @@
 import axios from 'axios';
 
 
-const baseURL = 'https://mama-africa-api.onrender.com'; 
-// const baseURL = import.meta.env.PROD
-//   ? "https://mama-africa-api.onrender.com"
-//   : "http://localhost:5000"; // your local backend
-
+export const baseURL = import.meta.env.PROD
+  ? 'https://mama-africa-api.onrender.com'
+  : 'http://localhost:5000';
 
 const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json'
   },
-  // withCredentials: true
+  withCredentials: true,
 });
 
-
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// Auto-add token if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // 🔒 Authentication
 // export const signup = async (userData) => {
