@@ -5,7 +5,7 @@ const nutritionArticles = [
     id: 1,
     title: 'First Trimester Superfoods for African Mums',
     summary: 'Explore nutrient-rich foods like sukuma wiki, millet porridge, and indigenous greens that support early fetal development.',
-    image: 'https://www.istockphoto.com/photo/african-pregnant-woman-eating-healthy-salad-gm1309328442-398275456',
+    image: 'https://i.pinimg.com/736x/30/bb/93/30bb93d89f5eeee3f199c0ffe9191467.jpg',
     author: 'Dr. Achieng Odongo',
     publishedAt: 'May 10, 2025'
   },
@@ -13,7 +13,7 @@ const nutritionArticles = [
     id: 2,
     title: 'Iron-Rich African Diet for Expecting Mothers',
     summary: 'Learn how to incorporate beans, liver, and leafy greens into your diet to combat anemia during pregnancy.',
-    image: 'https://www.istockphoto.com/photo/pregnant-african-woman-holding-bowl-of-vegetables-gm1279328442-398275456',
+    image: 'https://i.pinimg.com/736x/db/09/ed/db09edf4115f6870bf4327a55bd06739.jpg',
     author: 'Dr. Wanjiru Kamau',
     publishedAt: 'April 28, 2025'
   },
@@ -21,7 +21,7 @@ const nutritionArticles = [
     id: 3,
     title: 'Healthy Traditional Kenyan Meals for Pregnant Women',
     summary: 'Discover safe and nourishing ways to enjoy traditional dishes like ugali, fish stew, and arrowroots for maternal wellness.',
-    image: 'https://www.istockphoto.com/photo/pregnant-woman-preparing-traditional-kenyan-meal-gm1279328442-398275456',
+    image: 'https://i.pinimg.com/736x/53/a9/69/53a969d32288138a9fcbaa5058a2948b.jpg',
     author: 'Mama Grace (Community Health Volunteer)',
     publishedAt: 'April 15, 2025'
   }

@@ -4,47 +4,47 @@ const babyGrowthData = [
   {
     week: 8,
     size: 'Size of a groundnut',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Peanuts_in_shell.jpg',
+    image: 'https://i.pinimg.com/736x/d8/19/6f/d8196f7c10e91d9e1fc880eb3c861a85.jpg',
   },
   {
     week: 12,
     size: 'Size of a nduma (arrowroot)',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Arrowroot.JPG',
+    image: 'https://i.pinimg.com/736x/06/5d/b8/065db85001f59e10d7890b4bede9d843.jpg',
   },
   {
     week: 16,
     size: 'Size of a mango',
-    image: 'https://images.unsplash.com/photo-1576402187874-38c6a1d23ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/c4/41/60/c44160336851753abc03b27896af17b4.jpg',
   },
   {
     week: 20,
     size: 'Size of a maize cob',
-    image: 'https://images.unsplash.com/photo-1590077195243-5fd8c6e8826c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/1c/09/8d/1c098de09433dfd928107f372640d969.jpg',
   },
   {
     week: 24,
     size: 'Size of a sweet potato',
-    image: 'https://images.unsplash.com/photo-1606819655600-6cd4c5e88d32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'hhttps://i.pinimg.com/736x/a6/6a/0c/a66a0c5327d43c709525083489b0955e.jpg',
   },
   {
     week: 28,
     size: 'Size of a coconut',
-    image: 'https://images.unsplash.com/photo-1597633362234-05b7cb3292b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/29/2c/11/292c11d8fce55366be9edf5608ff285e.jpg',
   },
   {
     week: 32,
     size: 'Size of a papaya',
-    image: 'https://images.unsplash.com/photo-1615475164786-f0d928e9a79b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/9d/1c/e6/9d1ce66a82f7354aeb6fdb47e75220da.jpg',
   },
   {
     week: 36,
     size: 'Size of a watermelon',
-    image: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/25/e9/47/25e9471c8dac786c505ff3d4a5dc1114.jpg',
   },
   {
     week: 40,
     size: 'Ready to meet you!',
-    image: 'https://images.unsplash.com/photo-1595433562696-17e4b3ddbd0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60',
+    image: 'https://i.pinimg.com/736x/e0/48/1c/e0481cb8f58d9ad8d161212a3fb8ba5a.jpg',
   },
 ];
 
