@@ -2,22 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import { fetchChats, sendMessage } from '../../store/chatSlice';
 import axios from 'axios';
+import socket from '../../lib/socket'; // ✅ shared socket instance
 
 const ChatList = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [user, setUser] = useState(null); // ✅ useState instead of immediate JSON.parse
+  const [user, setUser] = useState(null);
   const [userId, setUserId] = useState(null);
   const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
   const [usePolling, setUsePolling] = useState(false);
 
-  // ✅ Get user from localStorage after component mounts
+  const { messages = [], status, error } = useSelector((state) => state.chat);
+
+  // Fetch user from localStorage
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('user');
@@ -25,20 +26,21 @@ const ChatList = () => {
         const parsed = JSON.parse(storedUser);
         setUser(parsed);
         setUserId(parsed.id);
-      } else {
-        console.warn("No user found in localStorage");
       }
     } catch (err) {
       console.error("Failed to parse user:", err);
     }
   }, []);
 
-  const { messages = [], status, error } = useSelector((state) => state.chat);
-
+  // Fetch specialists
   const { data: specialists, isLoading: specialistsLoading } = useQuery({
     queryKey: ['specialists'],
     queryFn: async () => {
-      const res = await axios.get('http://localhost:5000/healthpros');
+      const res = await axios.get(
+        import.meta.env.PROD
+          ? 'https://mama-africa-api.onrender.com/healthpros'
+          : 'http://localhost:5000/healthpros'
+      );
       return res.data;
     },
   });
@@ -49,35 +51,42 @@ const ChatList = () => {
     }
   }, [userId, id, dispatch]);
 
+  // Setup socket connection and events
   useEffect(() => {
     if (!userId) return;
 
-    const newSocket = io('http://localhost:5000', {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-    });
+    socket.connect();
 
-    newSocket.on('connect', () => {
+    socket.on('connect', () => {
       console.log('✅ WebSocket connected');
-      newSocket.emit('join', { user_id: userId });
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        socket.emit('join_room', { token });
+      }
       setUsePolling(false);
     });
 
-    newSocket.on('connect_error', () => {
+    socket.on('connect_error', () => {
       console.warn('⚠️ WebSocket failed, using polling');
       setUsePolling(true);
     });
 
-    newSocket.on('new_message', (message) => {
-      if (message.sender_id === parseInt(id) && message.receiver_id === userId) {
+    socket.off('new_message');
+    socket.on('new_message', (message) => {
+      if (
+        message.sender_id === parseInt(id) &&
+        message.receiver_id === userId
+      ) {
         dispatch(fetchChats({ userId, receiverId: id }));
       }
     });
 
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
+    return () => {
+      socket.disconnect();
+    };
   }, [userId, id, dispatch]);
 
+  // Fallback polling if socket fails
   useEffect(() => {
     if (!usePolling || !userId || !id) return;
     const interval = setInterval(() => {

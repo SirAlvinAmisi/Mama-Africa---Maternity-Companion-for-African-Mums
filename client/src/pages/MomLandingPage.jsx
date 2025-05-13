@@ -148,7 +148,7 @@ export default function MomLandingPage() {
       </h3>
 
       <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6">
-        {['profile', 'weekly', 'Scan records', 'questions', 'topics', 'appointments', 'groups'].map(tab => (
+        {['profile', 'weekly', 'Scan records', 'questions', 'appointments', 'groups'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -221,13 +221,13 @@ export default function MomLandingPage() {
         </section>
       )}
 
-      {activeTab === 'topics' && (
+      {/* {activeTab === 'topics' && (
         <section>
           <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800 mb-4">Follow Topics by Trimester</h3>
           <p className="text-gray-600">Coming soon: personalized topic suggestions based on your trimester.</p>
           <Topics />
         </section>
-      )}
+      )} */}
 
       {activeTab === 'appointments' && (
         <section>

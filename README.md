@@ -1,42 +1,70 @@
-# Mama Africa - Maternity Companion for African Mums
- CCI phase 5 project for moringa school
+# 🤰🏾 Mama Africa - Maternity Companion for African Mums
 
+**Mama Africa** is a culturally-grounded maternity platform designed to empower African mothers with personalized pregnancy tracking, localised content, expert Q&A, community support, and health resource recommendations.
 
-## For collaboration Purposes - to delete later
+---
 
- ### Server integration rules
+## 🌍 Features
 
-1. Clone the repository
+### 🧑‍⚕️ For Mums
+- Track pregnancy milestones (auto-calculates EDD & weekly updates)
+- Ask health professionals questions
+- Join trimester-based communities
+- Get nutritional advice with seasonal local foods
+- Upload scans and manage medical reminders
+- Follow topics by trimester
 
-        git clone repo .yes alvin
+### 👩🏽‍⚕️ For Health Professionals
+- Request verification (with license check)
+- Post articles (reviewed by admin)
+- Answer mum questions and view scans
+- Recommend trusted clinics
+- Flag misinformation
 
-2. Checkout from Main branch
+### 🛡️ For Admins
+- Approve/reject flagged content
+- Manage all users and verify professionals
+- View statistics and send notifications
+- Moderate community posts and comments
 
-        git checkout -b your-branch
+---
 
-3. Activate Virtual enviroment
+## 🛠️ Tech Stack
 
-        pipenv install && pipenv shell
+| Component        | Tech                                                                 |
+|------------------|----------------------------------------------------------------------|
+| Frontend         | React + Vite + Tailwind + Axios + Socket.IO                          |
+| Backend          | Flask + Flask-SocketIO + SQLAlchemy + JWT + Flask-CORS               |
+| Database         | PostgreSQL                                                           |
+| Real-Time        | WebSockets (chat, notifications, Q&A)                                |
+| Deployment       | Render (Backend) + Vercel/Netlify (Frontend)                         |
 
-4. Install dependencies
+---
 
-        1234
+## 🚀 Getting Started
 
+### 🔧 Prerequisites
+- Node.js (v16+)
+- Python (v3.10+)
+- PostgreSQL
+- Virtualenv (optional)
 
-5. ensure your python and postgress versions are:
+### 🧪 Backend Setup
 
-        python version - 3.12
+```bash
+# Clone repo and enter server directory
+cd server
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate for Windows
+pip install -r requirements.txt
 
-        postgres version - 8.2
+# Setup environment variables
+cp .env.example .env
+# Edit .env to match your DB credentials
 
-6. Run seed.py file, Make sure you see  
+# Run migrations & seed data
+flask db upgrade
+python seed.py
 
-        python seed.py
-
-        ✅ Database seeded successfully.
-
-7. Start the flask app
-
-        python app.py
-
-
+# Start backend
+python app.py

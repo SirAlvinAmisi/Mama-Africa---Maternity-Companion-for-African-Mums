@@ -45,7 +45,7 @@ const NutritionDashboard = () => {
               alt={item.summary}
               className="w-full h-48 text-black object-cover"
             />
-            <div className="flex flex-col justify-between flex-grow p-4">
+            <div className="flex flex-col justify-between p-8 flex-grow p-4">
               <div>
                 <h2 className="text-xl font-semibold text-cyan-900 mb-2">
                   Week {item.id}

@@ -15,7 +15,7 @@ const tabs = [
   "Answer Questions",
   "Upload Scans",
   "Recommend Clinics",
-  "Flag Misinformation",
+  // "Flag Misinformation",
   "My Articles",
   "Calendar"
   // "Notifications"
@@ -202,7 +202,7 @@ const HealthProDashboard = () => {
             </button>
           </>
         )} */}
-        {activeTab === "Flag Misinformation" && (
+        {/* {activeTab === "Flag Misinformation" && (
         <>
           <h2 className="text-xl font-semibold text-black mb-2">Flag Misinformation</h2>
           <p className="text-xl font-light text-black mb-2">Help maintain safety by flagging incorrect health information.</p>
@@ -213,7 +213,7 @@ const HealthProDashboard = () => {
             Review & Flag Content
           </button>
         </>
-      )}
+      )} */}
 
 
         {activeTab === "My Articles" && (

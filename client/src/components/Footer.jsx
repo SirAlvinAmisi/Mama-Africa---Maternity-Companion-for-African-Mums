@@ -22,7 +22,7 @@ const Footer = () => {
           <Link to="/community-guidelines" className="text-gray-800 hover:underline">Community Guidelines</Link>
           <Link to="/privacy" className="text-gray-800 hover:underline">Data Privacy Policy</Link>
           <Link to="/help-center" className="text-gray-800 hover:underline">Help Center</Link>
-          <Link to="/topics" className="text-gray-800 hover:underline">Popular Topics</Link>
+          {/* <Link to="/topics" className="text-gray-800 hover:underline">Popular Topics</Link> */}
         </div>
 
         {/* Third Column */}
