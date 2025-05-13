@@ -11,7 +11,7 @@ const ParentingDevelopmentPage = () => {
         title: "The Power of Responsive Parenting",
         content:
           "Children thrive when their caregivers are responsive. Research shows that children who receive consistent and warm responses from their parents develop better social and emotional skills.",
-        image: "https://i.pinimg.com/736x/79/31/e2/7931e2dd9f9d4e4f54054f6de5414b1d.jpg", // replace with your own or local assets
+        image: "https://i.pinimg.com/736x/79/31/e2/7931e2dd9f9d4e4f54054f6de5414b1d.jpg",
       },
       {
         id: 2,
@@ -52,7 +52,7 @@ const ParentingDevelopmentPage = () => {
 
     setArticles(dummyArticles);
   }, []);
-const ParentingDevelopment = () => {
+
   return (
     <div className="container mx-auto px-4 py-8 bg-cyan-100 rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold text-cyan-700 mb-6">Parenting Development Articles</h1>
@@ -71,11 +71,13 @@ const ParentingDevelopment = () => {
                 <p className="text-gray-600">{article.content.slice(0, 100)}...</p>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-500">Loading articles...</p>
+      )}
     </div>
   );
 };
 
-export default ParentingDevelopment;
+export default ParentingDevelopmentPage;
