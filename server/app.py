@@ -39,7 +39,7 @@ def create_app():
         r"/*": {
             "origins": [
                 "https://mama-africa.onrender.com",
-                "http://localhost:5173"
+                # "http://localhost:5173"
             ],
             "methods": ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
             "allow_headers": [

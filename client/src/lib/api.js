@@ -2,10 +2,10 @@
 import axios from 'axios';
 
 
-// const baseURL = 'https://mama-africa-api.onrender.com'; 
-const baseURL = import.meta.env.PROD
-  ? "https://mama-africa-api.onrender.com"
-  : "http://localhost:5000"; // your local backend
+const baseURL = 'https://mama-africa-api.onrender.com'; 
+// const baseURL = import.meta.env.PROD
+//   ? "https://mama-africa-api.onrender.com"
+//   : "http://localhost:5000"; // your local backend
 
 
 const api = axios.create({
