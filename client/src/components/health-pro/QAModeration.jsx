@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaFileMedical } from 'react-icons/fa'; 
+import { FaFileMedical } from 'react-icons/fa';
+import {
+  getHealthProQuestions,
+  getCurrentUser,
+  submitHealthProAnswer
+} from '../../lib/api'; 
 
 export default function QAModeration({ questions, setQuestions }) {
   const [activeTab, setActiveTab] = useState('unanswered');
@@ -8,55 +12,32 @@ export default function QAModeration({ questions, setQuestions }) {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-
-    // Fetch questions for this doctor
-    axios.get('http://localhost:5000/healthpros/questions', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(response => {
-        setQuestions(response.data.questions); // ✅ FIXED: actually store the result
+    const fetchData = async () => {
+      try {
+        const res = await getHealthProQuestions();
+        setQuestions(res.questions);
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      } finally {
         setLoading(false);
-      })
-      .catch(error => {
-        console.error("Failed to fetch questions", error);
-        setLoading(false);
-      });
+      }
+    };
 
-    // Fetch current user info
-    axios.get('http://localhost:5000/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(response => {
-        setCurrentUser(response.data);
-      })
-      .catch(error => {
-        console.error("Failed to fetch current user", error);
-      });
+    fetchData();
   }, [setQuestions]);
 
-  const handleAnswer = (id, answer) => {
-    const token = localStorage.getItem('access_token');
-    axios.post(`http://localhost:5000/healthpros/answers`, {
-      question_id: id,
-      answer_text: answer
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(() => {
-      // Refresh questions
-      axios.get(`http://localhost:5000/healthpros/questions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(res => {
-        setQuestions(res.data.questions);
-      });
-    })
-    .catch(error => {
+  const handleAnswer = async (id, answer) => {
+    try {
+      await submitHealthProAnswer(id, answer);
+      const res = await getHealthProQuestions();
+      setQuestions(res.questions);
+    } catch (error) {
       console.error("Error submitting answer", error);
       alert("Failed to submit answer.");
-    });
+    }
   };
-
 
   const filteredQuestions = questions.filter(q =>
     activeTab === 'unanswered' ? !q.answered : q.answered
@@ -96,7 +77,6 @@ export default function QAModeration({ questions, setQuestions }) {
                 <span>{q.date}</span>
               </div>
 
-              {/* <p className="text-lg text-gray-800 mb-4">{q.question}</p> */}
               <p className="text-lg text-gray-800 mb-4 flex flex-col gap-1">
                 {q.question.startsWith("[Scan Upload]") && (
                   <span className="inline-flex items-center gap-1 text-sm text-cyan-800 font-medium px-2 py-1 bg-cyan-100 border border-cyan-300 rounded w-max">
@@ -105,7 +85,6 @@ export default function QAModeration({ questions, setQuestions }) {
                 )}
                 <span>{q.question.replace("[Scan Upload]", "").trim()}</span>
 
-                {/* Optional: show file link if available */}
                 {q.scan_file_url && (
                   <a
                     href={q.scan_file_url}
@@ -117,7 +96,6 @@ export default function QAModeration({ questions, setQuestions }) {
                   </a>
                 )}
               </p>
-
 
               {q.answered ? (
                 <div className="bg-gray-300 p-4 rounded-md border border-green-300">

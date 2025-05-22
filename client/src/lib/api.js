@@ -1,10 +1,7 @@
 // src/lib/api.js
 import axios from 'axios';
 
-
-export const baseURL = import.meta.env.PROD
-  ? 'https://mama-africa.onrender.com'
-  : 'http://localhost:5000';
+export const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL,
@@ -14,7 +11,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Auto-add token if available
+// Auto-add token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
@@ -23,27 +20,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 🔒 Authentication
-// export const signup = async (userData) => {
-//   const response = await api.post('/signup', userData);
-//   return response.data;
-// };
-export const signup = async (userData) => {
-  const formData = new FormData();
-
-  for (let key in userData) {
-    formData.append(key, userData[key]);
-  }
-
+// -------------------- AUTH --------------------
+export const signup = async (formData) => {
   const response = await api.post('/signup', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-
   return response.data;
 };
-
 
 export const login = async (credentials) => {
   const response = await api.post('/login', credentials);
@@ -55,7 +38,7 @@ export const getMe = async () => {
   return response.data;
 };
 
-// 📄 Profiles
+// -------------------- USER PROFILE --------------------
 export const getProfiles = async () => {
   const response = await api.get('/profile');
   return response.data;
@@ -66,134 +49,72 @@ export const updateMumProfile = async (profileData) => {
   return response.data;
 };
 
-export const getHealthPros = async () => {
-  const response = await api.get('/healthpros');
+// -------------------- ADMIN --------------------
+export const getAdminUsers = async () => {
+  const response = await api.get('/admin/users');
   return response.data;
 };
 
-export const registerHealthPro = async (userData) => {
-  const response = await api.post('/healthpros/register', userData);
+export const addAdminUser = async (formData) => {
+  const response = await api.post('/admin/add_user', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
   return response.data;
 };
 
-export const getHealthProMe = async () => {
-  const response = await api.get('/healthpros/me');
+export const getAdminArticles = async () => {
+  const response = await api.get('/admin/articles');
   return response.data;
 };
 
-// ✅ NEW: Submit request for verification from health professional
-export const requestVerification = async () => {
-  const response = await api.post('/healthpro/request-verification');
+export const handleArticleAction = async (id, action) => {
+  let endpoint = '';
+  let method = 'PATCH';
+
+  if (action === 'approved') {
+    endpoint = `/admin/approve_article/${id}`;
+  } else if (action === 'flagged') {
+    endpoint = `/admin/flag_article/${id}`;
+  } else if (action === 'deleted') {
+    endpoint = `/admin/delete_article/${id}`;
+    method = 'DELETE';
+  }
+
+  const response = await api({
+    method,
+    url: endpoint,
+  });
+
   return response.data;
 };
 
-// ✅ NEW: Admin approves health professional verification
-export const approveHealthPro = async (userId) => {
-  const response = await api.post(`/admin/approve_healthpro/${userId}`);
+export const getFlaggedItems = async () => {
+  const response = await api.get('/flags');
+  return response.data.flags;
+};
+
+export const getFlaggedPost = async (id) => {
+  const response = await api.get(`/admin/posts/${id}`);
+  return response.data.post;
+};
+
+export const getFlaggedComment = async (id) => {
+  const response = await api.get(`/admin/comments/${id}`);
+  return response.data.comment;
+};
+
+export const updateFlagStatus = async (flagId) => {
+  const response = await api.patch(`/flags/${flagId}`);
   return response.data;
 };
 
-export const submitHealthProArticle = async (articleData) => {
-  const response = await api.post('/healthpros/articles', articleData);
+export const updatePostOrCommentStatus = async (type, id, status) => {
+  const endpoint = type === 'post' ? 'posts' : 'comments';
+  const response = await api.patch(`/admin/${endpoint}/${id}`, { status });
   return response.data;
 };
 
-export const answerQuestion = async (answerData) => {
-  const response = await api.post('/healthpros/answers', answerData);
-  return response.data;
-};
-
-export const recommendClinic = async (clinicData) => {
-  const response = await api.post('/healthpros/recommendations', clinicData);
-  return response.data;
-};
-
-export const getCommunities = async (trimester) => {
-  const response = await api.get('/communities', { params: { trimester } });
-  return response.data;
-};
-
-export const getCommunityPosts = async (communityId) => {
-  const response = await api.get(`/mums/communities/${communityId}/posts`);
-  return response.data;
-};
-
-export const createCommunityPost = async (communityId, postData) => {
-  const response = await api.post(`/mums/communities/${communityId}/post`, postData);
-  return response.data;
-};
-
-export const joinCommunity = async (communityId) => {
-  const response = await api.post(`/mums/communities/${communityId}/join`);
-  return response.data;
-};
-
-export const leaveCommunity = async (communityId) => {
-  const response = await api.post(`/mums/communities/${communityId}/leave`);
-  return response.data;
-};
-
-export const getPosts = async () => {
-  const response = await api.get('/posts');
-  return response.data;
-};
-
-export const commentOnPost = async (postId, commentData) => {
-  const response = await api.post(`/mums/communities/posts/${postId}/comment`, commentData);
-  return response.data;
-};
-
-export const getArticles = async () => {
-  const response = await api.get('/articles');
-  return response.data;
-};
-
-export const getArticleComments = async (articleId) => {
-  const response = await api.get(`/articles/${articleId}/comments`);
-  return response.data;
-};
-
-export const commentOnArticle = async (articleId, commentData) => {
-  const response = await api.post(`/mums/articles/${articleId}/comment`, commentData);
-  return response.data;
-};
-
-export const getComments = async () => {
-  const response = await api.get('/comments');
-  return response.data;
-};
-
-export const createComment = async (articleId, commentData) => {
-  const response = await api.post(`/mums/articles/${articleId}/comment`, commentData);
-  return response.data;
-};
-
-export const replyToComment = async (commentId, replyData) => {
-  const response = await api.post(`/mums/comments/${commentId}/reply`, replyData);
-  return response.data;
-};
-
-export const voteOnComment = async (commentId, voteData) => {
-  const response = await api.post(`/mums/comments/${commentId}/vote`, voteData);
-  return response.data;
-};
-
-export const askQuestion = async (questionData) => {
-  const response = await api.post('/mums/questions', questionData);
-  return response.data;
-};
-
-export const getQuestions = async (options = {}) => {
-  const { own, userId } = options;
-  const response = await api.get('/mums/questions', { params: { own, user_id: userId } });
-  return response.data;
-};
-
-export const commentOnQuestion = async (questionId, commentData) => {
-  const response = await api.post(`/mums/questions/${questionId}/comments`, commentData);
-  return response.data;
-};
-
+// -------------------- MUMS --------------------
 export const getPregnancyDetails = async () => {
   const response = await api.get('/mums/pregnancy');
   return response.data;
@@ -224,152 +145,221 @@ export const getUploads = async () => {
   return response.data;
 };
 
-export const getClinics = async () => {
-  const response = await api.get('/clinics');
+// -------------------- HEALTH PROFESSIONAL --------------------
+export const getHealthProProfile = async () => {
+  const response = await api.get('/me');
   return response.data;
 };
 
-export const getChats = async (userId, receiverId, page = 1, limit = 50) => {
-  const response = await api.get('/chats', { params: { user_id: userId, receiver_id: receiverId, page, limit } });
+export const getHealthProArticles = async () => {
+  const response = await api.get('/healthpros/articles');
   return response.data;
 };
 
-export const sendMessage = async (messageData) => {
-  const response = await api.post('/chats', messageData);
+export const getHealthProQuestions = async () => {
+  const response = await api.get('/healthpros/questions');
   return response.data;
 };
 
-export const reportMessage = async (messageId, reportData) => {
-  const response = await api.post(`/admin/report_message/${messageId}`, reportData);
+export const postHealthProArticle = async (articleData) => {
+  const response = await api.post('/healthpros/articles', articleData);
   return response.data;
 };
 
-export const sendTypingIndicator = async (typingData) => {
-  return Promise.resolve();
-};
-
-export const shareContent = async (contentType, contentId) => {
-  const response = await api.post('/mums/share', { content_type: contentType, content_id: contentId });
+export const updateHealthProProfile = async (profileData) => {
+  const response = await api.post('/healthpros/profile', profileData);
   return response.data;
 };
 
-export const shareViaEmail = async (contentType, contentId, recipientEmail) => {
-  const response = await api.post('/mums/share/email', { content_type: contentType, content_id: contentId, recipient_email: recipientEmail });
+export const requestHealthProVerification = async () => {
+  const response = await api.post('/healthpro/request-verification');
+  return response.data;
+};
+export const submitHealthProAnswer = async (question_id, answer_text) => {
+  const response = await api.post('/healthpros/answers', { question_id, answer_text });
   return response.data;
 };
 
-export const shareViaInbox = async (shareData) => {
-  const response = await api.post('/mums/share/inbox', shareData);
+export const getHealthProScans = async () => {
+  const response = await api.get('/scans');
   return response.data;
 };
 
-export const followThread = async (threadId) => {
-  const response = await api.post(`/mums/threads/${threadId}/follow`);
-  return response.data;
-};
-
-export const addUser = async (userData) => {
-  const response = await api.post('/admin/add_user', userData);
-  return response.data;
-};
-
-export const deactivateUser = async (userId) => {
-  const response = await api.patch(`/admin/deactivate_user/${userId}`);
-  return response.data;
-};
-
-export const removeContent = async (contentId) => {
-  const response = await api.delete(`/admin/remove_content/${contentId}`);
-  return response.data;
-};
-
-export const approveContent = async (contentId) => {
-  const response = await api.post(`/admin/approve_content/${contentId}`);
-  return response.data;
-};
-
-export const addCategory = async (categoryData) => {
-  const response = await api.post('/admin/add_category', categoryData);
-  return response.data;
-};
-
-export const approveArticle = async (articleId) => {
-  const response = await api.post(`/admin/approve_article/${articleId}`);
-  return response.data;
-};
-
-export const addCommunity = async (communityData) => {
-  const response = await api.post('/admin/add_community', communityData);
-  return response.data;
-};
-
-export const getTopics = async () => {
-  const response = await api.get('/topics');
-  return response.data;
-};
-
-export const searchTopics = async ({ query }) => {
-  const response = await api.get('/topics/search', { params: { query } });
-  return response.data;
-};
-
-export const getTopic = async (topicId) => {
-  const response = await api.get(`/topics/${topicId}`);
-  return response.data;
-};
-
-export const getTopicContent = async (topicId, contentType = 'all') => {
-  const response = await api.get(`/topics/${topicId}/content`, {
-    params: { type: contentType }
-  });
-  return response.data;
-};
-
-export const followTopic = async (topicId) => {
-  const response = await api.post(`/topics/${topicId}/follow`);
-  return response.data;
-};
-
-export const unfollowTopic = async (topicId) => {
-  const response = await api.post(`/topics/${topicId}/unfollow`);
-  return response.data;
-};
-
-export const getFollowedTopics = async () => {
-  const response = await api.get('/topics/followed');
-  return response.data;
-};
-
-export const getShareLink = async (contentType, contentId) => {
-  const response = await api.get('/share/link', {
-    params: { content_type: contentType, content_id: contentId }
-  });
-  return response.data;
-};
-
-export const getTrimesterCommunities = async (trimester) => {
-  const response = await api.get('/communities', {
-    params: { trimester }
-  });
-  return response.data;
-};
-
-// export const getJoinedCommunities = async () => {
-//   const response = await api.get('/communities/joined');
-//   return response.data;
-// };
-export const getJoinedCommunities = async () => {
-  const token = localStorage.getItem("access_token");
-  const response = await api.get('/mums/communities/joined', {
+export const uploadHealthProScan = async (formData) => {
+  const response = await api.post('/upload_scan', formData, {
     headers: {
-      Authorization: `Bearer ${token}`
+      'Content-Type': 'multipart/form-data'
     }
   });
   return response.data;
 };
 
-api.leaveCommunity = leaveCommunity;
-api.joinCommunity = joinCommunity;
-api.getJoinedCommunities = getJoinedCommunities;
+
+export const getClinics = async () => {
+  const response = await api.get('/clinics');
+  return response.data;
+};
+
+export const addClinic = async (clinicData) => {
+  const response = await api.post('/clinics', clinicData);
+  return response.data;
+};
+
+export const toggleClinicRecommendation = async (clinicId) => {
+  const response = await api.patch(`/clinics/${clinicId}/recommend`);
+  return response.data;
+};
+// -------------------- HEALTHPRO EVENTS --------------------
+export const fetchHealthProEvents = async () => {
+  const response = await api.get('/healthpros/events');
+  return response.data.events;
+};
+
+export const createHealthProEvent = async (eventData) => {
+  const response = await api.post('/healthpros/events', eventData);
+  return response.data.event;
+};
+
+// -------------------- COMMUNITY MODERATION --------------------
+export const getPendingCommunities = async () => {
+  const response = await api.get('/admin/communities/pending');
+  return response.data.communities;
+};
+
+export const updateCommunityStatus = async (id, status) => {
+  const response = await api.patch(`/communities/${id}`, { status });
+  return response.data;
+};
+
+export const createCommunity = async (data) => {
+  const response = await api.post('/admin/create_community', data);
+  return response.data;
+};
+
+export const resetUserPassword = async (email) => {
+  const response = await api.post('/admin/reset_password', { email });
+  return response.data;
+};
+
+// -------------------- COMMUNITIES --------------------
+export const fetchCommunities = async (trimester = 'all') => {
+  const response = await api.get('/communities', {
+    params: trimester !== 'all' ? { trimester } : {},
+  });
+  return response.data.communities;
+};
+
+export const fetchCommunityPosts = async (communityId) => {
+  const response = await api.get(`/communities/${communityId}/posts`);
+  return response.data.posts;
+};
+
+export const getCommunities = async (trimester) => {
+  const response = await api.get('/communities', { params: { trimester } });
+  return response.data;
+};
+
+export const getJoinedCommunities = async () => {
+  const response = await api.get('/mums/communities/joined');
+  return response.data;
+};
+
+export const joinCommunity = async (communityId) => {
+  const response = await api.post(`/mums/communities/${communityId}/join`);
+  return response.data;
+};
+
+export const leaveCommunity = async (communityId) => {
+  const response = await api.post(`/mums/communities/${communityId}/leave`);
+  return response.data;
+};
+
+// Fetch single community and posts
+export const getCommunityById = async (id) => {
+  const response = await api.get(`/communities/${id}`);
+  return response.data.community;
+};
+
+export const getCommunityPosts = async (id) => {
+  const response = await api.get(`/communities/${id}/posts`);
+  return response.data.posts;
+};
+
+// Get current user
+export const getCurrentUser = async () => {
+  const response = await api.get('/me');
+  return response.data;
+};
+
+// Join/leave a community
+export const joinCommunityById = async (id) => {
+  const response = await api.post(`/communities/${id}/join`);
+  return response.data;
+};
+
+export const leaveCommunityById = async (id) => {
+  const response = await api.post(`/communities/${id}/leave`);
+  return response.data;
+};
+
+// My posts
+export const getMyPosts = async () => {
+  const response = await api.get('/my-posts');
+  return response.data;
+};
+
+// Post actions
+export const createCommunityPost = async (id, formData) => {
+  const response = await api.post(`/communities/${id}/posts`, formData);
+  return response.data;
+};
+
+export const deletePost = async (postId) => {
+  const response = await api.delete(`/posts/${postId}`);
+  return response.data;
+};
+
+export const likePost = async (postId) => {
+  const response = await api.post(`/posts/${postId}/like`);
+  return response.data;
+};
+
+// Comments
+export const createComment = async (postId, data) => {
+  const response = await api.post(`/posts/${postId}/comments`, data);
+  return response.data;
+};
+
+export const deleteComment = async (commentId) => {
+  const response = await api.delete(`/comments/${commentId}`);
+  return response.data;
+};
+
+//--------------------- Health Pro general page --------------------
+export const fetchHealthProById = async (id) => {
+  const response = await api.get(`/healthpros/${id}`);
+  return response.data;
+};
+
+export const fetchArticlesByAuthorId = async (id) => {
+  const response = await api.get(`/articles/author/${id}`);
+  return response.data;
+};
+
+export const fetchClinicsByHealthProId = async (id) => {
+  const response = await api.get(`/clinics/healthpro/${id}`);
+  return response.data;
+};
+
+export const fetchUploadsByHealthProId = async (id) => {
+  const response = await api.get(`/uploads/healthpro/${id}`);
+  return response.data;
+};
+
+export const fetchFlaggedArticles = async () => {
+  const response = await api.get(`/articles/flagged`);
+  return response.data;
+};
+
 
 export default api;

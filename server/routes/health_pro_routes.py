@@ -1,8 +1,11 @@
 # server/routes/health_pro_routes.py
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from models import db, User, Article, Clinic, Question, Profile, VerificationRequest, Reminder, Notification, Comment, Post
+from models import db, User, Article, Clinic, Question, Profile, VerificationRequest, Reminder, Notification, Comment, Post, MedicalUpload
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from werkzeug.utils import secure_filename
+import os
+from flask import current_app
 from middleware.auth import role_required
 from utils.email_utils import send_email
 from extensions import socketio
@@ -498,3 +501,62 @@ def get_group_posts_with_comments():
             post_map[c.post_id]["comments"].append(comment_data)
 
     return jsonify({"posts": list(post_map.values())}), 200
+
+
+
+@health_bp.route('/upload_scan', methods=['POST'])
+@jwt_required()
+@role_required("health_pro")
+def upload_scan():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if file:
+        filename = secure_filename(file.filename)
+        upload_folder = os.path.join(current_app.root_path, 'static/uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        file_path = os.path.join(upload_folder, filename)
+        file.save(file_path)
+
+        # Construct file URL (adjust depending on static route)
+        file_url = f"/static/uploads/{filename}"
+        user_id = get_jwt_identity()
+
+        upload = MedicalUpload(
+            user_id=user_id,
+            doctor_id=user_id,
+            file_url=file_url,
+            file_type=file.content_type,
+            notes=request.form.get("description")
+        )
+        db.session.add(upload)
+        db.session.commit()
+
+        return jsonify({"message": "Scan uploaded successfully", "scan": {
+            "id": upload.id,
+            "file_url": file_url,
+            "file_type": upload.file_type,
+            "notes": upload.notes,
+            "uploaded_at": upload.uploaded_at.strftime("%Y-%m-%d %H:%M")
+        }}), 201
+
+@health_bp.route('/scans', methods=['GET'])
+@jwt_required()
+@role_required("health_pro")
+def get_uploaded_scans():
+    doctor_id = get_jwt_identity()
+    scans = MedicalUpload.query.filter_by(doctor_id=doctor_id).order_by(MedicalUpload.uploaded_at.desc()).all()
+    return jsonify({
+        "scans": [{
+            "id": scan.id,
+            "file_url": scan.file_url,
+            "file_type": scan.file_type,
+            "description": scan.notes,
+            "uploaded_at": scan.uploaded_at.strftime("%Y-%m-%d %H:%M")
+        } for scan in scans]
+    }), 200

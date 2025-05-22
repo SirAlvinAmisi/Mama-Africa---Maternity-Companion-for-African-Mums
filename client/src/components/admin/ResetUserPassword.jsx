@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { resetUserPassword } from '../../lib/api';
 
 const ResetUserPassword = () => {
   const [email, setEmail] = useState('');
@@ -7,12 +7,7 @@ const ResetUserPassword = () => {
   const handleReset = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.post('http://localhost:5000/admin/reset_password', {
-        email
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await resetUserPassword(email);
       alert('Reset email sent!');
       setEmail('');
     } catch (error) {
