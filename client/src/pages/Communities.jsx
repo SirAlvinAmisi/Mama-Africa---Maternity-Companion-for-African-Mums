@@ -1,6 +1,12 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import {
+  fetchCommunities,
+  fetchCommunityPosts,
+  joinCommunity,
+} from '../lib/api';
 
 import Welcome from '../components/WelcomeCard';
 import ParentingDevelopment from '../components/ParentingDevelopment';
@@ -8,7 +14,6 @@ import BabyCorner from '../components/BabyCorner';
 import Nutrition from '../components/Nutrition';
 import NutritionDashboard from '../components/NutritionDashboard';
 import CommunityDetail from './CommunityDetail';
-
 
 const Communities = () => {
   const queryClient = useQueryClient();
@@ -32,31 +37,9 @@ const Communities = () => {
 
   const validToken = token && !isTokenExpired(token);
 
-  const getCommunities = async () => {
-    const url = selectedTrimester === 'all'
-      ? 'http://localhost:5000/communities'
-      : `http://localhost:5000/communities?trimester=${selectedTrimester}`;
-
-    const res = await fetch(url, {
-      headers: {
-        'Authorization': validToken ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("❌ Fetch failed", res.status, text);
-      throw new Error('Failed to fetch communities');
-    }
-
-    const data = await res.json();
-    return data.communities;
-  };
-
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['communities', selectedTrimester],
-    queryFn: getCommunities,
+    queryFn: () => fetchCommunities(selectedTrimester),
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery({
@@ -64,49 +47,30 @@ const Communities = () => {
     queryFn: async () => {
       const communityId = groups?.[0]?.id;
       if (!communityId) return [];
-      const res = await fetch(`http://localhost:5000/communities/${communityId}/posts`, {
-        headers: {
-          Authorization: validToken ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch posts');
-      const data = await res.json();
-      return data.posts;
+      return await fetchCommunityPosts(communityId);
     },
     enabled: !!groups.length,
   });
 
   const joinMutation = useMutation({
-  mutationFn: async (communityId) => {
-    if (!validToken) {
-      alert("Please log in to join a community.");
-      navigate("/login");
-      return;
-    }
-
-    const res = await fetch(`http://localhost:5000/communities/${communityId}/join`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!res.ok) throw new Error('Failed to join community');
-    return res.json();
-  },
-  onSuccess: (data, communityId) => {
-  
-    queryClient.setQueryData(['communities', selectedTrimester], (oldData) => {
-      return oldData.map(group =>
-        group.id === communityId ? { ...group, is_member: true, member_count: data.member_count } : group
+    mutationFn: async (communityId) => {
+      if (!validToken) {
+        alert("Please log in to join a community.");
+        navigate("/login");
+        return;
+      }
+      return await joinCommunity(communityId);
+    },
+    onSuccess: (data, communityId) => {
+      queryClient.setQueryData(['communities', selectedTrimester], (oldData) =>
+        oldData.map(group =>
+          group.id === communityId
+            ? { ...group, is_member: true, member_count: data.member_count }
+            : group
+        )
       );
-    });
-  },
-});
-
+    },
+  });
 
   const filteredGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -190,7 +154,6 @@ const Communities = () => {
           </div>
         </section>
 
-        {/* <CommunityDetail posts={posts} /> */}
         <CommunityDetail />
       </div>
 

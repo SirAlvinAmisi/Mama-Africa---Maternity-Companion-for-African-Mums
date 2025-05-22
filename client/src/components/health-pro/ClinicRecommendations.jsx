@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import {
+  getClinics,
+  addClinic,
+  toggleClinicRecommendation
+} from '../../lib/api'; 
 
 export default function ClinicRecommendations() {
   const [clinics, setClinics] = useState([]);
@@ -22,14 +26,12 @@ export default function ClinicRecommendations() {
   ];
 
   useEffect(() => {
-    axios.get('http://localhost:5000/clinics')
-      .then(res => {
-        setAllClinics(res.data.clinics);
-        setClinics(res.data.clinics);
+    getClinics()
+      .then((data) => {
+        setAllClinics(data.clinics);
+        setClinics(data.clinics);
       })
-      .catch(err => {
-        console.error("Failed to fetch clinics:", err);
-      });
+      .catch((error) => console.error('Error fetching clinics:', error));
   }, []);
 
   useEffect(() => {
@@ -40,120 +42,107 @@ export default function ClinicRecommendations() {
     }
   }, [filter, allClinics]);
 
-  const handleRecommend = (id) => {
-    setClinics(clinics.map(clinic =>
-      clinic.id === id ? { ...clinic, recommended: !clinic.recommended } : clinic
-    ));
+  const handleRecommend = async (id) => {
+    try {
+      const updated = await toggleClinicRecommendation(id);
+      setClinics(prev =>
+        prev.map(clinic =>
+          clinic.id === id ? { ...clinic, recommended: updated.clinic.recommended } : clinic
+        )
+      );
+    } catch (error) {
+      console.error('Failed to toggle recommendation:', error);
+    }
   };
 
-  const handleAddClinic = (e) => {
+  const handleAddClinic = async (e) => {
     e.preventDefault();
-    const clinicToAdd = {
+    const clinicData = {
       ...newClinic,
-      id: clinics.length + 1,
       recommended: true,
-      languages: ["English"],
-      services: ["antenatal"],
-      contact_info: "",
+      services: ['antenatal'],
+      languages: ['English'],
+      contact_info: ''
     };
-    setClinics([...clinics, clinicToAdd]);
-    setNewClinic({
-      name: '',
-      location: '',
-      country: '',
-      region: 'east',
-      specialty: ''
-    });
+
+    try {
+      const response = await addClinic(clinicData);
+      setClinics([...clinics, response.clinic]);
+      setNewClinic({
+        name: '',
+        location: '',
+        country: '',
+        region: 'east',
+        specialty: ''
+      });
+    } catch (error) {
+      console.error('Failed to add clinic:', error);
+    }
   };
 
   return (
-    <div className="p-6 bg-cyan rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
+    <div className="p-6 bg-cyan-500 rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
       <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">Clinic Recommendations</h2>
 
-      {/* Region Filter Tabs */}
+      {/* Region Filter */}
       <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 text-sm rounded-full transition ${filter === 'all' ? 'bg-cyan-600 text-black font-bold' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-        >
+        <button onClick={() => setFilter('all')}
+          className={`px-4 py-2 text-sm rounded-full ${filter === 'all' ? 'bg-cyan-900 text-white font-bold' : 'bg-cyan-300'}`}>
           All Africa
         </button>
-        {regions.map(region => (
-          <button
-            key={region.value}
-            onClick={() => setFilter(region.value)}
-            className={`px-4 py-2 text-sm rounded-full transition ${filter === region.value ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
-          >
-            {region.label}
+        {regions.map(r => (
+          <button key={r.value} onClick={() => setFilter(r.value)}
+            className={`px-4 py-2 text-sm rounded-full ${filter === r.value ? 'bg-cyan-900 text-white font-bold' : 'bg-cyan-300'}`}>
+            {r.label}
           </button>
         ))}
       </div>
 
-      {/* Add Clinic Form */}
-      <form onSubmit={handleAddClinic} className="mb-8 bg-cyan-200 p-6 rounded-xl shadow-sm">
-        <h3 className="text-lg font-bold text-black mb-4">Add a New Clinic</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          {['name', 'location', 'country', 'specialty'].map((field) => (
-            <input
-              key={field}
-              type="text"
-              placeholder={field[0].toUpperCase() + field.slice(1)}
+      {/* Add Clinic */}
+      <form onSubmit={handleAddClinic} className="mb-6 bg-cyan-200 p-4 rounded-xl shadow-sm">
+        <h3 className="font-bold text-black mb-2">Add Clinic</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {['name', 'location', 'country', 'specialty'].map(field => (
+            <input key={field} type="text" placeholder={field}
               value={newClinic[field]}
               onChange={(e) => setNewClinic({ ...newClinic, [field]: e.target.value })}
-              className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-              required
-            />
+              className="p-2 border rounded-md bg-gray-300 text-black" required />
           ))}
-          <select
-            value={newClinic.region}
+          <select value={newClinic.region}
             onChange={(e) => setNewClinic({ ...newClinic, region: e.target.value })}
-            className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-          >
-            {regions.map(region => (
-              <option key={region.value} value={region.value}>{region.label}</option>
+            className="p-2 border rounded-md bg-gray-300 text-black">
+            {regions.map(r => (
+              <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
         </div>
-        <button
-          type="submit"
-          className="px-5 py-2 bg-cyan-600 text-black font-bold text-sm rounded-lg hover:bg-blue-700 transition"
-        >
+        <button type="submit" className="px-4 py-2 bg-cyan-600 text-black font-bold rounded-lg">
           Add Clinic
         </button>
       </form>
 
-      {/* Clinics Table */}
-      <div className="overflow-x-auto bg-cyan-100">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+      {/* Clinic Table */}
+      <div className="overflow-x-auto bg-cyan-500 p-4 rounded-xl shadow-sm">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-left text-black text-1xl"> 
             <tr>
-              <th className="px-6 py-3 text-left text-xl text-black font-bold">Clinic</th>
-              <th className="px-6 py-3 text-left text-xl text-black font-bold">Location</th>
-              <th className="px-6 py-3 text-left text-xl text-black font-bold">Specialty</th>
-              <th className="px-6 py-3 text-left text-xl text-black font-bold">Status</th>
+              <th className="px-4 py-2">Clinic</th>
+              <th className="px-4 py-2">Location</th>
+              <th className="px-4 py-2">Specialty</th>
+              <th className="px-4 py-2">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-600 bg-white">
+          <tbody>
             {clinics.map(clinic => (
-              <tr key={clinic.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-gray-800">{clinic.name}</div>
-                  <div className="text-xs text-gray-500">{clinic.contact_info}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-gray-700">{clinic.location}</div>
-                  <div className="text-xs text-gray-500">{clinic.country}</div>
-                </td>
-                <td className="px-6 py-4 text-black">{clinic.specialty}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleRecommend(clinic.id)}
-                    className={`px-3 py-1 text-xs rounded-full font-bold text-black border ${
-                      clinic.recommended
-                        ? 'bg-green-400 text-green-700 border-green-200'
-                        : 'bg-cyan-400 text-gray-700 border-gray-200'
-                    } hover:shadow-sm transition`}
-                  >
+              <tr key={clinic.id} className="border-t">
+                <td className="px-4 py-2">{clinic.name}</td>
+                <td className="px-4 py-2">{clinic.location}, {clinic.country}</td>
+                <td className="px-4 py-2">{clinic.specialty}</td>
+                <td className="px-4 py-2">
+                  <button onClick={() => handleRecommend(clinic.id)}
+                    className={`px-3 py-1 rounded-full font-bold text-1xl border ${
+                      clinic.recommended ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                    }`}>
                     {clinic.recommended ? '✓ Recommended' : 'Not Recommended'}
                   </button>
                 </td>
@@ -162,276 +151,9 @@ export default function ClinicRecommendations() {
           </tbody>
         </table>
         {clinics.length === 0 && (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            No clinics found in this region.
-          </div>
+          <p className="text-center p-4 text-gray-600">No clinics found.</p>
         )}
       </div>
     </div>
   );
 }
-
-
-
-// import React, { useState, useEffect } from 'react';
-
-// const africanClinics = [
-//   {
-//     id: 1,
-//     name: "Nairobi Women's Hospital",
-//     location: "Nairobi, Kenya",
-//     country: "Kenya",
-//     region: "east",
-//     specialty: "Comprehensive Maternity Care",
-//     contact: "+254 20 366 2000",
-//     languages: ["English", "Swahili"],
-//     services: ["antenatal", "delivery", "postnatal", "neonatal"],
-//     recommended: true
-//   },
-//   {
-//     id: 2,
-//     name: "Lagoon Hospitals",
-//     location: "Lagos, Nigeria",
-//     country: "Nigeria",
-//     region: "west",
-//     specialty: "High-Risk Pregnancy Unit",
-//     contact: "+234 1 270 4927",
-//     languages: ["English", "Yoruba"],
-//     services: ["high-risk", "ultrasound", "c-section"],
-//     recommended: true
-//   },
-//   {
-//     id: 3,
-//     name: "Ghana Fertility Center",
-//     location: "Accra, Ghana",
-//     country: "Ghana",
-//     region: "west",
-//     specialty: "Fertility & Prenatal Care",
-//     contact: "+233 30 222 6855",
-//     languages: ["English", "Twi"],
-//     services: ["ivf", "fertility", "prenatal"],
-//     recommended: false
-//   },
-//   {
-//     id: 4,
-//     name: "Aga Khan Hospital Dar es Salaam",
-//     location: "Dar es Salaam, Tanzania",
-//     country: "Tanzania",
-//     region: "east",
-//     specialty: "Maternal-Fetal Medicine",
-//     contact: "+255 22 211 5151",
-//     languages: ["English", "Swahili"],
-//     services: ["fetal", "genetic", "diabetes"],
-//     recommended: true
-//   },
-//   {
-//     id: 5,
-//     name: "Netcare Parklands Hospital",
-//     location: "Johannesburg, South Africa",
-//     country: "South Africa",
-//     region: "south",
-//     specialty: "High-Risk Deliveries",
-//     contact: "+27 11 480 5600",
-//     languages: ["English", "Zulu"],
-//     services: ["nicu", "emergency", "preterm"],
-//     recommended: true
-//   }
-// ];
-
-// export default function ClinicRecommendations() {
-//   const [clinics, setClinics] = useState(africanClinics);
-//   const [filter, setFilter] = useState('all');
-//   const [newClinic, setNewClinic] = useState({
-//     name: '',
-//     location: '',
-//     country: '',
-//     region: 'east',
-//     specialty: ''
-//   });
-
-//   useEffect(() => {
-//     if (filter === 'all') {
-//       setClinics(africanClinics);
-//     } else {
-//       setClinics(africanClinics.filter(clinic => clinic.region === filter));
-//     }
-//   }, [filter]);
-
-//   const handleRecommend = (id) => {
-//     setClinics(clinics.map(clinic =>
-//       clinic.id === id ? { ...clinic, recommended: !clinic.recommended } : clinic
-//     ));
-//   };
-
-//   const handleAddClinic = (e) => {
-//     e.preventDefault();
-//     const clinicToAdd = {
-//       ...newClinic,
-//       id: clinics.length + 1,
-//       recommended: true,
-//       languages: ["English"],
-//       services: ["antenatal"],
-//       contact: ""
-//     };
-//     setClinics([...clinics, clinicToAdd]);
-//     setNewClinic({
-//       name: '',
-//       location: '',
-//       country: '',
-//       region: 'east',
-//       specialty: ''
-//     });
-//   };
-
-//   const regions = [
-//     { value: 'east', label: 'East Africa' },
-//     { value: 'west', label: 'West Africa' },
-//     { value: 'south', label: 'Southern Africa' },
-//     { value: 'north', label: 'North Africa' },
-//     { value: 'central', label: 'Central Africa' }
-//   ];
-
-//   return (
-//     <div className="p-6 bg-cyan rounded-2xl shadow-md mt-6 max-w-7xl mx-auto">
-//       <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-center text-gray-800 mb-6">Clinic Recommendations</h2>
-
-//       {/* Region Tabs */}
-//       <div className="mb-6 flex flex-wrap gap-2">
-//         <button
-//           onClick={() => setFilter('all')}
-//           className={`px-4 py-2 text-sm rounded-full transition ${
-//             filter === 'all' ? 'bg-cyan-600 text-black font-bold shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-//           }`}
-//         >
-//           All Africa
-//         </button>
-//         {regions.map(region => (
-//           <button
-//             key={region.value}
-//             onClick={() => setFilter(region.value)}
-//             className={`px-4 py-2 text-sm rounded-full transition ${
-//               filter === region.value ? 'bg-green-600 text-white shadow-sm' : 'bg-green-100 text-green-800 hover:bg-green-200'
-//             }`}
-//           >
-//             {region.label}
-//           </button>
-//         ))}
-//       </div>
-
-//       {/* Add Clinic Form */}
-//       <form onSubmit={handleAddClinic} className="mb-8 bg-cyan-200 p-6 rounded-xl shadow-sm">
-//         <h3 className="text-lg font-bold text-black mb-4">Add a New Clinic</h3>
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-//           <input
-//             type="text"
-//             placeholder="Clinic Name"
-//             value={newClinic.name}
-//             onChange={(e) => setNewClinic({ ...newClinic, name: e.target.value })}
-//             className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-//             required
-//           />
-//           <input
-//             type="text"
-//             placeholder="Location"
-//             value={newClinic.location}
-//             onChange={(e) => setNewClinic({ ...newClinic, location: e.target.value })}
-//             className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-//             required
-//           />
-//           <input
-//             type="text"
-//             placeholder="Country"
-//             value={newClinic.country}
-//             onChange={(e) => setNewClinic({ ...newClinic, country: e.target.value })}
-//             className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-//             required
-//           />
-//           <select
-//             value={newClinic.region}
-//             onChange={(e) => setNewClinic({ ...newClinic, region: e.target.value })}
-//             className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-//           >
-//             {regions.map(region => (
-//               <option key={region.value} value={region.value}>{region.label}</option>
-//             ))}
-//           </select>
-//           <input
-//             type="text"
-//             placeholder="Specialty"
-//             value={newClinic.specialty}
-//             onChange={(e) => setNewClinic({ ...newClinic, specialty: e.target.value })}
-//             className="p-2 border rounded-md text-sm text-black bg-gray-100 focus:ring-2 focus:ring-blue-500"
-//             required
-//           />
-//         </div>
-//         <button
-//           type="submit"
-//           className="px-5 py-2 bg-cyan-600 text-black font-bold text-sm rounded-lg hover:bg-blue-700 transition"
-//         >
-//           Add Clinic
-//         </button>
-//       </form>
-
-//       {/* Clinics Table */}
-//       <div className="overflow-x-auto bg-cyan-100">
-//         <table className="min-w-full text-sm">
-//           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-//             <tr>
-//               <th className="px-6 py-3 text-left text-xl text-black font-bold">Clinic</th>
-//               <th className="px-6 py-3 text-left text-xl text-black font-bold">Location</th>
-//               <th className="px-6 py-3 text-left text-xl text-black font-bold">Specialty</th>
-//               <th className="px-6 py-3 text-left text-xl text-black font-bold">Services</th>
-//               <th className="px-6 py-3 text-left text-xl text-black font-bold">Status</th>
-//             </tr>
-//           </thead>
-//           <tbody className="divide-y divide-gray-600 bg-white">
-//             {clinics.map(clinic => (
-//               <tr key={clinic.id} className="hover:bg-gray-50 transition">
-//                 <td className="px-6 py-4">
-//                   <div className="font-medium text-gray-800">{clinic.name}</div>
-//                   <div className="text-xs text-gray-500">{clinic.contact}</div>
-//                 </td>
-//                 <td className="px-6 py-4">
-//                   <div className="text-gray-700">{clinic.location}</div>
-//                   <div className="text-xs text-gray-500">{clinic.country}</div>
-//                 </td>
-//                 <td className="px-6 py-4">{clinic.specialty}</td>
-//                 <td className="px-6 py-4">
-//                   <div className="flex flex-wrap gap-1">
-//                     {clinic.services.slice(0, 3).map(service => (
-//                       <span key={service} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-//                         {service}
-//                       </span>
-//                     ))}
-//                     {clinic.services.length > 3 && (
-//                       <span className="px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded-full">
-//                         +{clinic.services.length - 3}
-//                       </span>
-//                     )}
-//                   </div>
-//                 </td>
-//                 <td className="px-6 py-4">
-//                   <button
-//                     onClick={() => handleRecommend(clinic.id)}
-//                     className={`px-3 py-1 text-xs rounded-full font-bold text-black border ${
-//                       clinic.recommended
-//                         ? 'bg-green-400 text-green-700 border-green-200'
-//                         : 'bg-cyan-400 text-gray-700 border-gray-200'
-//                     } hover:shadow-sm transition`}
-//                   >
-//                     {clinic.recommended ? '✓ Recommended' : 'Not Recommended'}
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//         {clinics.length === 0 && (
-//           <div className="text-center py-8 text-gray-500 text-sm">
-//             No clinics found in this region.
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }

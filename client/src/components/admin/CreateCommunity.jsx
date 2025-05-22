@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { createCommunity } from '../../lib/api';
 
 const CreateCommunity = () => {
   const [name, setName] = useState('');
@@ -9,12 +9,7 @@ const CreateCommunity = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.post('http://localhost:5000/admin/create_community', {
-        name, description, image
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await createCommunity({ name, description, image });
       alert('Community created!');
       setName('');
       setDescription('');

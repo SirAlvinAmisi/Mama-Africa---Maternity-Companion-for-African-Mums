@@ -199,6 +199,20 @@ class Clinic(db.Model):
     services = db.Column(JSON)   # Store list of services
     recommended = db.Column(Boolean, default=False)
     recommended_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "location": self.location,
+            "contact_info": self.contact_info,
+            "country": self.country,
+            "region": self.region,
+            "specialty": self.specialty,
+            "languages": self.languages,
+            "services": self.services,
+            "recommended": self.recommended,
+            "recommended_by": self.recommended_by
+        }
 
     
 # --- Community, Topics, Flags ---

@@ -1,77 +1,30 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import {
+  getFlaggedItems,
+  getFlaggedPost,
+  getFlaggedComment,
+  updateFlagStatus,
+  updatePostOrCommentStatus,
+} from "../../lib/api";
 
 const PostReview = () => {
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // const fetchFlaggedContent = async () => {
-  //   try {
-  //     const token = localStorage.getItem("access_token");
-  //     const response = await axios.get("http://localhost:5000/flags", {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-
-  //     const flagList = response.data.flags || [];
-
-  //     const detailedFlags = await Promise.all(
-  //       flagList.map(async (flag) => {
-  //         if (!flag.content_id) return null;
-
-  //         let data = null;
-  //         try {
-  //           if (flag.content_type === "post") {
-  //             const res = await axios.get(`http://localhost:5000/admin/posts/${flag.content_id}`, {
-  //               headers: { Authorization: `Bearer ${token}` }
-  //             });
-  //             data = res.data.post;
-  //           } else if (flag.content_type === "comment") {
-  //             const res = await axios.get(`http://localhost:5000/admin/comments/${flag.content_id}`, {
-  //               headers: { Authorization: `Bearer ${token}` }
-  //             });
-  //             data = res.data.comment;
-  //           }
-  //         } catch (err) {
-  //           console.warn(`Error loading flagged ${flag.content_type}:`, err);
-  //         }
-
-  //         return data ? { ...flag, data } : null;
-  //       })
-  //     );
-
-  //     setFlags(detailedFlags.filter(Boolean)); // ✅ filter out nulls
-  //   } catch (error) {
-  //     console.error("Error fetching flagged content:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchFlaggedContent = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.get("http://localhost:5000/flags", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const flagList = response.data.flags || [];
+      const flagList = await getFlaggedItems();
 
       const detailedFlags = await Promise.all(
         flagList.map(async (flag) => {
-          if (!flag.content_id) return null;  // skip if no content id
+          if (!flag.content_id) return null;
 
           let data = null;
           try {
             if (flag.content_type === "post") {
-              const res = await axios.get(`http://localhost:5000/admin/posts/${flag.content_id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              data = res.data?.post;
+              data = await getFlaggedPost(flag.content_id);
             } else if (flag.content_type === "comment") {
-              const res = await axios.get(`http://localhost:5000/admin/comments/${flag.content_id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              data = res.data?.comment;
+              data = await getFlaggedComment(flag.content_id);
             }
           } catch (err) {
             console.warn(`⚠️ Error loading flagged ${flag.content_type} with ID ${flag.content_id}:`, err.response?.data || err.message);
@@ -89,21 +42,10 @@ const PostReview = () => {
     }
   };
 
-
   const updateContentStatus = async (id, status, flagId, type) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const endpoint = type === "post" ? "posts" : "comments";
-
-      await axios.patch(`http://localhost:5000/admin/${endpoint}/${id}`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (flagId) {
-        await axios.patch(`http://localhost:5000/flags/${flagId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
+      await updatePostOrCommentStatus(type, id, status);
+      if (flagId) await updateFlagStatus(flagId);
 
       alert(`${type.charAt(0).toUpperCase() + type.slice(1)} ${status} successfully`);
       fetchFlaggedContent();

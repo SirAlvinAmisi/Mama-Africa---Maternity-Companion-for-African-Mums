@@ -1,24 +1,23 @@
+// src/pages/Admin.jsx
 import React, { useState, useEffect } from 'react';
-import AdminCardList from '../components/admin/AdminCardList';
-import axios from 'axios';
+import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
+import AdminCardList from '../components/admin/AdminCardList';
 import ArticlesReview from '../components/admin/ArticlesReview';
 import PostReview from '../components/admin/PostReview';
 import CommunityReview from '../components/admin/CommunityReview';
-// import Notification from '../components/Notification';
-import CreateCategory from '../components/admin/CreateCategory';
 import CreateCommunity from '../components/admin/CreateCommunity';
 import ResetUserPassword from '../components/admin/ResetUserPassword';
-// import NotificationsTab from '../components/admin/NotificationsTab';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  // const [notifications, setNotifications] = useState([]); // State for notifications
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // State for user filter
+  const [filter, setFilter] = useState('all');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [firstName, setFirstName] = useState(''); 
+  const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -29,84 +28,28 @@ const Admin = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:5000/admin/users', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
+      const response = await api.get('/admin/users');
       setUsers(response.data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
-      if (error.response?.status === 401) {
-        navigate('/login');
-      }
+      if (error.response?.status === 401) navigate('/login');
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch notifications
-  // useEffect(() => {
-  //   if (activeTab === 'notifications') {
-  //     const fetchNotifications = async () => {
-  //       try {
-  //         const token = localStorage.getItem('access_token');
-  //         const response = await axios.get('http://localhost:5000/admin/notifications', {
-  //           headers: { Authorization: `Bearer ${token}` },
-  //         });
-  //         setNotifications(response.data.notifications || []);
-  //       } catch (error) {
-  //         console.error('Error fetching notifications:', error);
-  //       }
-  //     };
-
-  //     fetchNotifications();
-  //   }
-  // }, [activeTab]);
-
-  const tabs = [
-    { key: 'users', label: 'Manage Users' },
-    { key: 'articles', label: 'Review Articles' },
-    { key: 'posts', label: 'Review Posts' },
-    { key: 'communities', label: 'Approve Communities' },
-    { key: 'create_community', label: 'Create Community' },
-    // { key: 'create_category', label: 'Create Category' },
-    { key: 'reset_password', label: 'Reset Password' }
-    // { key: 'notifications', label: 'Notifications' }, // Updated label
-  ];
   const handleAddUser = async (e) => {
     e.preventDefault();
-
-    if (!firstName || !lastName || !newUserEmail || !password || !confirmPassword) {
-      alert("Please fill all required fields.");
-      return;
-    }
-
+    if (!firstName || !lastName || !newUserEmail || !password || !confirmPassword) return alert("Fill all required fields.");
+    if (password !== confirmPassword) return alert("Passwords do not match!");
     if (newUserRole === "health_pro") {
       const licenseRegex = /^[a-zA-Z]{2,}\/\d{4}\/\d{3,10}$/;
-      if (!licenseRegex.test(newUserLicenseNumber)) {
-        alert("License number format must be like ABC/2025/1234567");
-        return;
-      }
-
-      const yearMatch = newUserLicenseNumber.split("/")[1];
-      const currentYear = new Date().getFullYear().toString();
-      if (yearMatch !== currentYear) {
-        alert(`License year (${yearMatch}) may be expired.`);
-        return;
-      }
-    }
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+      if (!licenseRegex.test(newUserLicenseNumber)) return alert("License must be like ABC/2025/1234567");
+      if (newUserLicenseNumber.split("/")[1] !== new Date().getFullYear().toString()) return alert("License year may be expired.");
     }
 
     const payload = new FormData();
@@ -117,300 +60,121 @@ const Admin = () => {
     payload.append("role", newUserRole);
     payload.append("county", newUserRegion);
     payload.append("password", password);
-    if (newUserRole === "health_pro") {
-      payload.append("license_number", newUserLicenseNumber);
-    }
+    if (newUserRole === "health_pro") payload.append("license_number", newUserLicenseNumber);
 
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.post(
-        "http://localhost:5000/admin/add_user",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data"
-          }
-        }
-      );
-
+      const response = await api.post('/admin/add_user', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       if (response.status === 201) {
         alert(`User created with ID: ${response.data.user_id}`);
         setShowAddUserModal(false);
         fetchUsers();
-        // Reset fields
-        setFirstName('');
-        setMiddleName('');
-        setLastName('');
-        setNewUserEmail('');
-        setNewUserRole('mum');
-        setNewUserRegion('');
-        setNewUserLicenseNumber('');
-        setPassword('');
-        setConfirmPassword('');
+        setFirstName(''); setMiddleName(''); setLastName('');
+        setNewUserEmail(''); setNewUserRole('mum'); setNewUserRegion('');
+        setNewUserLicenseNumber(''); setPassword(''); setConfirmPassword('');
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || "Failed to add user";
-      alert(`Error: ${errorMsg}`);
-      console.error("Add user error:", error);
+      alert(`Error: ${error.response?.data?.error || "Failed to add user"}`);
     }
-};
+  };
 
-  // const handleAddUser = async (e) => {
-  //   e.preventDefault();
-    
-  //   // Basic validation
-  //   if (!newUserName || !newUserEmail) {
-  //     alert('Please fill all fields');
-  //     return;
-  //   }
-  
-  //   try {
-  //     const token = localStorage.getItem("access_token");
-  //     const response = await axios.post(
-  //       "http://localhost:5000/admin/add_user",
-  //       {
-  //         name: newUserName,
-  //         email: newUserEmail,
-  //         role: newUserRole,
-  //         region: newUserRegion,
-  //         license_number: newUserLicenseNumber,
-  //       },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-      
-  //     if (response.status === 201) {
-  //       alert(`User created with ID: ${response.data.user_id}`);
-  //       setShowAddUserModal(false);
-  //       setNewUserName('');
-  //       setNewUserEmail('');
-  //       setNewUserRole('mum');
-  //       fetchUsers();
-  //     }
-  //   } catch (error) {
-  //     const errorMsg = error.response?.data?.error || "Failed to add user";
-  //     alert(`Error: ${errorMsg}`);
-  //     console.error("Add user error:", error);
-  //   }
-  // };
-  
+  const tabs = [
+    { key: 'users', label: 'Manage Users' },
+    { key: 'articles', label: 'Review Articles' },
+    { key: 'posts', label: 'Review Posts' },
+    { key: 'communities', label: 'Approve Communities' },
+    { key: 'create_community', label: 'Create Community' },
+    { key: 'reset_password', label: 'Reset Password' }
+  ];
+
   return (
-  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-6 mb-6 bg-cyan-100 rounded-lg shadow-md">
-    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 text-center sm:text-left mb-6">
-      Admin Dashboard
-    </h1>
-
-    {/* Tabs */}
-    <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-8">
-      {tabs.map((tab) => (
-        <button
-          key={tab.key}
-          onClick={() => setActiveTab(tab.key)}
-          className={`px-4 py-2 rounded-full text-sm sm:text-base font-medium transition-all duration-200
-            ${
-              activeTab === tab.key
-                ? 'bg-cyan-600 text-white shadow-sm'
-                : 'bg-cyan-600 text-gray-100 hover:bg-cyan-700'
-            }`}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-
-    {/* Tab Content */}
-    <div className="bg-white rounded-xl shadow-md p-6 min-h-[300px]">
-      {loading ? (
-        <div className="text-center text-gray-700">Loading...</div>
-      ) : (
-        <>
-          {activeTab === 'users' && (
-            <div>
-              {/* Buttons and Dropdown */}
-              <div className="flex justify-between items-center mb-4">
-                {/* Dropdown Filter */}
-                <select
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="p-2 border rounded text-gray-700"
-                >
-                  <option value="all">All</option>
-                  <option value="mum">Mums</option>
-                  <option value="health_pro">Health Professionals</option>
-                </select>
-
-                {/* Add User Button */}
-                <button
-                  onClick={() => setShowAddUserModal(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                  Add User
-                </button>
-              </div>
-
-              {/* Filtered Users */}
-              <AdminCardList
-                users={users.filter(
-                  (u) => filter === 'all' || u.role === filter
-                )}
-                refreshUsers={fetchUsers}
-              />
-            </div>
-          )}
-          {activeTab === 'articles' && <ArticlesReview />}
-          {activeTab === 'posts' && <PostReview />}
-          {activeTab === 'communities' && <CommunityReview />}
-          {activeTab === 'create_community' && <CreateCommunity />}
-          {/* {activeTab === 'create_category' && <CreateCategory />} */}
-          {activeTab === 'reset_password' && <ResetUserPassword />}
-          {/* {activeTab === 'notifications' && <Notification />} */}
-          {/* {activeTab === 'notifications' && <NotificationsTab />} */}
-        </>
-      )}
-    </div>
-
-    {showAddUserModal && (
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white p-6 rounded shadow-md w-96">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Add New User</h2>
-          <form onSubmit={handleAddUser}>
-            <input
-              name="firstName"
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            <input
-              name="middleName"
-              placeholder="Middle Name"
-              value={middleName}
-              onChange={(e) => setMiddleName(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            <input
-              name="lastName"
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            <input
-              type="email"
-              placeholder="Email"
-              value={newUserEmail}
-              onChange={(e) => setNewUserEmail(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            <select
-              value={newUserRole}
-              onChange={(e) => setNewUserRole(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
+    <div className="flex min-h-screen p-4 sm:p-6 lg:p-10 bg-cyan-100">
+      {/* Sidebar */}
+      <aside className={`fixed top-0 left-10 w-64 h-full bg-cyan-700 text-white flex flex-col justify-between p-6 z-40 transform transition-transform duration-300 ease-in-out
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 sm:static`}>
+        <div>
+          <div className="flex justify-between items-center mb-6 sm:hidden">
+            <h2 className="text-xl font-bold">Admin Menu</h2>
+            <button onClick={() => setSidebarOpen(false)}><X /></button>
+          </div>
+          <h2 className="text-2xl font-bold hidden sm:block mb-6">Admin Dashboard</h2>
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setSidebarOpen(false);
+              }}
+              className={`block w-full text-left px-4 py-2 rounded-lg transition font-medium
+                ${activeTab === tab.key ? 'bg-white text-cyan-700 shadow-md' : 'hover:bg-cyan-600'}`}
             >
-              <option value="" disabled>Select Role</option>
-              <option value="mum">Mum</option>
-              <option value="health_pro">Health Professional</option>
-            </select>
-
-            <input
-              type="text"
-              placeholder="Region"
-              value={newUserRegion}
-              onChange={(e) => setNewUserRegion(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            {newUserRole === "health_pro" && (
-              <input
-                type="text"
-                placeholder="License Number"
-                value={newUserLicenseNumber}
-                onChange={(e) => setNewUserLicenseNumber(e.target.value)}
-                className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-              />
-            )}
-
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="p-3 bg-cyan-100 text-gray-700 border border-cyan-300 rounded-md w-full mb-3"
-            />
-
-            {/* <input
-              type="text"
-              placeholder="Name"
-              className="border p-2 rounded w-full mb-4 text-gray-800"
-              value={newUserName}
-              onChange={(e) => setNewUserName(e.target.value)}
-            /> */}
-            {/* <input
-              type="email"
-              placeholder="Email"
-              className="border p-2 rounded w-full mb-4 text-gray-800"
-              value={newUserEmail}
-              onChange={(e) => setNewUserEmail(e.target.value)}
-            />
-            <select
-              className="border p-2 rounded w-full mb-4 text-gray-800"
-              value={newUserRole}
-              onChange={(e) => setNewUserRole(e.target.value)}
-            >
-              <option value="" disabled>
-                Category
-              </option>
-              <option value="mum">Mum</option> */}
-              {/* <option value="health_pro">Health Professional</option> */}
-              {/* <option value="admin">Admin</option> */}
-            {/* </select>
-            <input
-              type="text"
-              placeholder="Region"
-              className="border p-2 rounded w-full mb-4 text-gray-800"
-              value={newUserRegion}
-              onChange={(e) => setNewUserRegion(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="License Number"
-              className="border p-2 rounded w-full mb-4 text-gray-800"
-              value={newUserLicenseNumber}
-              onChange={(e) => setNewUserLicenseNumber(e.target.value)}
-            /> */}
-            <div className="flex justify-end gap-4">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Add User
-              </button>
-              <button
-                onClick={() => setShowAddUserModal(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+              {tab.label}
+            </button>
+          ))}
         </div>
+        <div className="mt-8 text-center">
+          <div className="w-32 h-16 bg-cyan-900 text-white flex items-center justify-center mx-auto font-bold rounded">
+            Mama Africa
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Hamburger */}
+      <div className="sm:hidden fixed top-4 left-4 z-50">
+        <button onClick={() => setSidebarOpen(true)} className="text-cyan-700">
+          <Menu size={28} />
+        </button>
       </div>
-    )}
-  </div>
-);
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 ml-0 sm:ml-64 transition-all duration-300">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 text-center mb-6">
+          Admin Dashboard
+        </h1>
+
+        <div className="bg-white rounded-xl shadow-md p-6 min-h-[300px]">
+          {loading ? (
+            <div className="text-center text-gray-700">Loading...</div>
+          ) : (
+            <>
+              {activeTab === 'users' && (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <select
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="p-2 border rounded text-gray-700"
+                    >
+                      <option value="all">All</option>
+                      <option value="mum">Mums</option>
+                      <option value="health_pro">Health Professionals</option>
+                    </select>
+
+                    <button
+                      onClick={() => setShowAddUserModal(true)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                      Add User
+                    </button>
+                  </div>
+
+                  <AdminCardList
+                    users={users.filter(u => filter === 'all' || u.role === filter)}
+                    refreshUsers={fetchUsers}
+                  />
+                </div>
+              )}
+              {activeTab === 'articles' && <ArticlesReview />}
+              {activeTab === 'posts' && <PostReview />}
+              {activeTab === 'communities' && <CommunityReview />}
+              {activeTab === 'create_community' && <CreateCommunity />}
+              {activeTab === 'reset_password' && <ResetUserPassword />}
+            </>
+          )}
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default Admin;

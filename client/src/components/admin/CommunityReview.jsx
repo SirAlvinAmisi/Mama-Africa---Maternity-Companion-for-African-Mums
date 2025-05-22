@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import {
+  getPendingCommunities,
+  updateCommunityStatus,
+} from '../../lib/api';
 
 export default function CommunityReview() {
   const [communities, setCommunities] = useState([]);
@@ -7,11 +10,8 @@ export default function CommunityReview() {
 
   const fetchCommunities = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.get('http://localhost:5000/admin/communities/pending', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCommunities(res.data.communities || []);
+      const data = await getPendingCommunities();
+      setCommunities(data || []);
     } catch (err) {
       console.error('Error fetching communities:', err);
     } finally {
@@ -21,11 +21,7 @@ export default function CommunityReview() {
 
   const handleAction = async (id, action) => {
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.patch(`http://localhost:5000/communities/${id}`, 
-        { status: action }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await updateCommunityStatus(id, action);
       setCommunities(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error(`Error trying to ${action} community ${id}:`, err);

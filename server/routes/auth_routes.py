@@ -28,8 +28,8 @@ def signup():
             "health professional": "health_pro",
             "health_pro": "health_pro"
         }
-        role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
-        
+        role = role_map.get(raw_role, raw_role)
+
         if role == "admin":
             return jsonify({"error": "Cannot signup as admin"}), 403
 
@@ -37,21 +37,25 @@ def signup():
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 400
 
-        # Create the user
+        # Create and flush user to get ID
         user = User(email=email, role=role)
         user.set_password(password)
+        db.session.add(user)
+        db.session.flush()  # ✅ get user.id before creating profile
 
-        # Profile info
+        # Create profile with correct FK
         profile_data = {
             "full_name": f"{request.form.get('first_name', '')} {request.form.get('middle_name', '')} {request.form.get('last_name', '')}".strip(),
             "bio": request.form.get('bio', ''),
-            "region": request.form.get('county')
+            "region": request.form.get('county'),
+            "role": role
         }
 
         if role == 'health_pro' and 'license_number' in request.form:
             profile_data["license_number"] = request.form['license_number']
 
-        user.profile = Profile(**profile_data)
+        profile = Profile(**profile_data, user_id=user.id)
+        db.session.add(profile)
 
         # Handle avatar upload
         if 'avatar' in request.files:
@@ -62,22 +66,104 @@ def signup():
                 os.makedirs(upload_folder, exist_ok=True)
                 avatar_path = os.path.join(upload_folder, filename)
                 avatar.save(avatar_path)
-                user.profile.profile_picture = f"/uploads/{filename}"
+                profile.profile_picture = f"/uploads/{filename}"
 
-        db.session.add(user)
         db.session.commit()
-
         print("✅ Signup successful for:", email)
         return jsonify({"message": "User registered. Please check email to verify."}), 201
 
     except SQLAlchemyError as e:
         db.session.rollback()
-        print("❌ Database error during signup:", e)
+        import traceback
+        print("❌ SQLAlchemyError:", traceback.format_exc())
         return jsonify({"error": "Database error.", "details": str(e)}), 500
 
     except Exception as e:
-        print("❌ Exception during signup:", e)
+        import traceback
+        print("❌ General Exception:", traceback.format_exc())
         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
+# @auth_bp.route('/signup', methods=['POST'])
+# def signup():
+#     try:
+#         print("⚙️ Signup Request Received")
+#         print("Request form data:", request.form.to_dict())
+#         print("Request files:", request.files)
+
+#         email = request.form['email']
+#         password = request.form['password']
+#         raw_role = request.form['role'].strip().lower()
+
+#         # Normalize the role
+#         role_map = {
+#             "admin": "admin",
+#             "mom": "mum",
+#             "mother": "mum",
+#             "mum": "mum",
+#             "health professional": "health_pro",
+#             "health_pro": "health_pro"
+#         }
+#         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
+        
+#         if role == "admin":
+#             return jsonify({"error": "Cannot signup as admin"}), 403
+
+#         # Check for duplicate email
+#         if User.query.filter_by(email=email).first():
+#             return jsonify({"error": "Email already registered"}), 400
+
+#         # Create the user
+#         user = User(email=email, role=role)
+#         user.set_password(password)
+
+#         # Profile info
+#         profile_data = {
+#             "full_name": f"{request.form.get('first_name', '')} {request.form.get('middle_name', '')} {request.form.get('last_name', '')}".strip(),
+#             "bio": request.form.get('bio', ''),
+#             "region": request.form.get('county')
+#         }
+
+#         if role == 'health_pro' and 'license_number' in request.form:
+#             profile_data["license_number"] = request.form['license_number']
+
+#         user.profile = Profile(**profile_data)
+
+#         # Handle avatar upload
+#         if 'avatar' in request.files:
+#             avatar = request.files['avatar']
+#             if avatar.filename:
+#                 filename = secure_filename(avatar.filename)
+#                 upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+#                 os.makedirs(upload_folder, exist_ok=True)
+#                 avatar_path = os.path.join(upload_folder, filename)
+#                 avatar.save(avatar_path)
+#                 user.profile.profile_picture = f"/uploads/{filename}"
+
+#         db.session.add(user)
+#         db.session.commit()
+
+#         print("✅ Signup successful for:", email)
+#         return jsonify({"message": "User registered. Please check email to verify."}), 201
+
+#     # except SQLAlchemyError as e:
+#     #     db.session.rollback()
+#     #     print("❌ Database error during signup:", e)
+#     #     return jsonify({"error": "Database error.", "details": str(e)}), 500
+
+#     # except Exception as e:
+#     #     print("❌ Exception during signup:", e)
+#     #     return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+#     except SQLAlchemyError as e:
+#         db.session.rollback()
+#         import traceback
+#         print("❌ SQLAlchemyError:", traceback.format_exc())  # shows full trace
+#         return jsonify({"error": "Database error.", "details": str(e)}), 500
+
+#     except Exception as e:
+#         import traceback
+#         print("❌ General Exception:", traceback.format_exc())  # full trace
+#         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
+
 
 
 # Login Route
@@ -108,14 +194,26 @@ def login():
         print("❌ Invalid credentials for:", email)
         return jsonify({"error": "Invalid credentials"}), 401
 
+    # except SQLAlchemyError as e:
+    #     db.session.rollback()
+    #     print("❌ Database error during login:", e)
+    #     return jsonify({"error": "Database error during login", "details": str(e)}), 500
+
+    # except Exception as e:
+    #     print("❌ Exception during login:", e)
+        # return jsonify({"error": "Login failed", "details": str(e)}), 500
+    
     except SQLAlchemyError as e:
         db.session.rollback()
-        print("❌ Database error during login:", e)
-        return jsonify({"error": "Database error during login", "details": str(e)}), 500
+        import traceback
+        print("❌ SQLAlchemyError:", traceback.format_exc())  # shows full trace
+        return jsonify({"error": "Database error.", "details": str(e)}), 500
 
     except Exception as e:
-        print("❌ Exception during login:", e)
-        return jsonify({"error": "Login failed", "details": str(e)}), 500
+        import traceback
+        print("❌ General Exception:", traceback.format_exc())  # full trace
+        return jsonify({"error": "Login failed.", "details": str(e)}), 500
+
 
 
 # me Route
