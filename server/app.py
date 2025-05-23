@@ -97,6 +97,13 @@ def create_app():
             app.logger.info("✅ Database migration applied.")
         except Exception as e:
             app.logger.error(f"⚠️ Database migration failed: {e}")
+        # One-time fallback: Create tables manually (bypass Alembic)
+    with app.app_context():
+        try:
+            db.create_all()
+            app.logger.info("✅ Tables created successfully with db.create_all()")
+        except Exception as e:
+            app.logger.error(f"❌ Manual table creation failed: {e}")
 
 
     return app
