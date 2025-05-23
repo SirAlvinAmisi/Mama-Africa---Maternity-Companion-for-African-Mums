@@ -1,8 +1,8 @@
-"""Ensure all models are detected
+"""Clean migration reset
 
-Revision ID: 5d109384a558
-Revises: 23ada46ef4bd
-Create Date: 2025-05-23 22:24:04.672517
+Revision ID: 1dd62276500e
+Revises: 
+Create Date: 2025-05-23 22:39:34.388854
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '5d109384a558'
-down_revision = '23ada46ef4bd'
+revision = '1dd62276500e'
+down_revision = None
 branch_labels = None
 depends_on = None
 
