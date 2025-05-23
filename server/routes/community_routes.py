@@ -215,6 +215,11 @@ def create_community_post(id):
     community = Community.query.get_or_404(id)
 
     content = request.form.get("content", "").strip()
+    print("✅ FORM DATA RECEIVED:", dict(request.form))
+    print("✅ FILES RECEIVED:", request.files)
+    print("✅ Raw content value:", repr(content))
+    print("✅ Violation result:", detect_violation(content))
+
     media = request.files.get("media")
 
     if not content and not media:
@@ -235,6 +240,8 @@ def create_community_post(id):
         community_id=community.id,
         author_id=user_id
     )
+    print("✅ Received content:", content)
+    print("✅ Violation result:", detect_violation(content))
 
     # ✅ Flag if banned word detected
     violation_reason = detect_violation(content)

@@ -1,33 +1,23 @@
 // src/pages/Home.jsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { fetchProfiles } from '../lib/api';
 
 export default function Home() {
   const [featuredMums, setFeaturedMums] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/profile')
+    fetchProfiles()
       .then(response => {
-        console.log("🔍 Raw response:", response.data);
         const keywords = ["mum", "pregnan", "expect", "mother"];
-        
         const mums = response.data.users.filter(user =>
-          user.bio && (
-            user.bio.toLowerCase().includes("mum") ||
-            user.bio.toLowerCase().includes("pregnancy") ||
-            user.bio.toLowerCase().includes("expecting") ||
-            user.bio.toLowerCase().includes("mother")
-          )
+          user.bio && keywords.some(kw => user.bio.toLowerCase().includes(kw))
         );
-        console.log("🔍 Filtered Mums:", mums);     
-         
-        
         if (mums.length > 0) {
-          setFeaturedMums(mums); // use all mums
+          setFeaturedMums(mums);
         }
       })
       .catch(error => {
@@ -55,14 +45,13 @@ export default function Home() {
               Meet Our Members and Their Stories
             </h2>
 
-            
             <Swiper
               modules={[Autoplay, Pagination]}
               spaceBetween={30}
               breakpoints={{
                 640: { slidesPerView: 1, slidesPerGroup: 1 },
                 768: { slidesPerView: 2, slidesPerGroup: 1 },
-                1024: { slidesPerView: 3, slidesPerGroup: 1 }, // 👈 3 visible, scroll 1
+                1024: { slidesPerView: 3, slidesPerGroup: 1 },
               }}
               autoplay={{ delay: 2000, disableOnInteraction: false }}
               loop={true}
@@ -71,7 +60,6 @@ export default function Home() {
               pagination={{ clickable: true }}
               className="pb-10"
             >
-
               {featuredMums.map((mum, index) => (
                 <SwiperSlide key={index}>
                   <div className="flex flex-col items-center p-8 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
@@ -83,7 +71,6 @@ export default function Home() {
                         alt={`Profile of ${mum.full_name}`}
                         className="object-cover w-full h-full"
                       />
-
                     </div>
 
                     {/* Mum's Details */}

@@ -1,7 +1,11 @@
-// client/src/components/health-pro/ProfileSection.jsx
+
 import React, { useState, useEffect } from 'react';
-import { MdVerified, MdEdit, MdSave, MdEmail, MdCalendarToday } from 'react-icons/md';
-import axios from 'axios';
+import { MdVerified, MdEdit, MdSave } from 'react-icons/md';
+import {
+  getHealthProArticles,
+  getHealthProScans,
+  getClinics
+} from '../../lib/api'; // ✅ adjust path as needed
 
 const mockProfile = {
   name: "Dr. Wanjiku Mumbi",
@@ -22,33 +26,25 @@ export default function ProfileSection() {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState(mockProfile);
 
-  // New state variables for articles, scans, and recommended clinics
   const [articles, setArticles] = useState([]);
   const [scans, setScans] = useState([]);
   const [clinics, setClinics] = useState([]);
 
-  // Fetch data when component mounts
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const authHeaders = {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    };
-
-    // Fetch articles
-    axios.get('http://localhost:5000/healthpros/articles', authHeaders)
-      .then(response => setArticles(response.data))
+    // ✅ Replace all axios calls with imported API functions
+    getHealthProArticles()
+      .then(setArticles)
       .catch(error => console.error('Error fetching articles:', error));
 
-    // Fetch scans
-    axios.get('http://localhost:5000/mums/upload_scan', authHeaders)
-      .then(response => setScans(response.data))
+    getHealthProScans()
+      .then(setScans)
       .catch(error => console.error('Error fetching scans:', error));
 
-    // Fetch recommended clinics
-    axios.get('http://localhost:5000/healthpros/recommendations', authHeaders)
-      .then(response => setClinics(response.data))
+    getClinics()
+      .then(data => {
+        const recommended = data.filter(clinic => clinic.recommended);
+        setClinics(recommended);
+      })
       .catch(error => console.error('Error fetching clinics:', error));
   }, []);
 
@@ -69,7 +65,6 @@ export default function ProfileSection() {
         </button>
       </div>
 
-      {/* Profile Photo */}
       <div className="flex items-center mb-6">
         <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
           {profile.photo ? (
@@ -85,7 +80,6 @@ export default function ProfileSection() {
         )}
       </div>
 
-      {/* Profile Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ProfileField label="Name" value={profile.name} editing={isEditing} name="name" onChange={handleInputChange} />
         <ProfileField label="Specialty" value={profile.specialty} editing={isEditing} name="specialty" onChange={handleInputChange} />
@@ -97,7 +91,6 @@ export default function ProfileSection() {
         </div>
       </div>
 
-      {/* Verification Status */}
       <div className="mt-6 p-4 bg-blue-50 rounded">
         <div className="flex items-center gap-2">
           <MdVerified className="text-blue-600" />
@@ -110,40 +103,24 @@ export default function ProfileSection() {
         </div>
       </div>
 
-      {/* New Sections for Articles, Scans, and Recommended Clinics */}
       <div className="mt-6">
-        {/* Articles Section */}
         <h3 className="text-xl font-semibold text-gray-800 mb-2">Articles</h3>
         {articles.length > 0 ? (
-          <ul className="list-disc list-inside">
-            {articles.map((article, index) => (
-              <li key={index}>{article.title}</li>
-            ))}
-          </ul>
+          <ul className="list-disc list-inside">{articles.map((a, i) => <li key={i}>{a.title}</li>)}</ul>
         ) : (
           <p className="text-gray-600">No articles available.</p>
         )}
 
-        {/* Scans Section */}
         <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">Scans</h3>
         {scans.length > 0 ? (
-          <ul className="list-disc list-inside">
-            {scans.map((scan, index) => (
-              <li key={index}>{scan.description}</li>
-            ))}
-          </ul>
+          <ul className="list-disc list-inside">{scans.map((s, i) => <li key={i}>{s.description}</li>)}</ul>
         ) : (
           <p className="text-gray-600">No scans available.</p>
         )}
 
-        {/* Recommended Clinics Section */}
         <h3 className="text-xl font-semibold text-gray-800 mt-4 mb-2">Recommended Clinics</h3>
         {clinics.length > 0 ? (
-          <ul className="list-disc list-inside">
-            {clinics.map((clinic, index) => (
-              <li key={index}>{clinic.name}</li>
-            ))}
-          </ul>
+          <ul className="list-disc list-inside">{clinics.map((c, i) => <li key={i}>{c.name}</li>)}</ul>
         ) : (
           <p className="text-gray-600">No recommended clinics available.</p>
         )}
@@ -157,21 +134,9 @@ const ProfileField = ({ label, value, editing, name, type = 'text', textarea = f
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     {editing ? (
       textarea ? (
-        <textarea
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full border rounded p-2"
-          rows="3"
-        />
+        <textarea name={name} value={value} onChange={onChange} className="w-full border rounded p-2" rows="3" />
       ) : (
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          className="w-full border rounded p-2"
-        />
+        <input type={type} name={name} value={value} onChange={onChange} className="w-full border rounded p-2" />
       )
     ) : (
       <p className="p-2 bg-gray-50 rounded">{value || 'Not specified'}</p>

@@ -34,16 +34,7 @@ const Calendar = ({
       setShowModal(true);
     }
   };
-  // const handleAddEvent = () => {
-  //   if (eventText.trim()) {
-  //     const newEvent = { date: selectedDate, title: eventText.trim() };
-  //     if (typeof onAddEvent === 'function') {
-  //       onAddEvent(newEvent); // delegate to parent
-  //     }
-  //     setShowModal(false);
-  //     setEventText("");
-  //   }
-  // };
+
 
   const handleAddEvent = () => {
     if (eventText.trim()) {
@@ -178,34 +169,7 @@ const Calendar = ({
     )
   );
 
-  // const renderModal = () => (
-  //   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-  //     <div className="bg-cyan-200 p-6 rounded-lg shadow-md w-80">
-  //       <h2 className="text-lg font-bold mb-2">Add Event for {format(selectedDate, 'PPP')}</h2>
-  //       <input
-  //         type="text"
-  //         className="w-full p-2 border rounded text-black mb-3"
-  //         placeholder="Event details..."
-  //         value={eventText}
-  //         onChange={(e) => setEventText(e.target.value)}
-  //       />
-  //       <div className="flex justify-end gap-2">
-  //         <button
-  //           onClick={() => setShowModal(false)}
-  //           className="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400"
-  //         >
-  //           Cancel
-  //         </button>
-  //         <button
-  //           onClick={handleAddEvent}
-  //           className="px-3 py-1 rounded bg-cyan-700 text-white hover:bg-cyan-600"
-  //         >
-  //           Save
-  //         </button>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  
   return (
     <div className="max-w-4xl mx-auto">
       <div className="border rounded-lg bg-cyan-900 shadow overflow-hidden">

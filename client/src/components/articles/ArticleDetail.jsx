@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import { getArticleById } from '../../lib/api'; 
 
 export const ArticleDetail = () => {
   const { id } = useParams();
@@ -10,8 +10,8 @@ export const ArticleDetail = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/articles/${id}`);
-        setArticle(response.data.article);
+        const fetchedArticle = await getArticleById(id); // ✅ Use centralized API call
+        setArticle(fetchedArticle);
       } catch (error) {
         console.error('Error fetching article:', error);
       } finally {

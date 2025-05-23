@@ -560,3 +560,16 @@ def get_uploaded_scans():
             "uploaded_at": scan.uploaded_at.strftime("%Y-%m-%d %H:%M")
         } for scan in scans]
     }), 200
+
+@health_bp.route('/scans/<int:doctor_id>', methods=['GET'])
+def get_scans_by_health_pro_id(doctor_id):
+    scans = MedicalUpload.query.filter_by(doctor_id=doctor_id).order_by(MedicalUpload.uploaded_at.desc()).all()
+    return jsonify({
+        "uploads": [{
+            "id": scan.id,
+            "file_url": scan.file_url,
+            "file_type": scan.file_type,
+            "description": scan.notes,
+            "uploaded_at": scan.uploaded_at.strftime("%Y-%m-%d %H:%M")
+        } for scan in scans]
+    }), 200

@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getFetalDevelopment } from '../lib/api'; 
 
 export default function MomDevelopment() {
   const [tip, setTip] = useState('');
+
   useEffect(() => {
-    axios
-      .get('http://localhost:5000/mums/fetal_development', {
-        headers:{ Authorization:`Bearer ${localStorage.token}` }
-      })
-      .then(res => setTip(res.data.tip))
-      .catch(console.error);
+    const fetchTip = async () => {
+      try {
+        const data = await getFetalDevelopment(); // ✅ Replaces axios
+        setTip(data.tip);
+      } catch (error) {
+        console.error("Failed to fetch fetal development tip:", error);
+      }
+    };
+
+    fetchTip();
   }, []);
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4">Fetal Development Tip</h2>

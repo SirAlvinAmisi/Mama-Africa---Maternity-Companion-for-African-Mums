@@ -43,6 +43,9 @@ export const getProfiles = async () => {
   const response = await api.get('/profile');
   return response.data;
 };
+export const fetchProfiles = () => api.get('/profile');
+
+export const fetchSpecialists = () => api.get('/healthpros');
 
 export const updateMumProfile = async (profileData) => {
   const response = await api.post('/mums/profile', profileData);
@@ -115,6 +118,27 @@ export const updatePostOrCommentStatus = async (type, id, status) => {
 };
 
 // -------------------- MUMS --------------------
+export const getPregnancyInfo = async () => {
+  const response = await api.get('/mums/pregnancy-info');
+  return response.data;
+};
+
+export const getMumEvents = async () => {
+  const response = await api.get('/mums/events');
+  return response.data.events;
+};
+
+export const addMumEvent = async (eventData) => {
+  const response = await api.post('/mums/events', eventData);
+  return response.data;
+};
+
+
+export const addReminder = async (reminderData) => {
+  const response = await api.post('/mums/reminder', reminderData); // ✅ Correct
+  return response.data.event;
+};
+
 export const getPregnancyDetails = async () => {
   const response = await api.get('/mums/pregnancy');
   return response.data;
@@ -130,20 +154,50 @@ export const getFetalDevelopment = async () => {
   return response.data;
 };
 
+
 export const getReminders = async () => {
   const response = await api.get('/mums/reminders');
-  return response.data;
+  return response.data.events || []; // ✅ return the array directly
 };
 
-export const uploadScan = async (uploadData) => {
-  const response = await api.post('/mums/upload_scan', uploadData);
-  return response.data;
-};
+
+export const requestVerification = () =>
+  api.post('/healthpro/request-verification', {});
+
 
 export const getUploads = async () => {
   const response = await api.get('/uploads');
   return response.data;
 };
+// MUM Questions
+export const getMumQuestions = async () => {
+  const response = await api.get('/mums/questions');
+  return response.data;
+};
+
+export const createMumQuestion = async (questionData) => {
+  const response = await api.post('/mums/questions', questionData);
+  return response.data;
+};
+
+export const updateMumQuestion = async (questionData) => {
+  const response = await api.patch('/mums/questions', questionData);
+  return response.data;
+};
+
+export const registerMum = async (data) => {
+  const response = await api.post('/mums/register', data);
+  return response.data;
+};
+export const getScans = () => api.get('/mums/scans');
+export const getDoctors = () => api.get('/healthpros');
+export const uploadScan = (formData) =>
+  api.post('/mums/upload_scan', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+
+
 
 // -------------------- HEALTH PROFESSIONAL --------------------
 export const getHealthProProfile = async () => {
@@ -290,7 +344,10 @@ export const getCurrentUser = async () => {
   const response = await api.get('/me');
   return response.data;
 };
-
+export const updateUserProfile = async (profileData) => {
+  const response = await api.patch('/profile/update', profileData);
+  return response.data;
+};
 // Join/leave a community
 export const joinCommunityById = async (id) => {
   const response = await api.post(`/communities/${id}/join`);
@@ -309,8 +366,16 @@ export const getMyPosts = async () => {
 };
 
 // Post actions
-export const createCommunityPost = async (id, formData) => {
-  const response = await api.post(`/communities/${id}/posts`, formData);
+// export const createCommunityPost = async (id, formData) => {
+//   const response = await api.post(`/communities/${id}/posts`, formData);
+//   return response.data;
+// };
+export const createCommunityPost = async (communityId, formData) => {
+  const response = await api.post(`/communities/${communityId}/posts`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
@@ -350,16 +415,111 @@ export const fetchClinicsByHealthProId = async (id) => {
   const response = await api.get(`/clinics/healthpro/${id}`);
   return response.data;
 };
-
 export const fetchUploadsByHealthProId = async (id) => {
-  const response = await api.get(`/uploads/healthpro/${id}`);
-  return response.data;
+  const res = await axios.get(`/healthpros/scans/${id}`);
+  return res.data;
 };
+
+// export const fetchUploadsByHealthProId = async (id) => {
+//   const response = await api.get(`/uploads/healthpro/${id}`);
+//   return response.data;
+// };
 
 export const fetchFlaggedArticles = async () => {
   const response = await api.get(`/articles/flagged`);
   return response.data;
 };
+export const fetchAllSpecialists = async () => {
+  const response = await api.get('/healthpros');
+  return response.data;
+};
 
+export const fetchRecentArticles = async (limit = 5) => {
+  const response = await api.get('/articles', { params: { limit } });
+  return response.data;
+};
+
+// Fetch group posts with comments
+export const fetchHealthProGroupPosts = async () => {
+  const response = await api.get('/healthpro/group-posts-with-comments');
+  return response.data.posts;
+};
+
+// Flag a post as misinformation
+export const flagPost = async (postId) => {
+  const response = await api.post(`/flag-post/${postId}`);
+  return response.data;
+};
+export const getArticleById = async (id) => {
+  const response = await api.get(`/articles/${id}`);
+  return response.data.article;
+};
+// Admin notifications
+export const fetchAdminNotifications = async () => {
+  const response = await api.get('/admin/notifications');
+  return response.data.notifications;
+};
+
+// Approve health professional
+export const approveHealthProfessional = async (userId) => {
+  const response = await api.post(`/admin/approve_healthpro/${userId}`);
+  return response.data;
+};
+
+// Reject health professional
+export const rejectHealthProfessional = async (userId) => {
+  const response = await api.post(`/admin/reject_healthpro/${userId}`);
+  return response.data;
+};
+export const fetchCategories = async () => {
+  const response = await api.get('/admin/categories');
+  return response.data.categories;
+};
+
+export const createCategory = async (categoryData) => {
+  const response = await api.post('/admin/create_category', categoryData);
+  return response.data;
+};
+
+// Add new category
+export const addCategory = async (categoryData) => {
+  const response = await api.post('/admin/categories', categoryData);
+  return response.data.category;
+};
+
+// Delete a category
+export const deleteCategory = async (id) => {
+  const response = await api.delete(`/admin/categories/${id}`);
+  return response.data;
+};
+export const deactivateUser = async (userId) => {
+  const response = await api.patch(`/admin/deactivate/${userId}`);
+  return response.data;
+};
+
+export const activateUser = async (userId) => {
+  const response = await api.patch(`/admin/activate/${userId}`);
+  return response.data;
+};
+
+export const deleteUser = async (userId) => {
+  const response = await api.delete(`/admin/delete_user/${userId}`);
+  return response.data;
+};
+
+export const resetUserPasswordById = async (userId) => {
+  const response = await api.post(`/admin/reset_password/${userId}`);
+  return response.data;
+};
+
+export const approveHealthPro = async (userId) => {
+  const response = await api.post(`/admin/approve_healthpro/${userId}`);
+  return response.data;
+};
+
+export const promoteUserToAdmin = async (userId) => {
+  const response = await api.patch(`/admin/promote/${userId}`);
+  return response.data;
+};
 
 export default api;

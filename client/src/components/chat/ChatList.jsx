@@ -1,10 +1,11 @@
+// src/pages/chat/ChatList.jsx
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchChats, sendMessage } from '../../store/chatSlice';
-import axios from 'axios';
-import socket from '../../lib/socket'; // ✅ shared socket instance
+import socket from '../../lib/socket';
+import { fetchSpecialists } from '../../lib/api';
 
 const ChatList = () => {
   const { id } = useParams();
@@ -18,7 +19,6 @@ const ChatList = () => {
 
   const { messages = [], status, error } = useSelector((state) => state.chat);
 
-  // Fetch user from localStorage
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('user');
@@ -32,17 +32,9 @@ const ChatList = () => {
     }
   }, []);
 
-  // Fetch specialists
   const { data: specialists, isLoading: specialistsLoading } = useQuery({
     queryKey: ['specialists'],
-    queryFn: async () => {
-      const res = await axios.get(
-        import.meta.env.PROD
-          ? 'https://mama-africa-api.onrender.com/healthpros'
-          : 'http://localhost:5000/healthpros'
-      );
-      return res.data;
-    },
+    queryFn: fetchSpecialists,
   });
 
   useEffect(() => {
@@ -51,7 +43,6 @@ const ChatList = () => {
     }
   }, [userId, id, dispatch]);
 
-  // Setup socket connection and events
   useEffect(() => {
     if (!userId) return;
 
@@ -86,7 +77,6 @@ const ChatList = () => {
     };
   }, [userId, id, dispatch]);
 
-  // Fallback polling if socket fails
   useEffect(() => {
     if (!usePolling || !userId || !id) return;
     const interval = setInterval(() => {

@@ -1,26 +1,20 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import moment from 'moment';
+import { fetchHealthProGroupPosts, flagPost, baseURL } from '../../lib/api'; 
 
 const FlagMisinformation = () => {
   const [posts, setPosts] = useState([]);
   const [flagged, setFlagged] = useState({});
-  const token = localStorage.getItem('access_token');
-
-  const headers = {
-    Authorization: `Bearer ${token}`,
-  };
 
   useEffect(() => {
-    axios.get('http://localhost:5000/healthpro/group-posts-with-comments', { headers })
-    
-      .then(res => setPosts(res.data.posts || []))
+    fetchHealthProGroupPosts()
+      .then(setPosts)
       .catch(err => console.error('Failed to fetch posts', err));
   }, []);
 
   const handleFlag = async (postId) => {
     try {
-      await axios.post(`http://localhost:5000/flag-post/${postId}`, {}, { headers });
+      await flagPost(postId);
       setFlagged({ ...flagged, [postId]: true });
     } catch (err) {
       console.error('Failed to flag post', err);
@@ -38,7 +32,11 @@ const FlagMisinformation = () => {
           </p>
           <p className="text-black mb-2">{post.content}</p>
           {post.media_url && (
-            <img src={`http://localhost:5000${post.media_url}`} alt="media" className="w-full max-h-60 object-cover rounded mb-2" />
+            <img
+              src={`${baseURL}${post.media_url}`} // ✅ No hardcoded base URL
+              alt="media"
+              className="w-full max-h-60 object-cover rounded mb-2"
+            />
           )}
           <button
             onClick={() => handleFlag(post.id)}
@@ -48,7 +46,6 @@ const FlagMisinformation = () => {
             {flagged[post.id] ? 'Flagged' : 'Flag as Misinformation'}
           </button>
 
-          {/* Comments */}
           {post.comments?.length > 0 && (
             <div className="mt-4 bg-gray-100 p-3 rounded">
               <h3 className="text-sm font-semibold text-gray-800 mb-2">Comments:</h3>

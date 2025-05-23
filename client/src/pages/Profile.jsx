@@ -1,39 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '../lib/api';
 
-// const normalizeRole = (role) => {
-//   if (!role) return '';
-//   const lower = role.toLowerCase().trim();
-//   if (lower === 'health professional') return 'health_pro';
-//   if (lower === 'admin') return 'admin';
-//   if (lower === 'mum') return 'mum';
-//   return lower.replace(/\s+/g, '_'); // fallback
-// };
 const normalizeRole = (role) => {
   if (!role) return '';
   const lower = role.toLowerCase().trim();
   if (lower === 'health professional') return 'health_pro';
   if (lower === 'admin') return 'admin';
-  if (lower === 'mum') return 'mom'; 
+  if (lower === 'mum') return 'mom';
   return lower.replace(/\s+/g, '_');
 };
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        const response = await axios.get('http://localhost:5000/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setUser(response.data);
+        const userData = await getCurrentUser();
+        setUser(userData);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -59,19 +45,18 @@ const Profile = () => {
 
       {profile.profile_picture && (
         <div className="flex justify-center mb-6">
-          <img 
-            src={`http://localhost:5000${profile.profile_picture}`} 
-            alt="Profile Avatar" 
+          <img
+            src={`${import.meta.env.VITE_API_BASE_URL}${profile.profile_picture}`}
+            alt="Profile Avatar"
             className="w-32 h-32 rounded-full object-cover shadow-md"
           />
         </div>
       )}
 
       <div className="flex flex-col gap-4 text-gray-700 text-lg">
-        <div><strong>Full Name:</strong> {`${profile.first_name || ''} ${profile.middle_name || ''} ${profile.last_name || ''}`.trim()}
-        </div>
-        <div><strong>Short Bio:</strong> {profile.bio }</div>
-        <div><strong>Region:</strong> {profile.region }</div>
+        <div><strong>Full Name:</strong> {`${profile.first_name || ''} ${profile.middle_name || ''} ${profile.last_name || ''}`.trim()}</div>
+        <div><strong>Short Bio:</strong> {profile.bio}</div>
+        <div><strong>Region:</strong> {profile.region}</div>
         {profile.license_number && (
           <div><strong>License Number:</strong> {profile.license_number}</div>
         )}
@@ -80,9 +65,8 @@ const Profile = () => {
         <div><strong>Joined:</strong> {new Date(user.created_at).toLocaleDateString()}</div>
       </div>
 
-      {/* Edit Profile Button */}
       <div className="mt-6">
-        <button 
+        <button
           onClick={() => navigate('/profile/edit')}
           className="bg-cyan-600 text-white px-6 py-3 rounded hover:bg-cyan-700 transition"
         >
@@ -90,10 +74,9 @@ const Profile = () => {
         </button>
       </div>
 
-      {/* Back to Dashboard Button */}
       {dashboardRoutes[normalizedRole] && (
         <div className="mt-4">
-          <button 
+          <button
             onClick={() => navigate(dashboardRoutes[normalizedRole])}
             className="bg-green-100 text-gray-800 px-6 py-3 rounded hover:bg-gray-200 transition"
           >

@@ -1,7 +1,10 @@
-// client/src/components/admin/NotificationsTab.jsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Clock, UserCheck, AlertCircle } from 'lucide-react';
+import {
+  fetchAdminNotifications,
+  approveHealthProfessional,
+  rejectHealthProfessional
+} from '../../lib/api'; 
 
 const NotificationsTab = () => {
   const [notifications, setNotifications] = useState([]);
@@ -9,11 +12,8 @@ const NotificationsTab = () => {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:5000/admin/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(response.data.notifications || []);
+      const data = await fetchAdminNotifications(); // ✅ centralized API call
+      setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -23,15 +23,9 @@ const NotificationsTab = () => {
 
   const handleApprove = async (userId) => {
     try {
-      const token = localStorage.getItem('access_token');
-      // ✅ Send approval request to backend for this health professional
-      await axios.post(
-        `http://localhost:5000/admin/approve_healthpro/${userId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await approveHealthProfessional(userId); // ✅ centralized API call
       alert('Health professional approved!');
-      fetchNotifications(); // Refresh notifications
+      fetchNotifications();
     } catch (error) {
       console.error('Approval error:', error);
       alert('Failed to approve');
@@ -40,13 +34,7 @@ const NotificationsTab = () => {
 
   const handleReject = async (userId) => {
     try {
-      const token = localStorage.getItem('access_token');
-      // ❌ Optional: Add a /reject_healthpro endpoint if needed
-      await axios.post(
-        `http://localhost:5000/admin/reject_healthpro/${userId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await rejectHealthProfessional(userId); // ✅ centralized API call
       alert('Health professional rejected!');
       fetchNotifications();
     } catch (error) {
@@ -96,7 +84,6 @@ const NotificationsTab = () => {
                 </div>
               </div>
 
-              {/* Approve / Reject Actions */}
               {notification.type === 'health_pro_request' && (
                 <div className="flex justify-end gap-2 mt-3">
                   <button

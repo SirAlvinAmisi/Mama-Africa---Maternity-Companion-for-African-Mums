@@ -119,6 +119,6 @@ def serve_uploaded_scans(filename):
 # ===== RUN APP =====
 if __name__ == "__main__":
     # DEV MODE ONLY (better logging)
-    # app.run(debug=True, port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True, port=int(os.environ.get("PORT", 5000)))
     # For production: uncomment below
     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

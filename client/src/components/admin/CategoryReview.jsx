@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import {
+  fetchCategories,
+  addCategory,
+  deleteCategory
+} from '../../lib/api'; 
 
 export default function CategoryReview() {
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.get('http://localhost:5000/admin/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCategories(res.data.categories || []);
+      const data = await fetchCategories(); // ✅ Use API function
+      setCategories(data || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
     } finally {
@@ -20,28 +21,20 @@ export default function CategoryReview() {
     }
   };
 
-  const addCategory = async () => {
+  const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.post(
-        'http://localhost:5000/admin/categories',
-        { name: newCategory.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setCategories(prev => [...prev, res.data.category]);
+      const newCat = await addCategory({ name: newCategory.trim() }); // ✅ Use API function
+      setCategories(prev => [...prev, newCat]);
       setNewCategory('');
     } catch (err) {
       console.error('Error adding category:', err);
     }
   };
 
-  const deleteCategory = async (id) => {
+  const handleDeleteCategory = async (id) => {
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.delete(`http://localhost:5000/admin/categories/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await deleteCategory(id); // ✅ Use API function
       setCategories(prev => prev.filter(cat => cat.id !== id));
     } catch (err) {
       console.error('Error deleting category:', err);
@@ -49,10 +42,10 @@ export default function CategoryReview() {
   };
 
   useEffect(() => {
-    fetchCategories();
+    loadCategories();
   }, []);
 
-  if (loading){
+  if (loading) {
     return <p>Loading categories...</p>;
   }
 
@@ -67,7 +60,7 @@ export default function CategoryReview() {
           className="border px-3 py-2 rounded w-full"
         />
         <button
-          onClick={addCategory}
+          onClick={handleAddCategory}
           className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700"
         >
           Add
@@ -81,7 +74,7 @@ export default function CategoryReview() {
           >
             <span>{cat.name}</span>
             <button
-              onClick={() => deleteCategory(cat.id)}
+              onClick={() => handleDeleteCategory(cat.id)}
               className="text-red-600 text-sm hover:underline"
             >
               Delete
