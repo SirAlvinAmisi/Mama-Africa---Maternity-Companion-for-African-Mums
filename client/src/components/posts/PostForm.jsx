@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import { createCommunityPost } from '../../lib/api';
 
 export default function PostForm({ communityId, onSuccess }) {
   const [title, setTitle] = useState('');
@@ -7,16 +7,13 @@ export default function PostForm({ communityId, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('access_token');
 
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);
 
     try {
-      await axios.post(`http://localhost:5000/communities/${communityId}/posts`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await createCommunityPost(communityId, formData); // ✅ No more hardcoded URL
       setTitle('');
       setContent('');
       onSuccess?.();
@@ -43,7 +40,10 @@ export default function PostForm({ communityId, onSuccess }) {
         placeholder="Write something..."
         required
       />
-      <button className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700" type="submit">
+      <button
+        type="submit"
+        className="bg-cyan-600 text-white px-4 py-2 rounded hover:bg-cyan-700"
+      >
         Post
       </button>
     </form>

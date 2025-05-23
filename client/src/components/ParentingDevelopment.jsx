@@ -3,18 +3,21 @@ import { Link } from 'react-router-dom';
 
 function ParentingDevelopment() {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+    // <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+    <div className="bg-gradient-to-r from-cyan-300 via-cyan-400 to-purple-300 p-8 rounded-lg shadow-lg text-center text-cyan-900">
       <h2 className="text-2xl font-bold mb-4 text-cyan-700">
-        Parenting and <span className="text-cyan-500">Development</span>
+        Parenting and <span className="text-cyan-900">Development</span>
       </h2>
       
       <img 
-        src="https://i.pinimg.com/736x/bb/9e/43/bb9e4325e6a1957cfb0ce02c76ba08ee.jpg" 
+        src="https://i.pinimg.com/736x/7c/9d/09/7c9d09770bbafe7dac966b355ba6f930.jpg" 
         alt="Parenting" 
-        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
+        className="w-full h-50 sm:h-52 object-cover object-center rounded-xl shadow-md hover:shadow-lg transition duration-300"
+
+
       />
 
-      <p className="text-gray-600 mt-4 mb-6">
+      <p className="text-black font-bold mt-4 mb-6">
         Explore articles, tips, and guides for your parenting journey!
       </p>
 

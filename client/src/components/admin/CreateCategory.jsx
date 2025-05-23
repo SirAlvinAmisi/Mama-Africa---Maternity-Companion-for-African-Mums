@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchCategories, createCategory } from '../../lib/api'; 
 
 const CreateCategory = () => {
   const [name, setName] = useState('');
   const [categories, setCategories] = useState([]);
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:5000/admin/categories', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCategories(response.data.categories || []);
+      const data = await fetchCategories(); // ✅ Use centralized API function
+      setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -20,13 +17,10 @@ const CreateCategory = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.post('http://localhost:5000/admin/create_category', { name }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await createCategory({ name }); // ✅ Use centralized API function
       alert('Category created!');
       setName('');
-      fetchCategories(); // Refresh list
+      loadCategories(); // Refresh list
     } catch (error) {
       alert('Failed to create category');
       console.error(error);
@@ -34,7 +28,7 @@ const CreateCategory = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
+    loadCategories();
   }, []);
 
   return (
@@ -54,7 +48,6 @@ const CreateCategory = () => {
         </button>
       </form>
 
-      {/* List of categories */}
       <div>
         <h3 className="text-lg font-semibold text-gray-700 mt-6">Existing Categories</h3>
         {categories.length === 0 ? (

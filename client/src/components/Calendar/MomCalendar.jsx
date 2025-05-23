@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from './Calendar';
 import { format } from 'date-fns';
+import {
+  getPregnancyInfo,
+  getMumEvents,
+  addMumEvent,
+  addReminder,
+} from '../../lib/api'; 
 import { PregnancyService } from '../../services/PregnancyService';
 import { NotificationService } from '../../services/NotificationService';
-import axios from 'axios';
 
 const MomCalendar = ({ userId }) => {
   const [events, setEvents] = useState([]);
@@ -19,10 +24,7 @@ const MomCalendar = ({ userId }) => {
 
   const fetchPregnancyData = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/mums/pregnancy-info`, {
-        headers: { Authorization: `Bearer ${localStorage.token}` },
-      });
-      const pregnancyData = res.data;
+      const pregnancyData = await getPregnancyInfo();
       setLmp(pregnancyData.lmp);
       const calculatedEDD = new Date(pregnancyData.lmp);
       calculatedEDD.setDate(calculatedEDD.getDate() + 280);
@@ -30,10 +32,8 @@ const MomCalendar = ({ userId }) => {
       const milestones = PregnancyService.calculateMilestones(calculatedEDD);
       setPregnancyInfo(milestones);
 
-      const eventResponse = await axios.get(`http://localhost:5000/mums/events`, {
-        headers: { Authorization: `Bearer ${localStorage.token}` },
-      });
-      setEvents(eventResponse.data.events);
+      const fetchedEvents = await getMumEvents();
+      setEvents(fetchedEvents);
     } catch (error) {
       console.error('Error fetching pregnancy data or events:', error);
     }
@@ -80,17 +80,13 @@ const MomCalendar = ({ userId }) => {
   const handleSaveEvent = async () => {
     const eventToAdd = { ...newEvent };
     try {
-      const res = await axios.post(`http://localhost:5000/mums/events`, eventToAdd, {
-        headers: { Authorization: `Bearer ${localStorage.token}` },
-      });
-      setEvents([...events, res.data.event]);
+      const { event } = await addMumEvent(eventToAdd);
+      setEvents([...events, event]);
 
       if (eventToAdd.type === 'reminder') {
-        await axios.post('http://localhost:5000/mums/reminders', {
+        await addReminder({
           text: eventToAdd.title,
-          date: eventToAdd.date
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.token}` }
+          date: eventToAdd.date,
         });
       }
 

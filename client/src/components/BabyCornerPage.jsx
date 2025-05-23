@@ -77,32 +77,42 @@ const babyGrowthData = [
 
 const BabyCornerPage = () => {
   return (
-    <div className="p-6 max-w-6xl mx-auto font-sans bg-cyan-200 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-cyan-900 mb-4">👶🏾 Baby Corner</h1>
-      <p className="mb-6 text-gray-700">
-        Follow your baby's journey with relatable African food sizes, weekly development milestones, and encouragement just for Mama.
-      </p>
+    <div className="bg-gradient-to-b from-cyan-300 via-white to-cyan-100 py-10 px-4 sm:px-6 md:px-12 lg:px-20 font-sans">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-cyan-900 mb-4 text-center">
+          👶🏾 Baby Corner
+        </h1>
+        <p className="text-lg sm:text-xl text-center text-gray-700 mb-10 max-w-3xl mx-auto">
+          Follow your baby's journey with relatable African food sizes, weekly development milestones, and encouragement just for Mama.
+        </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {babyGrowthData.map((item, index) => (
-          <div
-            key={index}
-            className="bg-cyan-50 border-l-4 border-cyan-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300"
-          >
-            <img
-              src={item.image}
-              alt={`Week ${item.week} - ${item.size}`}
-              className="w-full h-48 p-8 object-cover"
-            />
-            <div className="p-8">
-              <h2 className="text-xl font-semibold text-cyan-900 mb-1">Week {item.week}</h2>
-              <p className="text-cyan-800 font-medium mb-2">👶 Size: {item.size}</p>
-              <p className="text-gray-700 text-sm mb-2">🧠 <strong>Development:</strong> {item.development}</p>
-              <p className="text-gray-600 italic text-sm">💡 <strong>Tip for Mama:</strong> {item.tip}</p>
-              <p className="text-sm text-cyan-700 mt-2 italic">{item.proverbOrJoke}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {babyGrowthData.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden border border-cyan-100"
+            >
+              <div className="w-full h-64 overflow-hidden">
+                <img
+                  src={item.image}
+                  alt={`Week ${item.week} - ${item.size}`}
+                  className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+              <div className="p-6 sm:p-8">
+                <h2 className="text-2xl font-bold text-cyan-800 mb-2">Week {item.week}</h2>
+                <p className="text-sm font-semibold text-cyan-700 mb-1">👶 Size: {item.size}</p>
+                <p className="text-gray-800 text-sm mb-2">
+                  <strong className="text-cyan-700">🧠 Development:</strong> {item.development}
+                </p>
+                <p className="text-gray-600 text-sm italic mb-2">
+                  <strong>💡 Tip for Mama:</strong> {item.tip}
+                </p>
+                <p className="text-cyan-700 text-sm italic">{item.proverbOrJoke}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-// CommunityDetail.jsx (Refactored)
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import moment from 'moment';
@@ -21,8 +20,7 @@ import {
   createComment,
   deleteComment,
 } from '../lib/api';
-
-// import CommentThread from './CommentThread';
+import CommentThread from '../components/CommentThread';
 
 const CommunityDetail = () => {
   const { id } = useParams();
@@ -120,13 +118,18 @@ const CommunityDetail = () => {
   };
 
   const handlePostSubmit = async () => {
-    if (!newPostContent.trim() && !newPostMedia) return;
+    if (!newPostContent.trim() && !newPostMedia) {
+      alert("Please add some content or attach media.");
+      return;
+    }
+
     try {
       const form = new FormData();
       form.append('content', newPostContent);
       if (newPostMedia) form.append('media', newPostMedia);
 
       await createCommunityPost(id, form);
+
       setNewPostContent('');
       setNewPostMedia(null);
       toast.success('✅ Posted successfully!');
@@ -134,53 +137,49 @@ const CommunityDetail = () => {
       fetchCommunityData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      if (err.response?.status === 400) {
-        alert('🚫 Post rejected: ' + err.response.data.error);
-      } else {
-        console.error('Error posting:', err);
-        alert('Something went wrong while posting.');
-      }
+      console.error("🚫 Post failed:", err);
+      alert(err.response?.data?.error || "Something went wrong while posting.");
     }
   };
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return <div className="text-center py-10 text-purple-700">Loading...</div>;
   if (error || !community) return <div className="text-center text-red-500"></div>;
 
   return (
-    <div className="container mx-auto p-4 overflow-x-hidden flex flex-col lg:flex-row gap-6">
+    <div className="bg-cyan-100 rounded  p-6 max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Sidebar */}
-      <div className="lg:w-1/3 w-full bg-white p-4 rounded shadow lg:sticky lg:top-4 lg:h-[90vh] lg:overflow-y-auto">
-        <h1 className="text-2xl font-semibold text-cyan-900 mb-2">{community.name}</h1>
-        <p className="text-gray-700">{community.description}</p>
-        <p className="text-sm font-medium text-blue-900">{community.member_count} members</p>
-        <button onClick={handleJoinLeave} className="mt-2 px-3 py-1 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700">
+      <div className="bg-cyan-500 p-4 rounded shadow sticky top-4 h-fit">
+        <h1 className="text-2xl font-bold text-purple-800">{community.name}</h1>
+        <p className="text-purple-700 mt-1">{community.description}</p>
+        <p className="text-sm font-medium text-purple-900">{community.member_count} members</p>
+        <button onClick={handleJoinLeave} className="mt-3 px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700">
           {community.is_member ? 'Leave Community' : 'Join Community'}
         </button>
 
         {community.is_member && (
           <>
-            <p onClick={() => setShowMyPosts(!showMyPosts)} className="mt-3 cursor-pointer text-cyan-700 underline text-sm">
+            <p onClick={() => setShowMyPosts(!showMyPosts)} className="mt-3 cursor-pointer text-purple-900 underline text-sm">
               {showMyPosts ? 'Hide My Posts' : 'View My Posts'}
             </p>
 
             {showMyPosts && (
               <div className="mt-4 space-y-4">
                 {myPosts.map(post => (
-                  <div key={post.id} className="bg-white p-4 rounded shadow-md">
-                    <p className="text-sm text-cyan-900">
+                  <div key={post.id} className="bg-purple-50 p-4 rounded shadow border-l-4 border-purple-400">
+                    <p className="text-sm text-purple-900">
                       {post.group_name ? `${post.group_name} · ` : ''}by {post.user_name || 'Anonymous'} · {moment(post.created_at).fromNow()}
                     </p>
-                    <p className="mt-2 text-gray-700 break-words">{post.content}</p>
-                    <button onClick={() => handleDeletePost(post.id)} className="text-red-700 font-medium text-xs mt-2">Delete</button>
+                    <p className="mt-2 text-gray-800 break-words">{post.content}</p>
+                    <button onClick={() => handleDeletePost(post.id)} className="text-red-700 text-xs mt-2">Delete</button>
                   </div>
                 ))}
               </div>
             )}
 
             <div className="hidden lg:block mt-6">
-              <h2 className="text-lg font-semibold text-cyan-900 mb-1">Write New Post</h2>
+              <h2 className="text-lg font-semibold text-purple-800 mb-1">Write New Post</h2>
               <textarea
-                className="w-full border border-cyan-200 p-2 text-gray-700 text-sm bg-white rounded"
+                className="w-full border border-purple-200 p-2 text-gray-800 text-sm bg-white rounded"
                 placeholder="What's on your mind?"
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
@@ -190,12 +189,12 @@ const CommunityDetail = () => {
                 <input
                   type="file"
                   accept="image/*,video/*,audio/*"
-                  className="bg-gray-100 p-2 rounded text-gray-700"
+                  className="bg-purple-100 p-2 rounded text-gray-700"
                   onChange={(e) => setNewPostMedia(e.target.files[0])}
                 />
               </div>
               {showEmojiPickerPost && <Picker onEmojiSelect={addEmojiToPost} theme="light" />}
-              <button onClick={handlePostSubmit} className="bg-cyan-900 hover:bg-cyan-700 text-white px-4 py-1 mt-2 rounded text-sm">
+              <button onClick={handlePostSubmit} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 mt-2 rounded text-sm">
                 Submit Post
               </button>
             </div>
@@ -204,18 +203,21 @@ const CommunityDetail = () => {
       </div>
 
       {/* Feed Area */}
-      <div className="lg:w-2/3 w-full space-y-6 overflow-y-auto max-h-[calc(100vh-120px)]">
+      <div className="space-y-6 lg:col-span-2">
         {posts.map(post => (
-          <div key={post.id} className="bg-white p-4 rounded shadow-md">
-            <p className="text-sm text-cyan-900">
+          <div key={post.id} className="bg-cyan-100 p-4 rounded shadow border-l-4 border-purple-400">
+            <p className="text-sm text-purple-800">
               {post.group_name ? `${post.group_name} · ` : ''}by {post.user_name || 'Anonymous'} · {moment(post.created_at).fromNow()}
             </p>
-            <p className="mt-2 break-words text-gray-700">{post.content}</p>
+            <p className="mt-2 break-words text-gray-800">{post.content}</p>
             <div className="flex items-center space-x-3 mt-3 text-sm text-gray-700">
-              <button onClick={() => handleLike(post.id)} className="flex items-center space-x-1">
+              <button onClick={() => handleLike(post.id)} className="flex items-center space-x-1 text-purple-700">
                 {post.liked_by_user ? <FaHeart className="text-red-600" /> : <FiHeart />} <span>{post.like_count}</span>
               </button>
-              <button onClick={() => setActiveComments({ ...activeComments, [post.id]: !activeComments[post.id] })}>
+              <button
+                onClick={() => setActiveComments({ ...activeComments, [post.id]: !activeComments[post.id] })}
+                className="text-cyan-800"
+              >
                 💬 {post.comment_count || 0} Comments
               </button>
             </div>
@@ -240,7 +242,7 @@ const CommunityDetail = () => {
                   placeholder="Write a comment..."
                   value={newComments[post.id] || ''}
                   onChange={(e) => setNewComments({ ...newComments, [post.id]: e.target.value })}
-                  className="w-full border border-cyan-200 p-2 text-sm text-gray-700 bg-white rounded"
+                  className="w-full border border-cyan-200 p-2 text-sm text-gray-800 bg-white rounded"
                 />
                 <div className="flex items-center gap-2 mt-1">
                   <button
@@ -253,7 +255,7 @@ const CommunityDetail = () => {
                   >😀</button>
                   <button
                     onClick={() => handleComment(post.id)}
-                    className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-4 py-1 rounded text-sm"
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-1 rounded text-sm"
                   >Add Comment</button>
                 </div>
                 {activeEmojiCommentPicker === post.id && (
@@ -266,11 +268,6 @@ const CommunityDetail = () => {
             )}
           </div>
         ))}
-
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="lg:hidden fixed bottom-4 right-4 bg-cyan-600 text-white rounded-full p-3 shadow-lg hover:bg-cyan-700"
-        >↑ Top</button>
       </div>
 
       <ToastContainer position="top-right" autoClose={3000} />

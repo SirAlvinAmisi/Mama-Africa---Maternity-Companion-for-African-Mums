@@ -3,18 +3,19 @@ import { Link } from 'react-router-dom';
 
 function BabyCorner() {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+    // <div className="bg-purple-400 p-6 rounded-lg shadow-lg text-center">
+    <div className="bg-gradient-to-r from-cyan-300 via-cyan-400 to-purple-300 p-8 rounded-lg shadow-lg text-center text-cyan-900">
       <h2 className="text-2xl font-bold mb-4 text-cyan-700">
-        Baby <span className="text-cyan-500">Corner</span>
+        Baby <span className="text-cyan-900">Corner</span>
       </h2>
 
       <img 
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZmYsjo8t1K8r6L7KO5Uqs5kLIrZ18bSwM5Qac5ROnKVOAgzL5L9s-JnvmCFMBOOkARow&usqp=CAU" 
+        src="https://i.pinimg.com/736x/e9/1f/82/e91f82a4f874b0820aabef4b62f5f5da.jpg" 
         alt="Baby Corner" 
-        className="w-full h-64 object-cover rounded-lg shadow-md hover:shadow-lg transition"
+        className="w-full h-50 sm:h-52 object-cover object-center rounded-xl shadow-md hover:shadow-lg transition duration-300"
       />
 
-      <p className="text-gray-600 mt-4 mb-6">
+      <p className="text-black font-bold mt-4 mb-6">
         Tips, advice, and milestones for your little one's growth!
       </p>
 
