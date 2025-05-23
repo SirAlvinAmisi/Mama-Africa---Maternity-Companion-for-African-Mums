@@ -9,6 +9,14 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room
 from dotenv import load_dotenv
 from models import db
+# 🔥 Ensure all models are imported so Flask-Migrate sees them
+from models import (
+    User, Profile, PregnancyDetail, Post, Article, Comment, Question,
+    MedicalUpload, Certification, Clinic, Community, Topic, FlagReport,
+    BabyWeekUpdate, NutritionBlog, Nutrition, Message, SharedContent,
+    VerificationRequest, Notification, Reminder, Category
+)
+
 from routes import register_routes
 from extensions import socketio, mail
 from flask_jwt_extended import exceptions as jwt_exceptions
