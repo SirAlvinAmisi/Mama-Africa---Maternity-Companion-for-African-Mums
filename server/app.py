@@ -104,6 +104,24 @@ def create_app():
             app.logger.info("✅ Tables created successfully with db.create_all()")
         except Exception as e:
             app.logger.error(f"❌ Manual table creation failed: {e}")
+        # ✅ Seed admin if not exists
+        try:
+            from werkzeug.security import generate_password_hash
+            if not User.query.filter_by(email="admin@mama.africa").first():
+                admin = User(
+                    email="admin@mama.africa",
+                    password_hash=generate_password_hash("Admin123!"),
+                    role="admin",
+                    is_active=True,
+                    is_validated=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                app.logger.info("✅ Admin user seeded.")
+            else:
+                app.logger.info("✅ Admin already exists.")
+        except Exception as e:
+            app.logger.error(f"❌ Admin seeding failed: {e}")    
 
 
     return app
