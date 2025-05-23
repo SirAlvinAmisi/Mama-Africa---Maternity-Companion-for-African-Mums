@@ -80,6 +80,16 @@ def create_app():
     def handle_jwt_errors(e):
         app.logger.error("JWT error: %s", str(e))
         return jsonify({"error": "JWT error", "message": str(e)}), 401
+    
+        # Automatically apply migrations on startup (for Render free tier)
+    from flask_migrate import upgrade
+    with app.app_context():
+        try:
+            upgrade()
+            app.logger.info("✅ Database migration applied.")
+        except Exception as e:
+            app.logger.error(f"⚠️ Database migration failed: {e}")
+
 
     return app
 
