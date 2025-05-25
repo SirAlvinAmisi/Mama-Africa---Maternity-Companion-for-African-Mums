@@ -178,7 +178,6 @@ from werkzeug.security import generate_password_hash
 from dotenv import load_dotenv
 
 from models import db, User
-from seed import seed_database  # ✅ your full seed logic
 from routes import register_routes
 from extensions import socketio, mail
 from flask_jwt_extended import exceptions as jwt_exceptions
@@ -186,10 +185,10 @@ from flask_jwt_extended import exceptions as jwt_exceptions
 # Load environment variables
 load_dotenv()
 
-# Enable logging
+# Logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Frontend dist folder path
+# Frontend dist folder
 frontend_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "client"))
 dist_folder = os.path.join(frontend_folder, "dist")
 
@@ -198,13 +197,11 @@ def create_app():
     app.config.from_object("config.Config")
     app.logger.info("🔗 Connected to database: %s", app.config["SQLALCHEMY_DATABASE_URI"])
 
-    # Initialize extensions
     db.init_app(app)
     Migrate(app, db)
     JWTManager(app)
     mail.init_app(app)
 
-    # CORS setup
     CORS(app,
          supports_credentials=True,
          origins=[
@@ -216,7 +213,6 @@ def create_app():
          methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
          allow_headers=["Content-Type", "Authorization", "X-Requested-With"])
 
-    # Socket.IO
     socketio.init_app(app, cors_allowed_origins=[
         "https://mama-africa.onrender.com",
         "http://localhost:5173",
@@ -224,7 +220,6 @@ def create_app():
         "http://127.0.0.1:5173"
     ])
 
-    # Serve frontend
     @app.route("/", defaults={"filename": ""})
     @app.route("/<path:filename>")
     def index(filename):
@@ -236,10 +231,8 @@ def create_app():
     def not_found(e):
         return send_from_directory(dist_folder, "index.html")
 
-    # Register routes
     register_routes(app)
 
-    # JWT error handling
     @app.errorhandler(jwt_exceptions.NoAuthorizationError)
     @app.errorhandler(jwt_exceptions.JWTDecodeError)
     @app.errorhandler(jwt_exceptions.WrongTokenError)
@@ -251,11 +244,11 @@ def create_app():
         app.logger.error("JWT error: %s", str(e))
         return jsonify({"error": "JWT error", "message": str(e)}), 401
 
-    # Database migration and seeding
+    # Migrations + Seeding
     with app.app_context():
         try:
             upgrade()
-            app.logger.info("✅ Database migration applied.")
+            app.logger.info("✅ Migration applied.")
         except Exception as e:
             app.logger.error(f"⚠️ Migration failed: {e}")
             try:
@@ -264,21 +257,21 @@ def create_app():
             except Exception as err:
                 app.logger.error(f"❌ Manual table creation failed: {err}")
 
-        # Seed only if health professionals don't exist
-        if not User.query.filter_by(role="health_pro").first():
-            try:
+        try:
+            if not User.query.filter_by(role="health_pro").first():
+                from seed import seed_database  # ✅ moved here to prevent circular import
                 seed_database()
                 app.logger.info("✅ Full seed data loaded.")
-            except Exception as e:
-                app.logger.error(f"❌ Seeding failed: {e}")
-        else:
-            app.logger.info("ℹ️ Seed skipped — health professionals already exist.")
+            else:
+                app.logger.info("ℹ️ Seeding skipped — health professionals already exist.")
+        except Exception as e:
+            app.logger.error(f"❌ Seeding error: {e}")
 
     return app
 
 app = create_app()
 
-# ===== SOCKET.IO HANDLERS =====
+# ===== SOCKET.IO =====
 @socketio.on("connect")
 def handle_connect():
     app.logger.info(f"Socket connected: {request.sid}")
