@@ -182,13 +182,11 @@ from routes import register_routes
 from extensions import socketio, mail
 from flask_jwt_extended import exceptions as jwt_exceptions
 
-# Load environment variables
+# Load .env variables
 load_dotenv()
 
-# Logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Frontend dist folder
 frontend_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "client"))
 dist_folder = os.path.join(frontend_folder, "dist")
 
@@ -244,7 +242,7 @@ def create_app():
         app.logger.error("JWT error: %s", str(e))
         return jsonify({"error": "JWT error", "message": str(e)}), 401
 
-    # Migrations + Seeding
+    # Migrate and Seed inside context
     with app.app_context():
         try:
             upgrade()
@@ -257,13 +255,14 @@ def create_app():
             except Exception as err:
                 app.logger.error(f"❌ Manual table creation failed: {err}")
 
+        # 🧠 Import here to prevent circular import
         try:
             if not User.query.filter_by(role="health_pro").first():
-                from seed import seed_database  # ✅ moved here to prevent circular import
+                from seed import seed_database
                 seed_database()
-                app.logger.info("✅ Full seed data loaded.")
+                app.logger.info("✅ Seed data loaded.")
             else:
-                app.logger.info("ℹ️ Seeding skipped — health professionals already exist.")
+                app.logger.info("ℹ️ Skipping seeding — health professionals already exist.")
         except Exception as e:
             app.logger.error(f"❌ Seeding error: {e}")
 
@@ -271,7 +270,7 @@ def create_app():
 
 app = create_app()
 
-# ===== SOCKET.IO =====
+# ==== SOCKET.IO ====
 @socketio.on("connect")
 def handle_connect():
     app.logger.info(f"Socket connected: {request.sid}")
@@ -301,6 +300,6 @@ def serve_media(filename):
 def serve_uploaded_scans(filename):
     return send_from_directory(os.path.join(app.root_path, "static/uploads"), filename)
 
-# ===== RUN APP =====
+# ==== RUN ====
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
