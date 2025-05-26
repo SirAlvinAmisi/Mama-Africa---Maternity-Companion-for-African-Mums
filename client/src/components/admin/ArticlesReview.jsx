@@ -43,17 +43,21 @@ export default function ArticlesReview() {
     }
   };
 
-  if (loading) return <p>Loading Articles...</p>;
-  if (articles.length === 0) return <p>No articles available for review.</p>;
+  if (loading) return <p className="text-center text-cyan-700 font-medium">Loading Articles...</p>;
+  if (articles.length === 0) return <p className="text-center text-gray-600">No articles available for review.</p>;
 
   return (
-    <div className="space-y-4 bg-white text-black p-4 rounded-lg shadow-md">
+    <div className="space-y-6 bg-white text-black p-4 sm:p-6 rounded-xl shadow-md">
       {articles.map((article) => (
-        <div key={article.id} className="p-4 border border-gray-200 rounded-lg shadow-sm bg-cyan-100">
-          <h3 className="text-lg font-semibold text-gray-800">{article.title}</h3>
-          <p className="text-gray-700 font-medium">{article.content}</p>
-          <div className="flex justify-between items-center mt-3">
-            <p className="text-sm text-gray-600 font-medium">
+        <div
+          key={article.id}
+          className="p-5 border border-gray-200 rounded-xl shadow-sm bg-gradient-to-br from-cyan-50 to-white hover:shadow-lg transition duration-200"
+        >
+          <h3 className="text-xl font-semibold text-purple-800 mb-2">{article.title}</h3>
+          <p className="text-gray-700 mb-4">{article.content}</p>
+
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <p className="text-sm font-medium text-gray-600">
               Status:{" "}
               <span
                 className={`font-semibold ${
@@ -71,13 +75,14 @@ export default function ArticlesReview() {
                   : "Pending"}
               </span>
             </p>
-            <div className="flex gap-2">
+
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => handleAction(article.id, "flagged")}
-                className={`px-4 py-1 rounded text-sm font-medium ${
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition duration-150 ${
                   article.is_flagged
-                    ? "bg-red-200 text-red-700 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-800 hover:bg-red-300"
+                    ? "bg-red-200 text-red-800 cursor-not-allowed"
+                    : "bg-red-100 text-red-700 hover:bg-red-200"
                 }`}
                 disabled={article.is_flagged}
               >
@@ -87,17 +92,17 @@ export default function ArticlesReview() {
               {!article.is_approved && (
                 <button
                   onClick={() => handleAction(article.id, "approved")}
-                  className="px-4 py-1 bg-green-100 text-green-700 rounded text-sm font-medium hover:bg-green-200"
+                  className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition duration-150"
                 >
-                  Approve
+                  ✅ Approve
                 </button>
               )}
 
               <button
                 onClick={() => handleAction(article.id, "deleted")}
-                className="px-4 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200"
+                className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200 transition duration-150"
               >
-                Delete
+                🗑️ Delete
               </button>
             </div>
           </div>

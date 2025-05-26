@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, current_app as app, send_from_dir
 from models import db, User, Profile
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+# from utils import generate_password_reset_token, send_email  
+import os
 from sqlalchemy.exc import SQLAlchemyError
 import os
 
@@ -83,88 +85,6 @@ def signup():
         print("❌ General Exception:", traceback.format_exc())
         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
 
-# @auth_bp.route('/signup', methods=['POST'])
-# def signup():
-#     try:
-#         print("⚙️ Signup Request Received")
-#         print("Request form data:", request.form.to_dict())
-#         print("Request files:", request.files)
-
-#         email = request.form['email']
-#         password = request.form['password']
-#         raw_role = request.form['role'].strip().lower()
-
-#         # Normalize the role
-#         role_map = {
-#             "admin": "admin",
-#             "mom": "mum",
-#             "mother": "mum",
-#             "mum": "mum",
-#             "health professional": "health_pro",
-#             "health_pro": "health_pro"
-#         }
-#         role = role_map.get(raw_role, raw_role)  # fallback to raw if not mapped
-        
-#         if role == "admin":
-#             return jsonify({"error": "Cannot signup as admin"}), 403
-
-#         # Check for duplicate email
-#         if User.query.filter_by(email=email).first():
-#             return jsonify({"error": "Email already registered"}), 400
-
-#         # Create the user
-#         user = User(email=email, role=role)
-#         user.set_password(password)
-
-#         # Profile info
-#         profile_data = {
-#             "full_name": f"{request.form.get('first_name', '')} {request.form.get('middle_name', '')} {request.form.get('last_name', '')}".strip(),
-#             "bio": request.form.get('bio', ''),
-#             "region": request.form.get('county')
-#         }
-
-#         if role == 'health_pro' and 'license_number' in request.form:
-#             profile_data["license_number"] = request.form['license_number']
-
-#         user.profile = Profile(**profile_data)
-
-#         # Handle avatar upload
-#         if 'avatar' in request.files:
-#             avatar = request.files['avatar']
-#             if avatar.filename:
-#                 filename = secure_filename(avatar.filename)
-#                 upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
-#                 os.makedirs(upload_folder, exist_ok=True)
-#                 avatar_path = os.path.join(upload_folder, filename)
-#                 avatar.save(avatar_path)
-#                 user.profile.profile_picture = f"/uploads/{filename}"
-
-#         db.session.add(user)
-#         db.session.commit()
-
-#         print("✅ Signup successful for:", email)
-#         return jsonify({"message": "User registered. Please check email to verify."}), 201
-
-#     # except SQLAlchemyError as e:
-#     #     db.session.rollback()
-#     #     print("❌ Database error during signup:", e)
-#     #     return jsonify({"error": "Database error.", "details": str(e)}), 500
-
-#     # except Exception as e:
-#     #     print("❌ Exception during signup:", e)
-#     #     return jsonify({"error": "Signup failed.", "details": str(e)}), 500
-#     except SQLAlchemyError as e:
-#         db.session.rollback()
-#         import traceback
-#         print("❌ SQLAlchemyError:", traceback.format_exc())  # shows full trace
-#         return jsonify({"error": "Database error.", "details": str(e)}), 500
-
-#     except Exception as e:
-#         import traceback
-#         print("❌ General Exception:", traceback.format_exc())  # full trace
-#         return jsonify({"error": "Signup failed.", "details": str(e)}), 500
-
-
 
 # Login Route
 @auth_bp.route('/login', methods=['POST'])
@@ -194,14 +114,6 @@ def login():
         print("❌ Invalid credentials for:", email)
         return jsonify({"error": "Invalid credentials"}), 401
 
-    # except SQLAlchemyError as e:
-    #     db.session.rollback()
-    #     print("❌ Database error during login:", e)
-    #     return jsonify({"error": "Database error during login", "details": str(e)}), 500
-
-    # except Exception as e:
-    #     print("❌ Exception during login:", e)
-        # return jsonify({"error": "Login failed", "details": str(e)}), 500
     
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -284,3 +196,17 @@ def update_profile():
 @auth_bp.route('/uploads/<path:filename>')
 def serve_uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# Flask route example
+# @auth_bp.route('/reset-password', methods=['POST'])
+# def send_password_reset():
+#     email = request.json.get('email')
+#     user = User.query.filter_by(email=email).first()
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
+
+#     token = generate_password_reset_token(user)  # You must implement this
+#     reset_url = f"{FRONTEND_URL}/reset-password/{token}"
+#     send_email(user.email, "Reset Your Password", f"Click here: {reset_url}")
+
+#     return jsonify({"message": "Reset email sent"})

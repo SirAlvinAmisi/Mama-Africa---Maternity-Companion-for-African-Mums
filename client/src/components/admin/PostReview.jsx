@@ -27,7 +27,10 @@ const PostReview = () => {
               data = await getFlaggedComment(flag.content_id);
             }
           } catch (err) {
-            console.warn(`⚠️ Error loading flagged ${flag.content_type} with ID ${flag.content_id}:`, err.response?.data || err.message);
+            console.warn(
+              `⚠️ Error loading flagged ${flag.content_type} with ID ${flag.content_id}:`,
+              err.response?.data || err.message
+            );
           }
 
           return data ? { ...flag, data } : null;
@@ -58,41 +61,53 @@ const PostReview = () => {
     fetchFlaggedContent();
   }, []);
 
-  if (loading) return <p className="text-center text-gray-600">Loading flagged content...</p>;
-  if (!flags.length) return <p className="text-center text-gray-600">No flagged content found.</p>;
+  if (loading) return <p className="text-center text-cyan-600 font-medium">Loading flagged content...</p>;
+  if (!flags.length) return <p className="text-center text-gray-500">No flagged content found.</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 bg-white text-black p-4 sm:p-6 rounded-xl shadow-md">
       {flags.map(({ id: flagId, reason, data, content_type }) => (
-        <div key={`${content_type}-${data.id}`} className="p-4 border rounded shadow-sm bg-red-50">
-          <h3 className="text-lg font-bold text-red-800">
-            {content_type === 'post' ? data.title : 'Flagged Comment'}
+        <div
+          key={`${content_type}-${data.id}`}
+          className="p-5 border border-gray-200 rounded-xl shadow-sm bg-gradient-to-br from-red-50 to-white hover:shadow-lg transition duration-200"
+        >
+          <h3 className="text-lg sm:text-xl font-semibold text-purple-800 mb-2">
+            {content_type === "post" ? data.title : "🚩 Flagged Comment"}
           </h3>
-          <p className="text-gray-700">{data.content}</p>
-          <p className="text-sm text-gray-500">
-            By: <span className="font-medium">{data.user?.full_name || "Unknown"}</span>
-            {content_type === 'post' && ` | Community: ${data.community?.name || "N/A"}`}
-          </p>
-          <p className="text-xs text-red-600 font-semibold mt-1">Reason: {reason}</p>
 
-          <div className="flex gap-4 mt-2">
+          <p className="text-gray-700 mb-2">{data.content}</p>
+
+          <p className="text-sm text-gray-600 mb-1">
+            <span className="font-medium text-black">By:</span> {data.user?.full_name || "Unknown"}
+            {content_type === "post" && (
+              <span className="ml-2 text-gray-500">
+                | Community: <span className="font-semibold text-cyan-700">{data.community?.name || "N/A"}</span>
+              </span>
+            )}
+          </p>
+
+          <p className="text-xs text-red-700 font-semibold">Reason: {reason}</p>
+
+          <div className="flex flex-wrap gap-3 mt-4">
             <button
               onClick={() => updateContentStatus(data.id, "approved", flagId, content_type)}
-              className="bg-cyan-500 text-black px-4 py-2 rounded"
+              className="px-4 py-2 text-sm font-semibold rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 transition"
             >
-              Approve
+              ✅ Approve
             </button>
+
             <button
               onClick={() => updateContentStatus(data.id, "flagged", flagId, content_type)}
-              className="bg-yellow-600 text-white px-4 py-2 rounded"
+              className="px-4 py-2 text-sm font-semibold rounded-lg bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition"
             >
-              Keep Flagged
+              🚩 Keep Flagged
             </button>
+
             <button
               onClick={() => updateContentStatus(data.id, "rejected", flagId, content_type)}
-              className="bg-red-600 text-white px-4 py-2 rounded"
+              className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
             >
-              Delete
+              🗑️ Delete
             </button>
           </div>
         </div>
