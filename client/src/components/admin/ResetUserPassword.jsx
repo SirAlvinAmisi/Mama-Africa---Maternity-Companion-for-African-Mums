@@ -8,27 +8,35 @@ const ResetUserPassword = () => {
     e.preventDefault();
     try {
       await resetUserPassword(email);
-      alert('Reset email sent!');
+      alert('📩 Reset email sent!');
       setEmail('');
     } catch (error) {
-      alert('Failed to reset password');
+      alert('❌ Failed to reset password');
       console.error(error);
     }
   };
 
   return (
-    <form onSubmit={handleReset} className="space-y-4 bg-cyan-200 p-4 rounded shadow-md">
-      <h2 className="text-xl font-bold text-cyan-900">Reset User Password</h2>
+    <form
+      onSubmit={handleReset}
+      className="bg-cyan-300 text-black max-w-md mx-auto p-6 rounded-xl shadow-md space-y-5"
+    >
+      <h2 className="text-2xl font-bold text-red-600">🔐 Reset User Password</h2>
+
       <input
         type="email"
-        placeholder="User Email"
+        placeholder="Enter User Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="border text-black p-2 w-full rounded"
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         required
       />
-      <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded">
-        Send Reset
+
+      <button
+        type="submit"
+        className="w-full bg-gradient-to-r from-red-600 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 transition"
+      >
+        🚀 Send Reset Link
       </button>
     </form>
   );
